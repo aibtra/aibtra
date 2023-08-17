@@ -1,0 +1,25 @@
+name: Create Windows ICO
+
+on:
+  push:
+    branches:
+      - icons
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install ImageMagick
+      run: sudo apt-get install -y imagemagick
+
+    - name: Convert PNG to ICO
+      run: convert src/main/resources/images/logo.png -define icon:auto-resize=256,128,64,48,32,16 logo.ico
+
+    - name: Upload ICO as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: logo
+        path: logo.ico

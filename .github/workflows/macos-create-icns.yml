@@ -1,0 +1,41 @@
+name: Create macOS ICNS
+
+on:
+  push:
+    branches:
+      - icons
+
+jobs:
+  convert:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Prepare iconset directory and resize images
+      run: |
+        mkdir logo.iconset
+        cp src/main/resources/images/logo.png logo.iconset/icon_512x512.png
+        # Generate other resolutions from the original image
+        sips -z 16 16     src/main/resources/images/logo.png --out logo.iconset/icon_16x16.png
+        sips -z 32 32     src/main/resources/images/logo.png --out logo.iconset/icon_16x16@2x.png
+        sips -z 32 32     src/main/resources/images/logo.png --out logo.iconset/icon_32x32.png
+        sips -z 64 64     src/main/resources/images/logo.png --out logo.iconset/icon_32x32@2x.png
+        sips -z 128 128   src/main/resources/images/logo.png --out logo.iconset/icon_128x128.png
+        sips -z 256 256   src/main/resources/images/logo.png --out logo.iconset/icon_128x128@2x.png
+        sips -z 256 256   src/main/resources/images/logo.png --out logo.iconset/icon_256x256.png
+        sips -z 512 512   src/main/resources/images/logo.png --out logo.iconset/icon_256x256@2x.png
+
+    - name: Convert iconset to icns
+      run: |
+        iconutil -c icns logo.iconset
+
+    - name: Check the generated ICNS
+      run: |
+        ls -al *.icns
+
+    - name: Upload ICNS as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: icns
+        path: logo.icns
