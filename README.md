@@ -1,8 +1,12 @@
-# Aibtra Project README
+# Aibtra
+
+This is the source code of [Aibtra](https://www.aibtra.dev/), a desktop tool for refining texts using OpenAI.
+If you are only interested in Aibtra from a user's perspective, visit the [website](https://www.aibtra.dev/).
+Binaries can be downloaded directly from [GitHub ](https://github.com/aibtra/aibtra/releases/tag/latest).
 
 ## Introduction
 
-Welcome to the Aibtra project! This project is built on the Kotlin JVM platform and utilizes the Swing framework for its GUI components. A combination of popular libraries are employed to achieve various tasks.
+This project is built on the Kotlin JVM platform and utilizes the Swing framework for its GUI components. A combination of popular libraries are employed to achieve various tasks.
 
 ## Setup
 
