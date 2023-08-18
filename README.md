@@ -21,7 +21,7 @@ gradlew jpackage
 Tests use the JUnit 5 platform. You can run tests using:
 
 ```bash
-gradle test
+gradlew test
 ```
 
 ## Dependencies
