@@ -119,7 +119,6 @@ class MainFrame(private val environment: Environment) {
 		val bottomToolBar = ToolBar(environment.theme, false)
 		bottomToolBar.add(copyAndCloseAction)
 		bottomToolBar.add(Box.createHorizontalGlue())
-		bottomToolBar.add(submitAction)
 
 		val pane = frame.contentPane
 		pane.layout = BorderLayout()
