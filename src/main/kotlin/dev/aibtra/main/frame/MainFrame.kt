@@ -111,13 +111,13 @@ class MainFrame(private val environment: Environment) {
 		mainToolBar.add(profileComboBox)
 		mainToolBar.add(applyChangeAction)
 		mainToolBar.add(Box.createHorizontalGlue())
-		mainToolBar.add(copyAndCloseAction)
 		mainToolBar.add(pasteAndSubmitAction)
 		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(toggleShowDiffBeforeAfterAction)
 		mainToolBar.add(toggleDarkModeAction)
 
 		val bottomToolBar = ToolBar(environment.theme, false)
+		bottomToolBar.add(copyAndCloseAction)
 		bottomToolBar.add(Box.createHorizontalGlue())
 		bottomToolBar.add(submitAction)
 
