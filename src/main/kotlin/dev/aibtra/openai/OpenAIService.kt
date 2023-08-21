@@ -13,10 +13,11 @@ import java.io.InputStreamReader
 import java.io.StringReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 class OpenAIService(private val apiToken: String) {
-	fun request(model: String, content: String, streaming: Boolean, callback: (result: Result<StringBuilder>) -> Boolean) {
+	fun request(model: String, content: String, streaming: Boolean, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = model
 		input["n"] = 1
@@ -74,21 +75,28 @@ class OpenAIService(private val apiToken: String) {
 								val choice = requireNotNull(choices[0])
 								val messageOut = objNotNull<JSONObject>(choice, "message")
 								val message = objNotNull<String>(messageOut, "content")
-								callback(Result.success(StringBuilder(message)))
+								callback(Result(StringBuilder(message)))
 							}
 						}
 					}
 				}
 			} catch (ioe: IOException) {
 				val parser = JSONParser()
-				(parser.parse(InputStreamReader(connection.errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
-					(result["error"] as? JSONObject)?.let { error ->
-						(error["message"] as? String)?.let { message ->
-							callback(Result.failure(IOException("${ioe.message}:\n\n$message")))
+				connection.errorStream?.let { errorStream ->
+					(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
+						(result["error"] as? JSONObject)?.let { error ->
+							(error["message"] as? String)?.let { message ->
+								callback(Result(null, Pair(IOException("${ioe.message}:\n\n$message"), true)))
+							}
 						}
 					}
 				} ?: run {
-					callback(Result.failure(ioe))
+					if (ioe is UnknownHostException) {
+						callback(Result(null, Pair(IOException("Unknown host: ${ioe.message}"), false)))
+					}
+					else {
+						callback(Result(null, Pair(ioe, true)))
+					}
 				}
 			}
 		} finally {
@@ -96,7 +104,7 @@ class OpenAIService(private val apiToken: String) {
 		}
 	}
 
-	private fun parseDataChunk(data: String, builder: StringBuilder, callback: (result: Result<StringBuilder>) -> Boolean): Boolean {
+	private fun parseDataChunk(data: String, builder: StringBuilder, callback: (result: Result) -> Boolean): Boolean {
 		return StringReader(data).use {
 			val parser = JSONParser()
 			val result = parser.parse(it)
@@ -110,7 +118,7 @@ class OpenAIService(private val apiToken: String) {
 			if (objMaybeNull<String>(choice, "finish_reason") == null) {
 				val message = objNotNull<Any>(messageOut, "content")
 				builder.append(message)
-				callback(Result.success(builder))
+				callback(Result(builder))
 			}
 			else {
 				false
@@ -134,4 +142,6 @@ class OpenAIService(private val apiToken: String) {
 			}
 		}
 	}
+
+	class Result(val content: StringBuilder?, val failure: Pair<IOException, Boolean>? = null)
 }

@@ -73,15 +73,17 @@ class SubmitAction(
 			val service = OpenAIService(apiToken)
 			requestManager.schedule { input: String, callback: RequestManager.OpCallback ->
 				service.request(profile.model, profile.instructions + "\n\n" + input, true) { result ->
-					if (result.isSuccess) {
-						callback.callback(result.getOrThrow().toString())
-					}
-					else {
+					result.content?.let {
+						callback.callback(it.toString())
+					} ?: run {
+						val (failure, mightBeAuthentication) = requireNotNull(result.failure)
 						Ui.runInEdt {
-							configurationProvider.change(OpenAIConfiguration) {
-								it.copy(apiToken = null)
+							if (mightBeAuthentication) {
+								configurationProvider.change(OpenAIConfiguration) {
+									it.copy(apiToken = null)
+								}
 							}
-							Dialogs.showIOError(result.exceptionOrNull() as IOException, dialogDisplayer)
+							Dialogs.showIOError(failure, dialogDisplayer)
 						}
 						false
 					}
