@@ -11,6 +11,8 @@ import dev.aibtra.core.GlobalExceptionHandler
 import dev.aibtra.core.Logger
 import dev.aibtra.core.SingleInstanceAppLock
 import dev.aibtra.gui.Ui
+import dev.aibtra.gui.dialogs.DialogDisplayer
+import dev.aibtra.gui.dialogs.Dialogs
 import dev.aibtra.main.frame.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.awt.*
@@ -49,7 +51,7 @@ class MainStartup {
 			val settingsPath = paths.settingsPath
 			SingleInstanceAppLock(settingsPath, {
 				val coroutineDispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher()
-				val configurationProvider = ConfigurationProvider(settingsPath)
+				val configurationProvider = ConfigurationProvider(settingsPath, DialogDisplayer.createGlobal())
 				val systemTrayEnabled = checkSystemTrayEnabled(configurationProvider)
 				val application = MainApplication(paths, configurationProvider, coroutineDispatcher, systemTrayEnabled)
 				application.theme.update()
@@ -197,7 +199,7 @@ class MainStartup {
 		}
 	}
 
-	class ConfigurationProvider(private val settingsRoot: Path) : dev.aibtra.configuration.ConfigurationProvider {
+	class ConfigurationProvider(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : dev.aibtra.configuration.ConfigurationProvider {
 		private val classToConfiguration = HashMap<Class<ConfigurationFactory<Any>>, ConfigurationFile<Any>>()
 
 		override fun <D> get(factory: ConfigurationFactory<D>): D {
@@ -213,7 +215,9 @@ class MainStartup {
 		private fun <D> getFile(factory: ConfigurationFactory<D>): ConfigurationFile<D> {
 			val javaClass: Class<ConfigurationFactory<Any>> = factory.javaClass as Class<ConfigurationFactory<Any>>
 			return classToConfiguration.computeIfAbsent(javaClass) {
-				ConfigurationFile.load(settingsRoot.resolve(factory.name() + ".json"), factory.serializer(), factory.default()) as ConfigurationFile<Any>
+				ConfigurationFile.load(settingsRoot.resolve(factory.name() + ".json"), factory.serializer(), factory.default()) {
+					Dialogs.showIOError(it, dialogDisplayer)
+				} as ConfigurationFile<Any>
 			} as ConfigurationFile<D>
 		}
 	}

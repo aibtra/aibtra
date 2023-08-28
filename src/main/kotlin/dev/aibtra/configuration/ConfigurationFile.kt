@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.function.Consumer
 
 internal class ConfigurationFile<D>(
 	private val path: Path,
@@ -43,7 +44,7 @@ internal class ConfigurationFile<D>(
 			ignoreUnknownKeys = true
 		}
 
-		fun <D> load(path: Path, serializer: KSerializer<D>, default: D): ConfigurationFile<D> {
+		fun <D> load(path: Path, serializer: KSerializer<D>, default: D, failureCallback: Consumer<IOException>): ConfigurationFile<D> {
 			return try {
 				val contentString = Files.readString(path)
 				val content = json.decodeFromString(serializer, contentString)
@@ -64,6 +65,13 @@ internal class ConfigurationFile<D>(
 
 					is IOException, is SerializationException -> {
 						LOG.error(e)
+
+						failureCallback.accept(if (e is IOException) {
+							e
+						}
+						else  {
+							IOException(e)
+						})
 
 						ConfigurationFile(path, false, serializer, default)
 					}
