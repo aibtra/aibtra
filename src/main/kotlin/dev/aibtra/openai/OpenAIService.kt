@@ -26,10 +26,9 @@ class OpenAIService(private val apiToken: String) {
 		}
 
 		val messagesIn = JSONArray()
-		val messageIn = JSONObject()
-		messageIn["role"] = "user"
-		messageIn["content"] = content
-		messagesIn.add(messageIn)
+
+		messagesIn.add(createMessageObject("user", content))
+
 		input["messages"] = messagesIn
 
 		val url = URL("https://api.openai.com/v1/chat/completions")
@@ -102,6 +101,13 @@ class OpenAIService(private val apiToken: String) {
 		} finally {
 			connection.disconnect()
 		}
+	}
+
+	private fun createMessageObject(role: String, userMessage: String): JSONObject {
+		val obj = JSONObject()
+		obj["role"] = role
+		obj["content"] = userMessage
+		return obj
 	}
 
 	private fun parseDataChunk(data: String, builder: StringBuilder, callback: (result: Result) -> Boolean): Boolean {
