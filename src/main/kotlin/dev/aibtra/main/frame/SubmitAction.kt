@@ -10,7 +10,6 @@ import dev.aibtra.gui.action.ActionRunnable
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.openai.OpenAIConfiguration
 import dev.aibtra.openai.OpenAIService
-import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.JLabel
 
@@ -72,7 +71,7 @@ class SubmitAction(
 			val profile = profile()
 			val service = OpenAIService(apiToken)
 			requestManager.schedule { input: String, callback: RequestManager.OpCallback ->
-				service.request(profile.model, profile.instructions + "\n\n" + input, true) { result ->
+				service.request(profile.model, profile.instructions, input, true) { result ->
 					result.content?.let {
 						callback.callback(it.toString())
 					} ?: run {

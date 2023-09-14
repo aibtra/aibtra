@@ -17,7 +17,7 @@ import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 class OpenAIService(private val apiToken: String) {
-	fun request(model: String, content: String, streaming: Boolean, callback: (result: Result) -> Boolean) {
+	fun request(model: String, systemMessage: String, userMessage: String, streaming: Boolean, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = model
 		input["n"] = 1
@@ -26,8 +26,12 @@ class OpenAIService(private val apiToken: String) {
 		}
 
 		val messagesIn = JSONArray()
-
-		messagesIn.add(createMessageObject("user", content))
+//		messagesIn.add(createMessageObject("system", "Do not change the markdown structure"))
+//		messagesIn.add(createMessageObject("system", "Preserve the detected language"))
+//		messagesIn.add(createMessageObject("system", "Preserve the markdown structure exactly"))
+//		messagesIn.add(createMessageObject("system", "Stay as close as possible to the original"))
+		messagesIn.add(createMessageObject("system", "Proofread following text and stay as close as possible to the original."))
+		messagesIn.add(createMessageObject("user", userMessage))
 
 		input["messages"] = messagesIn
 
