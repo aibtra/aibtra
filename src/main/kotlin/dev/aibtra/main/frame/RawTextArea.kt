@@ -121,6 +121,7 @@ class RawTextArea(environment: Environment) {
 
 	fun setText(text: String) {
 		textArea.text = normalize(text)
+		textArea.caretPosition = 0
 
 		undoManager.discardAllEdits()
 	}
