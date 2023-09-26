@@ -78,6 +78,8 @@ class OpenAIService(private val apiToken: String) {
 								callback(Result(StringBuilder(message)))
 							}
 						}
+
+						return
 					}
 				}
 			} catch (ioe: IOException) {
