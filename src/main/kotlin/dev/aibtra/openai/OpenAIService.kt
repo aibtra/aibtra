@@ -63,6 +63,10 @@ class OpenAIService(private val apiToken: String) {
 									}
 								}
 							}
+
+							if (ensureTrailingNewlines(content, builder)) {
+								callback(Result(builder))
+							}
 						}
 						else {
 							InputStreamReader(input, StandardCharsets.UTF_8).use {
@@ -75,7 +79,9 @@ class OpenAIService(private val apiToken: String) {
 								val choice = requireNotNull(choices[0])
 								val messageOut = objNotNull<JSONObject>(choice, "message")
 								val message = objNotNull<String>(messageOut, "content")
-								callback(Result(StringBuilder(message)))
+								val builder = StringBuilder(message)
+								ensureTrailingNewlines(message, builder)
+								callback(Result(builder))
 							}
 						}
 
@@ -104,6 +110,17 @@ class OpenAIService(private val apiToken: String) {
 		} finally {
 			connection.disconnect()
 		}
+	}
+
+	private fun ensureTrailingNewlines(content: String, result: StringBuilder): Boolean {
+		val inputCount = content.takeLastWhile { it == '\n' }.count()
+		val resultCount = result.takeLastWhile { it == '\n' }.count()
+		if (resultCount >= inputCount) {
+			return false
+		}
+
+		result.append("\n".repeat(inputCount - resultCount))
+		return true
 	}
 
 	private fun parseDataChunk(data: String, builder: StringBuilder, callback: (result: Result) -> Boolean): Boolean {
