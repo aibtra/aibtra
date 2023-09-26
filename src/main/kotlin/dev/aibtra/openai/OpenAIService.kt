@@ -90,11 +90,12 @@ class OpenAIService(private val apiToken: String) {
 				}
 			} catch (ioe: IOException) {
 				val parser = JSONParser()
+				val mightBeAuthentication = connection.responseCode in AUTHENTICATION_RELATED_RESPONSE_CODES
 				connection.errorStream?.let { errorStream ->
 					(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
 						(result["error"] as? JSONObject)?.let { error ->
 							(error["message"] as? String)?.let { message ->
-								callback(Result(null, Pair(IOException("${ioe.message}:\n\n$message"), true)))
+								callback(Result(null, Pair(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)))
 							}
 						}
 					}
@@ -103,7 +104,7 @@ class OpenAIService(private val apiToken: String) {
 						callback(Result(null, Pair(IOException("Unknown host: ${ioe.message}"), false)))
 					}
 					else {
-						callback(Result(null, Pair(ioe, true)))
+						callback(Result(null, Pair(ioe, mightBeAuthentication)))
 					}
 				}
 			}
@@ -163,4 +164,8 @@ class OpenAIService(private val apiToken: String) {
 	}
 
 	class Result(val content: StringBuilder?, val failure: Pair<IOException, Boolean>? = null)
+
+	companion object {
+		val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
+	}
 }
