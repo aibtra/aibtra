@@ -13,6 +13,9 @@ import dev.aibtra.text.FilteredText
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
+import java.lang.StringBuilder
+import java.nio.file.Files
+import java.nio.file.Path
 
 class DiffManager(
 	initialConfig: Config,
@@ -20,8 +23,10 @@ class DiffManager(
 ) {
 	private val sequentialRunner = SequentialRunner(coroutineDispatcher)
 	private val listeners = ArrayList<(State) -> Unit>()
+	private val debugDirectory = initializeDebugDirectory(initialConfig)
+	private val debugStartTime = System.currentTimeMillis()
 
-	private var data: Data = Data(Input("", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()))
+	private var data: Data = Data(Input("", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0)
 	val state: State
 		get() = data.state
 
@@ -33,7 +38,7 @@ class DiffManager(
 				return
 			}
 
-			updateState(it.input.copy(raw = raw, callback = callback), true)
+			updateState(it.input.copy(raw = raw, callback = callback), true, "updateRaw")
 		}
 	}
 
@@ -45,7 +50,7 @@ class DiffManager(
 				return
 			}
 
-			updateState(it.input.copy(ref = ref, finished = finished), finished)
+			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRefined" else null)
 		}
 	}
 
@@ -57,7 +62,7 @@ class DiffManager(
 				return
 			}
 
-			updateState(it.input.copy(config = config), true)
+			updateState(it.input.copy(config = config), true, "setConfig")
 		}
 	}
 
@@ -65,9 +70,9 @@ class DiffManager(
 		listeners.add(listener)
 	}
 
-	private fun updateState(input: Input, forceUpdate: Boolean) {
+	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
 		val lastState = data.state
-		data = Data(input, lastState)
+		data = Data(input, lastState, data.sequenceId + 1)
 
 		sequentialRunner.schedule(object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
@@ -99,8 +104,11 @@ class DiffManager(
 				callback {
 					Ui.assertEdt()
 
-					this@DiffManager.data = Data(input.copy(callback = null), state)
+					val data = Data(input.copy(callback = null), state, this@DiffManager.data.sequenceId + 1)
+					this@DiffManager.data = data
 					input.callback?.run()
+
+					writeDebugFiles(data, debugOperationName)
 
 					listeners.forEach { it(state) }
 				}
@@ -150,11 +158,47 @@ class DiffManager(
 		return Math.min(raw.length, Math.max(balancedRawTo, lastState.rawTo))
 	}
 
+	private fun writeDebugFiles(data: Data, operationName: String?) {
+		if (debugDirectory == null || operationName == null) {
+			return
+		}
+
+		writeDebugFile(data.sequenceId, operationName, "raw", data.state.raw, data.state.rawChars, debugDirectory)
+		writeDebugFile(data.sequenceId, operationName, "ref", data.state.ref, data.state.refChars, debugDirectory)
+	}
+
+	private fun writeDebugFile(sequenceId: Int, operationName: String, type: String, text: String, diffChars: List<DiffChar>, debugDirectory: Path) {
+		val debugFile = debugDirectory.resolve("$debugStartTime-$sequenceId-$operationName-$type.txt")
+		Files.newBufferedWriter(debugFile).use { writer ->
+			var textBuilder = StringBuilder()
+			var diffBuilder = StringBuilder()
+			require(text.length == diffChars.size)
+			for (i in text.indices) {
+				val ch = text[i]
+				textBuilder.append(ch)
+				diffBuilder.append(diffChars[i].kind.char)
+				if (ch == '\n') {
+					writer.write(textBuilder.toString())
+					diffBuilder.append("\n")
+					writer.write(diffBuilder.toString())
+
+					textBuilder = StringBuilder()
+					diffBuilder = StringBuilder()
+				}
+			}
+
+			textBuilder.append("\n")
+			writer.write(textBuilder.toString())
+			diffBuilder.append("\n")
+			writer.write(diffBuilder.toString())
+		}
+	}
+
 	class State(val raw: String, val rawTo: Int, val rawChars: List<DiffChar>, val filtered: FilteredText, val ref: String, val refFormatted: String, val refChars: List<DiffChar>, val blocks: List<DiffBlock>)
 
 	private data class Input(val raw: String, val ref: String, val config: Config, val finished: Boolean, val callback: Runnable?)
 
-	private class Data(val input: Input, val state: State)
+	private class Data(val input: Input, val state: State, val sequenceId: Int)
 
 	companion object {
 		fun getSelectedBlocksFromRefined(state: State, range: IntRange): List<DiffBlock> {
@@ -179,13 +223,24 @@ class DiffManager(
 
 			return selected
 		}
+
+		fun initializeDebugDirectory(config: Config): Path? {
+			if (config.debugLogDirectory == null) {
+				return null
+			}
+
+			val dir = Path.of(config.debugLogDirectory)
+			Files.createDirectories(dir)
+			return dir
+		}
 	}
 
 	@Serializable
 	data class Config(
 		val filterMarkdown: Boolean = true,
 		val showRefBeforeAndAfter: Boolean = true,
-		val endBalancerCharCount: Int = 50
+		val endBalancerCharCount: Int = 50,
+		val debugLogDirectory: String? = null
 	) {
 		companion object : ConfigurationFactory<Config> {
 			override fun name(): String = "diff"
