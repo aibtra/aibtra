@@ -4,7 +4,6 @@
 
 package dev.aibtra.text
 
-import dev.aibtra.configuration.ConfigurationFactory
 import kotlinx.serialization.Serializable
 
 class TextNormalizer(val config: Config) {
@@ -208,13 +207,5 @@ class TextNormalizer(val config: Config) {
 		val changeDoubleToSingleBlockQuotes: Boolean = true,
 		val rewrapBlockQuotes: Boolean = true,
 		val rewrapBlockQuotesAt: Int = 72
-	) {
-		companion object : ConfigurationFactory<Config> {
-			override fun name(): String = "text-normalizer"
-
-			override fun default(): Config {
-				return Config()
-			}
-		}
-	}
+	)
 }

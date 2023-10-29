@@ -5,6 +5,7 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
+import dev.aibtra.text.Schemes
 import dev.aibtra.text.TextNormalizer
 
 class TextNormalizerAction private constructor(
@@ -15,13 +16,24 @@ class TextNormalizerAction private constructor(
 	get: (TextNormalizer.Config) -> Boolean,
 	set: (TextNormalizer.Config, Boolean) -> TextNormalizer.Config
 ) :
-	MainMenuConfigurationBooleanAction<TextNormalizer.Config>(id, title, null, null, null, accelerators,
+	MainMenuConfigurationBooleanAction<Schemes>(id, title, null, null, null, accelerators,
 		configurationProvider,
-		TextNormalizer.Config,
-		{ config -> get(config) },
-		{ config: TextNormalizer.Config, value: Boolean -> set(config, value) },
-		{ _: TextNormalizer.Config -> }
+		Schemes,
+		{ schemes -> get(schemes.current().textNormalizerConfig) },
+		{ schemes: Schemes, value: Boolean ->
+			val current = schemes.current()
+			val newConfig = set(current.textNormalizerConfig, value)
+			val newList = schemes.list.mapIndexed { index, scheme -> if (scheme == current) scheme.copy(textNormalizerConfig = newConfig) else scheme }
+			schemes.copy(list = newList)
+		},
+		{ _: Schemes -> }
 	) {
+	init {
+		configurationProvider.listenTo(Schemes::class) {
+			updateState()
+		}
+	}
+
 	companion object {
 		fun createJoinLines(configurationProvider: ConfigurationProvider, accelerators: Accelerators): TextNormalizerAction {
 			return TextNormalizerAction("textNormalizerJoinLines", "Join Lines", configurationProvider, accelerators,

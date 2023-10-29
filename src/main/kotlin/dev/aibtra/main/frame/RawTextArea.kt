@@ -8,6 +8,7 @@ import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffKind
 import dev.aibtra.text.FilteredText
 import dev.aibtra.text.TextNormalizer
+import dev.aibtra.text.Schemes
 import java.awt.Color
 import java.awt.Component
 import java.awt.event.ActionEvent
@@ -127,7 +128,7 @@ class RawTextArea(environment: Environment) {
 	}
 
 	private fun normalize(text: String): String {
-		return TextNormalizer(configurationProvider.get(TextNormalizer.Config)).normalize(text)
+		return TextNormalizer(configurationProvider.get(Schemes).current().textNormalizerConfig).normalize(text)
 	}
 
 	fun replaceText(from: Int, to: Int, text: String) {

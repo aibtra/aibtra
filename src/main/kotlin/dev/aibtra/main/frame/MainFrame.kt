@@ -12,6 +12,7 @@ import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import dev.aibtra.gui.toolbar.ToolBar
 import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.text.Schemes
 import kotlinx.serialization.Serializable
 import java.awt.*
 import java.awt.event.*
@@ -30,6 +31,7 @@ class MainFrame(private val environment: Environment) {
 	private val applyChangeAction: MainMenuAction
 	private val copyAndCloseAction: MainMenuAction
 	private val pasteAndSubmitAction: MainMenuAction
+	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val profileComboBox: JComboBox<OpenAIConfiguration.Profile>
 	private val toggleFilterMarkdownAction: MainMenuAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
@@ -76,6 +78,7 @@ class MainFrame(private val environment: Environment) {
 			}
 		}
 
+		schemeComboBox = createSchemeComboBox()
 		profileComboBox = createProfileComboBox()
 
 		val submitAction = SubmitAction(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
@@ -108,6 +111,8 @@ class MainFrame(private val environment: Environment) {
 
 		val mainToolBar = ToolBar(environment.theme, true)
 		mainToolBar.add(submitAction)
+		mainToolBar.add(schemeComboBox)
+		mainToolBar.add(Box.createRigidArea(Dimension(5, 0)))
 		mainToolBar.add(profileComboBox)
 		mainToolBar.add(applyChangeAction)
 		mainToolBar.add(Box.createHorizontalGlue())
@@ -157,6 +162,40 @@ class MainFrame(private val environment: Environment) {
 				it.copy(x = location.x, y = location.y, width = size.width, height = size.height, maximized = false)
 			}
 		}
+	}
+
+	private fun createSchemeComboBox(): JComboBox<Schemes.Scheme> {
+		val configurationProvider = environment.configurationProvider
+		val scheme = configurationProvider.get(Schemes)
+		val comboBox = ComboBoxWithPreferredSize(scheme.list.toTypedArray())
+		scheme.list.find { it.name == scheme.currentName }?.let {
+			comboBox.selectedItem = it
+		}
+
+		comboBox.renderer = object : DefaultListCellRenderer() {
+			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
+				if (value is Schemes.Scheme) {
+					label.text = value.name
+				}
+				else {
+					label.text = Schemes.DEFAULT_NAME
+				}
+
+				return label
+			}
+		}
+
+		comboBox.adjustWidth()
+
+		comboBox.addItemListener {
+			(comboBox.selectedItem as? Schemes.Scheme)?.let { profile ->
+				configurationProvider.change(Schemes) {
+					it.copy(currentName = profile.name)
+				}
+			}
+		}
+		return comboBox
 	}
 
 	private fun createProfileComboBox(): JComboBox<OpenAIConfiguration.Profile> {
@@ -244,13 +283,6 @@ class MainFrame(private val environment: Environment) {
 		addAction(fileMenu, ExitAction(environment))
 		menuBar.add(fileMenu)
 
-		val onPasteMenu = JMenu("On Paste")
-		addAction(onPasteMenu, TextNormalizerAction.createJoinLines(environment.configurationProvider, environment.accelerators))
-		onPasteMenu.addSeparator()
-		addAction(onPasteMenu, TextNormalizerAction.createChangeDoubleToSingleBlockQuotes(environment.configurationProvider, environment.accelerators))
-		addAction(onPasteMenu, TextNormalizerAction.createFixMissingEmptyLineAfterBlockQuote(environment.configurationProvider, environment.accelerators))
-		addAction(onPasteMenu, TextNormalizerAction.createRewrapBlockQuotes(environment.configurationProvider, environment.accelerators))
-
 		val editMenu = JMenu("Edit")
 		addAction(editMenu, applyChangeAction)
 		editMenu.addSeparator()
@@ -258,8 +290,6 @@ class MainFrame(private val environment: Environment) {
 		addAction(editMenu, pasteAndSubmitAction)
 		editMenu.addSeparator()
 		addAction(editMenu, toggleFilterMarkdownAction)
-		editMenu.addSeparator()
-		editMenu.add(onPasteMenu)
 		menuBar.add(editMenu)
 
 		val viewMenu = JMenu("View")
@@ -270,6 +300,17 @@ class MainFrame(private val environment: Environment) {
 			addAction(viewMenu, ToggleSystemTrayAction(environment.configurationProvider, environment.accelerators))
 		}
 		menuBar.add(viewMenu)
+
+		val onPasteMenu = JMenu("On Paste")
+		addAction(onPasteMenu, TextNormalizerAction.createJoinLines(environment.configurationProvider, environment.accelerators))
+		onPasteMenu.addSeparator()
+		addAction(onPasteMenu, TextNormalizerAction.createChangeDoubleToSingleBlockQuotes(environment.configurationProvider, environment.accelerators))
+		addAction(onPasteMenu, TextNormalizerAction.createFixMissingEmptyLineAfterBlockQuote(environment.configurationProvider, environment.accelerators))
+		addAction(onPasteMenu, TextNormalizerAction.createRewrapBlockQuotes(environment.configurationProvider, environment.accelerators))
+
+		val schemeMenu = JMenu("Scheme")
+		schemeMenu.add(onPasteMenu)
+		menuBar.add(schemeMenu)
 
 		val helpMenu = JMenu("Help")
 		addAction(helpMenu, AcknowledgmentsAction(environment, dialogDisplayer))
@@ -304,8 +345,9 @@ class MainFrame(private val environment: Environment) {
 	@Serializable
 	private data class Layout(val x: Int? = null, val y: Int? = null, val width: Int = DEFAULT_WIDTH, val height: Int = DEFAULT_HEIGHT, val maximized: Boolean = false, val dividerLocation: Int = 0) {
 		companion object : ConfigurationFactory<Layout> {
-			val DEFAULT_WIDTH : Int
-			val DEFAULT_HEIGHT : Int
+			val DEFAULT_WIDTH: Int
+			val DEFAULT_HEIGHT: Int
+
 			init {
 				DEFAULT_WIDTH = if (GuiConfiguration.Fonts.DEFAULT_FONT_SIZE < 20) 1000 else 1500
 				DEFAULT_HEIGHT = DEFAULT_WIDTH * 2 / 3
