@@ -63,7 +63,22 @@ class RefinedTextArea(environment: Environment) {
 
 	fun getSelectionRange(): IntRange? {
 		val start = textArea.selectionStart
-		val end = textArea.selectionEnd
+		val end = textArea.selectionEnd.let {
+			val length = textArea.text.length
+			if (it <= length) {
+				it
+			}
+			else {
+				// Unicode characters which may occupy two Java characters, like U+1F60A, may confuse the selection range.
+				// In such cases, it seems that the end index may be one character too large. This can be reproduced when having
+				// "Hi!\n\nThank for the test repository and detailed information. " in raw text and
+				// "Hi!\n\nThank you for the test repository and the detailed information. U+1F60A" in the refined text and
+				// selecting " U+1F60A".
+				require(it == length + 1)
+				it - 1
+			}
+		}
+
 		return if (start < end) IntRange(start, end - 1) else null
 	}
 
