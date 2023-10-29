@@ -65,7 +65,7 @@ class OpenAIService(private val apiToken: String) {
 								}
 							}
 
-							if (ensureTrailingNewlines(content, builder)) {
+							if (ensureTrailingNewlines(text, builder)) {
 								callback(Result(builder))
 							}
 						}
@@ -81,7 +81,7 @@ class OpenAIService(private val apiToken: String) {
 								val messageOut = objNotNull<JSONObject>(choice, "message")
 								val message = objNotNull<String>(messageOut, "content")
 								val builder = StringBuilder(message)
-								ensureTrailingNewlines(content, builder)
+								ensureTrailingNewlines(text, builder)
 								callback(Result(builder))
 							}
 						}
