@@ -59,7 +59,15 @@ class OpenAIService(private val apiToken: String) {
 										break
 									}
 
-									if (!parseDataChunk(data, builder, callback)) {
+									val start = builder.isEmpty()
+									if (!parseDataChunk(data, builder)) {
+										break
+									}
+
+									if (start) {
+										ensureLeadingQuotedBlock(text, builder)
+									}
+									if (!callback(Result(builder))) {
 										break
 									}
 								}
@@ -81,6 +89,7 @@ class OpenAIService(private val apiToken: String) {
 								val messageOut = objNotNull<JSONObject>(choice, "message")
 								val message = objNotNull<String>(messageOut, "content")
 								val builder = StringBuilder(message)
+								ensureLeadingQuotedBlock(text, builder)
 								ensureTrailingNewlines(text, builder)
 								callback(Result(builder))
 							}
@@ -114,6 +123,24 @@ class OpenAIService(private val apiToken: String) {
 		}
 	}
 
+	private fun ensureLeadingQuotedBlock(text: String, result: StringBuilder) {
+		if (!text.startsWith(">") || result.length == 0 || result[0] == '>') {
+			return
+		}
+
+		val prefix = StringBuilder()
+		for (line in text.split("\n")) {
+			if (!line.startsWith(">") &&
+				!line.isBlank()) {
+				break
+			}
+
+			prefix.append(line).append("\n")
+		}
+
+		result.insert(0, prefix)
+	}
+
 	private fun ensureTrailingNewlines(content: String, result: StringBuilder): Boolean {
 		val inputCount = content.takeLastWhile { it == '\n' }.count()
 		val resultCount = result.takeLastWhile { it == '\n' }.count()
@@ -125,7 +152,7 @@ class OpenAIService(private val apiToken: String) {
 		return true
 	}
 
-	private fun parseDataChunk(data: String, builder: StringBuilder, callback: (result: Result) -> Boolean): Boolean {
+	private fun parseDataChunk(data: String, builder: StringBuilder): Boolean {
 		return StringReader(data).use {
 			val parser = JSONParser()
 			val result = parser.parse(it)
@@ -139,7 +166,7 @@ class OpenAIService(private val apiToken: String) {
 			if (objMaybeNull<String>(choice, "finish_reason") == null) {
 				val message = objNotNull<Any>(messageOut, "content")
 				builder.append(message)
-				callback(Result(builder))
+				true
 			}
 			else {
 				false
