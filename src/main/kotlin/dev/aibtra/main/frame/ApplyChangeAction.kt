@@ -4,8 +4,10 @@
 
 package dev.aibtra.main.frame
 
+import dev.aibtra.core.Logger
 import dev.aibtra.diff.DiffManager
 import dev.aibtra.gui.action.ActionRunnable
+import java.util.stream.Collectors
 
 class ApplyChangeAction(
 	refinedTextArea: RefinedTextArea,
@@ -15,10 +17,19 @@ class ApplyChangeAction(
 ) :
 	MainMenuAction("applyChange", "Apply", Icons.ACCEPT, "Apply", "alt LEFT", accelerators, ActionRunnable {
 		val state = diffManager.state
-		require(rawTextArea.getText() == state.raw)
+		val rawText = state.raw
+		val refText = state.ref
+		require(rawTextArea.getText() == rawText)
 
 		refinedTextArea.getSelectionRange()?.let {
-			for (block in DiffManager.getSelectedBlocksFromRefined(state, it).reversed()) {
+			val blocks = DiffManager.getSelectedBlocksFromRefined(state, it).reversed()
+			LOG.info("Apply " + blocks.stream().map {
+				"(${it.rawFrom}-${it.rawTo} '${rawText.substring(it.rawFrom, it.rawTo).replace("\n", "\\n")}')" +
+								"->" +
+								"(${it.refFrom}-${it.refTo} '${refText.substring(it.refFrom, it.refTo).replace("\n", "\\n")}')"
+			}.collect(Collectors.joining(",")))
+
+			for (block in blocks) {
 				rawTextArea.replaceText(block.rawFrom, block.rawTo, state.ref.substring(block.refFrom, block.refTo))
 			}
 		}
@@ -32,6 +43,10 @@ class ApplyChangeAction(
 		}
 
 		isEnabled = false
+	}
+
+	companion object {
+		private val LOG = Logger.getLogger(this::class)
 	}
 }
 
