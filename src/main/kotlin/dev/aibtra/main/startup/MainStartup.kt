@@ -34,6 +34,8 @@ import java.util.logging.LogRecord
 import javax.swing.JMenuItem
 import javax.swing.JPopupMenu
 import javax.swing.SwingUtilities
+import kotlin.collections.HashMap
+import kotlin.reflect.KClass
 
 class MainStartup {
 	companion object {
@@ -186,6 +188,7 @@ class MainStartup {
 
 	class ConfigurationProvider(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : dev.aibtra.configuration.ConfigurationProvider {
 		private val classToConfiguration = HashMap<Class<ConfigurationFactory<Any>>, ConfigurationFile<Any>>()
+		private val classToListeners = HashMap<Any, ArrayList<Runnable>>()
 
 		override fun <D> get(factory: ConfigurationFactory<D>): D {
 			return getFile(factory).config
@@ -194,6 +197,18 @@ class MainStartup {
 		override fun <T> change(factory: ConfigurationFactory<T>, change: (T) -> T) {
 			val file = getFile(factory)
 			file.config = change(file.config)
+
+			file.config?.let { config ->
+				classToListeners[config::class]?.let { listeners ->
+					for (runnable in listeners) {
+						runnable.run()
+					}
+				}
+			}
+		}
+
+		override fun <T : Any> listenTo(clazz: KClass<T>, runnable: Runnable) {
+			classToListeners.computeIfAbsent(clazz) { ArrayList() }.add(runnable)
 		}
 
 		@Suppress("UNCHECKED_CAST")
