@@ -16,9 +16,9 @@ open class MainMenuConfigurationBooleanAction<T>(
 	toolBarText: String? = null,
 	keyStrokeDefault: String? = null,
 	accelerators: Accelerators?,
-	configurationProvider: ConfigurationProvider,
-	configurationFactory: ConfigurationFactory<T>,
-	get: (T) -> Boolean,
+	val configurationProvider: ConfigurationProvider,
+	val configurationFactory: ConfigurationFactory<T>,
+	val get: (T) -> Boolean,
 	set: (T, Boolean) -> T,
 	invoke: (T) -> Unit
 ) :
@@ -29,6 +29,11 @@ open class MainMenuConfigurationBooleanAction<T>(
 
 	init {
 		setSelectable(true)
+
+		updateState()
+	}
+
+	fun updateState() {
 		setSelected(get(configurationProvider.get(configurationFactory)))
 	}
 }
