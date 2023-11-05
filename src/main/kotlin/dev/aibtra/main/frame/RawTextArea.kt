@@ -7,7 +7,6 @@ package dev.aibtra.main.frame
 import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffKind
 import dev.aibtra.text.FilteredText
-import dev.aibtra.text.TextNormalizer
 import java.awt.Color
 import java.awt.Component
 import java.awt.event.ActionEvent
@@ -20,7 +19,7 @@ import javax.swing.text.AttributeSet
 import javax.swing.text.DocumentFilter
 import javax.swing.undo.UndoManager
 
-class RawTextArea(environment: Environment) {
+class RawTextArea(private val textInitializer: TextInitializer, environment: Environment) {
 	private val textArea: JTextArea
 	private val highlighter: RefinedTextArea.Highlighter
 	private val undoManager: UndoManager
@@ -53,7 +52,7 @@ class RawTextArea(environment: Environment) {
 			it.documentFilter = object : DocumentFilter() {
 				override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
 					val normalized: String = if (pasting && offset == 0 && length == fb.document.length) {
-						normalize(text)
+						textInitializer.initialize(text)
 					}
 					else {
 						text
@@ -120,14 +119,11 @@ class RawTextArea(environment: Environment) {
 	}
 
 	fun setText(text: String) {
-		textArea.text = normalize(text)
+		val initialize = textInitializer.initialize(text)
+		textArea.text = initialize
 		textArea.caretPosition = 0
 
 		undoManager.discardAllEdits()
-	}
-
-	private fun normalize(text: String): String {
-		return TextNormalizer(configurationProvider.get(TextNormalizer.Config)).normalize(text)
 	}
 
 	fun replaceText(from: Int, to: Int, text: String) {
@@ -186,5 +182,9 @@ class RawTextArea(environment: Environment) {
 			DiffKind.GAP_LEFT -> styleGapLeft
 			DiffKind.GAP_RIGHT -> styleGapRight
 		}
+	}
+
+	fun interface TextInitializer {
+		fun initialize(text: String): String
 	}
 }

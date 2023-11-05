@@ -17,25 +17,38 @@ import kotlinx.serialization.Serializable
 
 class DiffManager(
 	initialConfig: Config,
+	private val rawNormalizer: RawNormalizer,
 	coroutineDispatcher: CoroutineDispatcher,
 	private val debugLog: DebugLog
 ) {
 	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
 	private val listeners = ArrayList<(State) -> Unit>()
 
-	private var data: Data = Data(Input("", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0)
+	private var data: Data = Data(Input("", "", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0)
 	val state: State
 		get() = data.state
 
-	fun updateRaw(raw: String, callback: Runnable? = null) {
+	fun updateRaw(raw: String, initial: Boolean = false, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
-			if (it.input.raw == raw && callback == null) {
-				return
+			if (it.input.raw == raw && !initial && callback == null) {
+				return raw
 			}
 
-			updateState(it.input.copy(raw = raw, callback = callback), true, "updateRaw")
+			val rawNormalized : String
+			val rawOrg : String?
+			if (initial) {
+				rawNormalized = rawNormalizer.normalize(raw)
+				rawOrg = raw
+			}
+			else {
+				rawNormalized = raw
+				rawOrg = null
+			}
+
+			updateState(it.input.copy(raw = rawNormalized, rawOrg = rawOrg, callback = callback), true, "updateRaw")
+			return rawNormalized
 		}
 	}
 
@@ -47,7 +60,20 @@ class DiffManager(
 				return
 			}
 
-			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRefined" else null)
+			// Once starting the refinement, this will be no more the "initial" state, hence reset rawOrg
+			updateState(it.input.copy(ref = ref, rawOrg = null, finished = finished), finished, if (finished) "updateRefined" else null)
+		}
+	}
+
+	fun updateInitial(): String? {
+		Ui.assertEdt()
+
+		data.let {
+			val input = it.input
+			val rawOrg = input.rawOrg ?: return null
+			val normalized = rawNormalizer.normalize(rawOrg)
+			updateState(input.copy(raw = normalized, rawOrg = rawOrg), true, "updateInitial")
+			return rawOrg
 		}
 	}
 
@@ -196,7 +222,7 @@ class DiffManager(
 
 	class State(val raw: String, val rawTo: Int, val rawChars: List<DiffChar>, val filtered: FilteredText, val ref: String, val refFormatted: String, val refChars: List<DiffChar>, val blocks: List<DiffBlock>)
 
-	private data class Input(val raw: String, val ref: String, val config: Config, val finished: Boolean, val callback: Runnable?)
+	private data class Input(val raw: String, val rawOrg: String?, val ref: String, val config: Config, val finished: Boolean, val callback: Runnable?)
 
 	private class Data(val input: Input, val state: State, val sequenceId: Int)
 
@@ -239,5 +265,9 @@ class DiffManager(
 				return Config()
 			}
 		}
+	}
+
+	fun interface RawNormalizer {
+		fun normalize(text: String): String
 	}
 }
