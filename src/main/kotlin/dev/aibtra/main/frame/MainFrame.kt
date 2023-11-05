@@ -12,6 +12,7 @@ import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import dev.aibtra.gui.toolbar.ToolBar
 import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.text.TextNormalizer
 import kotlinx.serialization.Serializable
 import java.awt.*
 import java.awt.event.*
@@ -40,11 +41,16 @@ class MainFrame(private val environment: Environment) {
 		frame.iconImage = Icons.LOGO.getImageIcon(true).image
 
 		dialogDisplayer = create(frame)
-		rawTextArea = RawTextArea(environment)
-		refinedTextArea = RefinedTextArea(environment)
 
 		val coroutineDispatcher = environment.coroutineDispatcher
-		diffManager = DiffManager(environment.configurationProvider.get(DiffManager.Config), coroutineDispatcher, environment.debugLog)
+		diffManager = DiffManager(
+			environment.configurationProvider.get(DiffManager.Config), {
+				TextNormalizer(environment.configurationProvider.get(TextNormalizer.Config)).normalize(it)
+			}, coroutineDispatcher, environment.debugLog
+		)
+
+		rawTextArea = RawTextArea({ text -> diffManager.updateRaw(text, initial = true) }, environment)
+		refinedTextArea = RefinedTextArea(environment)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
 			diffManager.updateRaw(rawTextArea.getText())
