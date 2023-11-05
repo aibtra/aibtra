@@ -1,8 +1,6 @@
 # Logo
 
-Generated at:
-
-https://hotpot.ai/s/art-generator/8-0uqBTjEGr26TOhV
+Generated using DALL·E3
 
 # Icons
 
