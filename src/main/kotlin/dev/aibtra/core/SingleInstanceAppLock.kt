@@ -136,6 +136,6 @@ class SingleInstanceAppLock<T>(
 	}
 
 	companion object {
-		private val LOG = Logger.getLogger("singleInstanceAppLock")
+		private val LOG = Logger.getLogger(this::class)
 	}
 }

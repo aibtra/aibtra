@@ -168,7 +168,7 @@ class MainStartup {
 		}
 
 		private fun createLogger(): Logger {
-			return Logger.getLogger("startup")
+			return Logger.getLogger(this::class)
 		}
 	}
 
