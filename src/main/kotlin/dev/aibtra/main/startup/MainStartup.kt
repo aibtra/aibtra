@@ -29,9 +29,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.logging.FileHandler
 import java.util.logging.Formatter
-import java.util.logging.Level
 import java.util.logging.LogRecord
 import javax.swing.JMenuItem
 import javax.swing.JPopupMenu
@@ -71,11 +69,7 @@ class MainStartup {
 		}
 
 		private fun configureLogging(paths: ApplicationPaths) {
-			val logger: java.util.logging.Logger = java.util.logging.Logger.getLogger("")
-			logger.addHandler(FileHandler(paths.settingsPath.resolve("log.txt").toString()).apply {
-				formatter = LogFormatter()
-			})
-			logger.level = Level.INFO
+			Logger.setup(paths.settingsPath.resolve("log.txt"))
 		}
 
 		private fun showMainFrame(environment: Environment) {
