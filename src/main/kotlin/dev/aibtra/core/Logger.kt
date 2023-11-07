@@ -30,10 +30,6 @@ class Logger private constructor(private val logger: Logger) {
 	}
 
 	companion object {
-		fun getLogger(name: String): dev.aibtra.core.Logger {
-			return Logger(Logger.getLogger(name))
-		}
-
 		fun getLogger(kClass: KClass<*>): dev.aibtra.core.Logger {
 			return Logger(Logger.getLogger(kClass.qualifiedName))
 		}
