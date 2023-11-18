@@ -88,7 +88,7 @@ class OpenAIService(private val apiToken: String) {
 							}
 						}
 
-						return
+						Unit
 					}
 				}
 			} catch (ioe: IOException) {
