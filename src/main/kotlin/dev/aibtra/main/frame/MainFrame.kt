@@ -20,7 +20,7 @@ import java.nio.file.Path
 import javax.swing.*
 
 class MainFrame(private val environment: Environment) {
-	private val dialogDisplayer: DialogDisplayer
+	val dialogDisplayer: DialogDisplayer
 	private val frame: JFrame
 	private val rawTextArea: RawTextArea
 	private val refinedTextArea: RefinedTextArea

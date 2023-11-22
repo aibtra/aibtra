@@ -88,6 +88,8 @@ class MainStartup {
 					val frame = MainFrame(environment)
 					frame.show()
 					frame.setText(getContentFromClipboard(environment.paths))
+
+					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, frame.dialogDisplayer).invoke()
 				}
 			}
 		}
