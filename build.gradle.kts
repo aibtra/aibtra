@@ -75,6 +75,10 @@ task("generateBuildProperties") {
     }
 }
 
+tasks.jar {
+    dependsOn("generateBuildProperties")
+}
+
 tasks["generateBuildProperties"].dependsOn("processResources")
 tasks["jpackage"].dependsOn("generateBuildProperties")
 
