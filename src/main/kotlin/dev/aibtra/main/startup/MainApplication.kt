@@ -12,6 +12,7 @@ import java.util.*
 class MainApplication(
 	override val paths: ApplicationPaths,
 	override val configurationProvider: ConfigurationProvider,
+	override val buildInfo: BuildInfo,
 	override val coroutineDispatcher: CoroutineDispatcher,
 	override val systemTrayEnabled: Boolean
 ) : Environment {

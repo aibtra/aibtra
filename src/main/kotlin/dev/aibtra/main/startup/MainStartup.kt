@@ -46,14 +46,16 @@ class MainStartup {
 
 			FlatDarkLaf.setup() // required for very early (error dialogs) and to properly initialize the default font size
 			GlobalExceptionHandler.install()
-			logBuildProperties(paths)
+
+			val buildInfo = BuildInfo.load()
+			createLogger().info(paths.appName + " build " + buildInfo.sha + " from " + buildInfo.instant)
 
 			val settingsPath = paths.settingsPath
 			SingleInstanceAppLock(settingsPath, {
 				val coroutineDispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher()
 				val configurationProvider = ConfigurationProvider(settingsPath, DialogDisplayer.createGlobal())
 				val systemTrayEnabled = checkSystemTrayEnabled(configurationProvider)
-				val application = MainApplication(paths, configurationProvider, coroutineDispatcher, systemTrayEnabled)
+				val application = MainApplication(paths, configurationProvider, buildInfo, coroutineDispatcher, systemTrayEnabled)
 				application.theme.update()
 
 				SwingUtilities.invokeAndWait {
@@ -66,19 +68,6 @@ class MainStartup {
 
 				showMainFrame(application)
 			}).startup(COMMAND_SHOW)
-		}
-
-		private fun logBuildProperties(paths: ApplicationPaths) {
-			MainStartup::class.java.getResourceAsStream("/build.properties").use {
-				val properties = Properties()
-				if (it != null) {
-					properties.load(it)
-				}
-
-				val sha = properties.getProperty("sha") ?: "<unknown>"
-				val instant = properties.getProperty("time") ?: "unknown"
-				createLogger().info(paths.appName + " build " + sha + " from " + instant)
-			}
 		}
 
 		private fun configureLogging(paths: ApplicationPaths) {

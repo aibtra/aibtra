@@ -15,6 +15,7 @@ interface Environment {
 	val configurationProvider: ConfigurationProvider
 	val theme: Theme
 	val frameManager: FrameManager
+	val buildInfo: BuildInfo
 	val timer: Timer
 	val coroutineDispatcher: CoroutineDispatcher
 	val systemTrayEnabled: Boolean
