@@ -12,6 +12,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.EmptyCoroutineContext
@@ -32,18 +34,24 @@ class SequentialRunnerTest {
 
 		val mainThread = Thread.currentThread()
 		val random = Random(0)
+		val state = AtomicInteger()
+		val semaphore = Semaphore(0)
 		for (i in 0 until RUNS) {
 			Thread.sleep(random.nextLong(10))
 			runner.schedule(object : Run {
 				override suspend fun invoke(callback: Callback, p2: CoroutineScope) {
 					Assertions.assertTrue(Thread.currentThread() != mainThread)
 					@Suppress("BlockingMethodInNonBlockingContext")
-					Thread.sleep(random.nextLong(10))
+					Thread.sleep(random.nextLong(100))
 
 					Assertions.assertEquals(threadDispatcher, coroutineContext[ContinuationInterceptor])
 
 					callback {
 						Assertions.assertEquals(mainDispatcher, coroutineContext[ContinuationInterceptor])
+						Assertions.assertTrue(state.getAndSet(i) < i)
+						if (i == RUNS - 1) {
+							semaphore.release()
+						}
 					}
 				}
 			}, true)
@@ -52,6 +60,12 @@ class SequentialRunnerTest {
 		failure.get()?.let {
 			throw it
 		}
+
+		while (!semaphore.tryAcquire()) {
+			Thread.sleep(random.nextLong(10))
+		}
+
+		Assertions.assertEquals(RUNS - 1, state.get())
 	}
 
 	companion object {

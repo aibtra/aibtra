@@ -6,6 +6,7 @@ package dev.aibtra.gui
 
 import dev.aibtra.core.GlobalExceptionHandler
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.EmptyCoroutineContext
 
 typealias Update = suspend () -> Unit
@@ -27,13 +28,18 @@ class SequentialRunner(private val mainScope: CoroutineScope, private val mainDi
 				}
 			}
 
-			currentJob = launchSafe(threadScope, threadDispatcher, exceptionHandle) {
+			val job = AtomicReference<Job>()
+			job.set(launchSafe(threadScope, threadDispatcher, exceptionHandle) {
 				run({ update: Update ->
 					launchSafe(mainScope, mainDispatcher, exceptionHandle) {
-						update()
+						if (job.get() == currentJob) {
+							update()
+						}
 					}
 				}, this)
-			}
+			})
+
+			currentJob = job.get()
 		}
 	}
 
