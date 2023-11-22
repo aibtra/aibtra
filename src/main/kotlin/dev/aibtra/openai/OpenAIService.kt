@@ -4,6 +4,8 @@
 
 package dev.aibtra.openai
 
+import dev.aibtra.core.JsonUtils
+import dev.aibtra.core.JsonUtils.Companion.objNotNull
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
@@ -135,30 +137,13 @@ class OpenAIService(private val apiToken: String) {
 
 			val choice = requireNotNull(choices[0])
 			val messageOut = objNotNull<JSONObject>(choice, "delta")
-			if (objMaybeNull<String>(choice, "finish_reason") == null) {
+			if (JsonUtils.objMaybeNull<String>(choice, "finish_reason") == null) {
 				val message = objNotNull<Any>(messageOut, "content")
 				builder.append(message)
 				callback(Result(builder))
 			}
 			else {
 				false
-			}
-		}
-	}
-
-	private fun <T> objNotNull(input: Any, key: String): T {
-		return objMaybeNull<T>(input, key) ?: throw IOException("'$key' does not exist")
-	}
-
-	private fun <T> objMaybeNull(input: Any, key: String): T? {
-		return (input as? JSONObject)?.let {
-			val value = it[key]
-			if (value == null) {
-				null
-			}
-			else {
-				@Suppress("UNCHECKED_CAST")
-				(value as? T) ?: throw IOException("'$key' is of wrong type")
 			}
 		}
 	}
