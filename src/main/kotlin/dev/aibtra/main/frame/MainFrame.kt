@@ -44,7 +44,7 @@ class MainFrame(private val environment: Environment) {
 		refinedTextArea = RefinedTextArea(environment)
 
 		val coroutineDispatcher = environment.coroutineDispatcher
-		diffManager = DiffManager(environment.configurationProvider.get(DiffManager.Config), coroutineDispatcher)
+		diffManager = DiffManager(environment.configurationProvider.get(DiffManager.Config), coroutineDispatcher, environment.debugLog)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
 			diffManager.updateRaw(rawTextArea.getText())

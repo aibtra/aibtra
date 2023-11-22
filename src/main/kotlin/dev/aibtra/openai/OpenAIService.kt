@@ -5,6 +5,7 @@
 package dev.aibtra.openai
 
 import dev.aibtra.core.JsonUtils
+import dev.aibtra.core.DebugLog
 import dev.aibtra.core.JsonUtils.Companion.objNotNull
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
@@ -18,7 +19,7 @@ import java.net.URL
 import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
-class OpenAIService(private val apiToken: String) {
+class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
 	fun request(model: String, instructions: String, text: String, streaming: Boolean, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = model
@@ -43,71 +44,77 @@ class OpenAIService(private val apiToken: String) {
 			connection.addRequestProperty("Authorization", "Bearer $apiToken")
 			connection.addRequestProperty("Content-Type", "application/json")
 
-			val jsonInput = input.toJSONString()
-			try {
-				connection.outputStream.use { output ->
-					output.write(jsonInput.toByteArray(StandardCharsets.UTF_8))
-					output.flush()
+			debugLog.run("openai") { log: DebugLog.Log, _: Boolean ->
+				val jsonInput = input.toJSONString()
+				try {
+					connection.outputStream.use { output ->
+						output.write(jsonInput.toByteArray(StandardCharsets.UTF_8))
+						output.flush()
 
-					connection.inputStream.use { input ->
-						if (streaming) {
-							val reader = BufferedReader(InputStreamReader(input, StandardCharsets.UTF_8))
-							val builder = StringBuilder()
-							while (true) {
-								val line = reader.readLine() ?: break
-								if (line.startsWith("data: ")) {
-									val data = line.substring(6)
-									if (data == "[DONE]") {
-										break
-									}
+						connection.inputStream.use { input ->
+							if (streaming) {
+								val reader = BufferedReader(InputStreamReader(input, StandardCharsets.UTF_8))
+								val builder = StringBuilder()
+								while (true) {
+									val line = reader.readLine() ?: break
+									log.println(line)
 
-									if (!parseDataChunk(data, builder, callback)) {
-										break
+									if (line.startsWith("data: ")) {
+										val data = line.substring(6)
+										if (data == "[DONE]") {
+											break
+										}
+
+										if (!parseDataChunk(data, builder, callback)) {
+											break
+										}
 									}
+								}
+
+								if (ensureTrailingNewlines(text, builder)) {
+									callback(Result(builder))
+								}
+							}
+							else {
+								InputStreamReader(input, StandardCharsets.UTF_8).use {
+									val parser = JSONParser()
+									val result = parser.parse(it)
+									log.println(result.toString())
+
+									val choices = objNotNull<JSONArray>(result, "choices")
+									if (choices.size != 1) {
+										throw IOException("Unexpected number of 'choices'")
+									}
+									val choice = requireNotNull(choices[0])
+									val messageOut = objNotNull<JSONObject>(choice, "message")
+									val message = objNotNull<String>(messageOut, "content")
+									val builder = StringBuilder(message)
+									ensureTrailingNewlines(text, builder)
+									callback(Result(builder))
 								}
 							}
 
-							if (ensureTrailingNewlines(text, builder)) {
-								callback(Result(builder))
+							Unit
+						}
+					}
+				} catch (ioe: IOException) {
+					val parser = JSONParser()
+					val mightBeAuthentication = connection.responseCode in AUTHENTICATION_RELATED_RESPONSE_CODES
+					connection.errorStream?.let { errorStream ->
+						(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
+							(result["error"] as? JSONObject)?.let { error ->
+								(error["message"] as? String)?.let { message ->
+									callback(Result(null, Pair(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)))
+								}
 							}
+						}
+					} ?: run {
+						if (ioe is UnknownHostException) {
+							callback(Result(null, Pair(IOException("Unknown host: ${ioe.message}"), false)))
 						}
 						else {
-							InputStreamReader(input, StandardCharsets.UTF_8).use {
-								val parser = JSONParser()
-								val result = parser.parse(it)
-								val choices = objNotNull<JSONArray>(result, "choices")
-								if (choices.size != 1) {
-									throw IOException("Unexpected number of 'choices'")
-								}
-								val choice = requireNotNull(choices[0])
-								val messageOut = objNotNull<JSONObject>(choice, "message")
-								val message = objNotNull<String>(messageOut, "content")
-								val builder = StringBuilder(message)
-								ensureTrailingNewlines(text, builder)
-								callback(Result(builder))
-							}
+							callback(Result(null, Pair(ioe, mightBeAuthentication)))
 						}
-
-						Unit
-					}
-				}
-			} catch (ioe: IOException) {
-				val parser = JSONParser()
-				val mightBeAuthentication = connection.responseCode in AUTHENTICATION_RELATED_RESPONSE_CODES
-				connection.errorStream?.let { errorStream ->
-					(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
-						(result["error"] as? JSONObject)?.let { error ->
-							(error["message"] as? String)?.let { message ->
-								callback(Result(null, Pair(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)))
-							}
-						}
-					}
-				} ?: run {
-					if (ioe is UnknownHostException) {
-						callback(Result(null, Pair(IOException("Unknown host: ${ioe.message}"), false)))
-					}
-					else {
-						callback(Result(null, Pair(ioe, mightBeAuthentication)))
 					}
 				}
 			}
