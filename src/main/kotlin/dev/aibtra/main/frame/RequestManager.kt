@@ -21,7 +21,7 @@ class RequestManager(
 	coroutineDispatcher: CoroutineDispatcher,
 	private val dialogDisplayer: DialogDisplayer
 ) {
-	private val sequentialRunner = SequentialRunner(coroutineDispatcher)
+	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
 	private val inProgressListeners = ArrayList<InProgressListener>()
 	private val currentRun: AtomicReference<Run?> = AtomicReference(null)
 	var inProgress = false

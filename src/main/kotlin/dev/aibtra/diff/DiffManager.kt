@@ -20,7 +20,7 @@ class DiffManager(
 	coroutineDispatcher: CoroutineDispatcher,
 	private val debugLog: DebugLog
 ) {
-	private val sequentialRunner = SequentialRunner(coroutineDispatcher)
+	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
 	private val listeners = ArrayList<(State) -> Unit>()
 
 	private var data: Data = Data(Input("", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0)
