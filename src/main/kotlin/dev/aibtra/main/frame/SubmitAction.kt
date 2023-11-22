@@ -18,7 +18,7 @@ class SubmitAction(
 	environment: Environment,
 	requestManager: RequestManager,
 	dialogDisplayer: DialogDisplayer,
-	profile: () -> OpenAIConfiguration.Profile
+	profile: () -> OpenAIConfiguration.Profile,
 ) :
 	MainMenuAction("submit", "Submit", Icons.SUBMIT, "Submit", null, environment.accelerators, ActionRunnable { action -> (action as SubmitAction).worker.run() }) {
 
@@ -70,7 +70,7 @@ class SubmitAction(
 			require(apiToken != null) { "API token must not be null" }
 
 			val profile = profile()
-			val service = OpenAIService(apiToken)
+			val service = OpenAIService(apiToken, environment.debugLog)
 			requestManager.schedule { input: String, callback: RequestManager.OpCallback ->
 				service.request(profile.model, profile.instructions, input, true) { result ->
 					result.content?.let {

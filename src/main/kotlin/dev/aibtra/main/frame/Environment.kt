@@ -5,6 +5,7 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
+import dev.aibtra.core.DebugLog
 import kotlinx.coroutines.CoroutineDispatcher
 import java.util.*
 
@@ -19,4 +20,5 @@ interface Environment {
 	val timer: Timer
 	val coroutineDispatcher: CoroutineDispatcher
 	val systemTrayEnabled: Boolean
+	val debugLog: DebugLog
 }
