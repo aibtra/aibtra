@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.logging.FileHandler
 import java.util.logging.Level
+import java.util.logging.LogManager
 import java.util.logging.Logger
 import kotlin.reflect.KClass
 
@@ -45,12 +46,20 @@ class Logger private constructor(private val logger: Logger) {
 		fun setup(logFile: Path) {
 			this.logFile = logFile
 
+			val configFile = logFile.parent.resolve("logger.properties")
+			if (Files.isRegularFile(configFile)) {
+				System.setProperty("java.util.logging.config.file", configFile.toString())
+				LogManager.getLogManager().readConfiguration()
+			}
+			else {
+				Logger.getLogger("").level = Level.INFO
+			}
+
 			val logger: Logger = Logger.getLogger("")
 			fileHandler = FileHandler(logFile.toString()).apply {
 				formatter = MainStartup.LogFormatter()
 			}
 			logger.addHandler(fileHandler)
-			logger.level = Level.INFO
 		}
 
 		fun backup(prefix: String) {
