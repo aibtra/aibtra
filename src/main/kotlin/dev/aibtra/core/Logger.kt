@@ -15,6 +15,10 @@ import java.util.logging.Logger
 import kotlin.reflect.KClass
 
 class Logger private constructor(private val logger: Logger) {
+	fun debug(message: String?) {
+		logger.log(Level.FINE, message)
+	}
+
 	fun info(message: String?) {
 		logger.log(Level.INFO, message)
 	}
