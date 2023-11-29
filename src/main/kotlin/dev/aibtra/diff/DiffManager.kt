@@ -6,6 +6,7 @@ package dev.aibtra.diff
 
 import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.core.DebugLog
+import dev.aibtra.core.Logger
 import dev.aibtra.gui.Callback
 import dev.aibtra.gui.Run
 import dev.aibtra.gui.SequentialRunner
@@ -94,6 +95,8 @@ class DiffManager(
 	}
 
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
+		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
+
 		val lastState = data.state
 		data = Data(input, lastState, data.sequenceId + 1)
 		if (debugOperationName != null) {
@@ -104,6 +107,8 @@ class DiffManager(
 
 		sequentialRunner.schedule(object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
+				LOG.debug("updateState (run): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
+
 				val raw = input.raw
 				val ref = input.ref
 				val config = input.config
@@ -227,6 +232,8 @@ class DiffManager(
 	private class Data(val input: Input, val state: State, val sequenceId: Int)
 
 	companion object {
+		private val LOG = Logger.getLogger(this::class)
+
 		fun getSelectedBlocksFromRefined(state: State, range: IntRange): List<DiffBlock> {
 			require(range.first >= 0 && range.last < state.refFormatted.length)
 
