@@ -99,16 +99,16 @@ class MainFrame(private val environment: Environment) {
 
 	fun show() {
 		val layout = environment.configurationProvider.get(Layout)
+		frame.preferredSize = Dimension(layout.width, layout.height)
+		layout.x?.let { x ->
+			layout.y?.let { y ->
+				frame.location = Point(x, y)
+			}
+		}
+		frame.pack()
+
 		if (layout.maximized) {
 			frame.extendedState = Frame.MAXIMIZED_BOTH
-		}
-		else {
-			layout.x?.let { x ->
-				layout.y?.let { y ->
-					frame.location = Point(x, y)
-				}
-			}
-			frame.preferredSize = Dimension(layout.width, layout.height)
 		}
 
 		val menubar = JMenuBar()
@@ -142,9 +142,6 @@ class MainFrame(private val environment: Environment) {
 		fillContent(centerPane)
 
 		frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-		if (!layout.maximized) {
-			frame.pack()
-		}
 		frame.isVisible = true
 
 		environment.frameManager.register(this, frame, !environment.systemTrayEnabled)
