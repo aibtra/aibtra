@@ -1,0 +1,4 @@
+[bugtraq "github"]
+  url = https://github.com/aibtra/aibtra/issues/%BUGID%
+  loglinkregex = "#\\d+"
+  logregex = \\d+
