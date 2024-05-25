@@ -4,9 +4,12 @@
 
 package dev.aibtra.main.frame
 
+import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffManager
+import java.awt.Robot
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.awt.event.KeyEvent
 import javax.swing.JFrame
 
 class CopyAndCloseAction(
@@ -14,6 +17,7 @@ class CopyAndCloseAction(
 	requestManager: RequestManager,
 	diffManager: DiffManager,
 	rawTextArea: RawTextArea,
+	configurationProvider: ConfigurationProvider,
 	frame: JFrame
 ) :
 	MainMenuAction("copyAndClose", "Copy and Close", Icons.COPY, "Copy and Close", null, environment.accelerators, {
@@ -22,6 +26,14 @@ class CopyAndCloseAction(
 		val clipboard = Toolkit.getDefaultToolkit().systemClipboard
 		clipboard.setContents(selection, selection)
 		frame.dispose()
+
+		if (configurationProvider.get(GuiConfiguration).pasteOnClose) {
+			val robot = Robot()
+			robot.keyPress(KeyEvent.VK_CONTROL)
+			robot.keyPress(KeyEvent.VK_V)
+			robot.keyRelease(KeyEvent.VK_V)
+			robot.keyRelease(KeyEvent.VK_CONTROL)
+		}
 	}) {
 
 	init {

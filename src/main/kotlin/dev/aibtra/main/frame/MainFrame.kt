@@ -37,7 +37,6 @@ class MainFrame(private val environment: Environment) {
 	private val toggleFilterMarkdownAction: MainMenuAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
-	private val toggleHotkeyAction: ToggleHotkeyAction
 
 	init {
 		frame = JFrame("Aibtra 1.0 alpha")
@@ -91,12 +90,11 @@ class MainFrame(private val environment: Environment) {
 		val submitAction = SubmitAction(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
 		this.submitAction = submitAction
 		applyChangeAction = ApplyChangeAction(refinedTextArea, rawTextArea, diffManager, environment.accelerators)
-		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, frame)
+		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
 		pasteAndSubmitAction = PasteAndSubmitAction(environment, requestManager, diffManager, rawTextArea, submitAction)
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, environment.configurationProvider, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, environment.configurationProvider, environment.accelerators)
 		toggleDarkModeAction = ToggleDarkModeAction(environment.theme, environment.configurationProvider, environment.accelerators)
-		toggleHotkeyAction = ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer)
 	}
 
 	fun show() {
@@ -299,7 +297,8 @@ class MainFrame(private val environment: Environment) {
 		editMenu.addSeparator()
 		addAction(editMenu, toggleFilterMarkdownAction)
 		editMenu.addSeparator()
-		addAction(editMenu, toggleHotkeyAction)
+		addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
+		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
 		menuBar.add(editMenu)
 
 		val viewMenu = JMenu("View")
