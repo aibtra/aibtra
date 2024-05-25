@@ -28,6 +28,7 @@ class MainFrame(private val environment: Environment) {
 	private val refinedTextArea: RefinedTextArea
 	private val diffManager: DiffManager
 	private val requestManager: RequestManager
+	private val submitter: Submitter
 	private val submitAction: MainMenuAction
 	private val applyChangeAction: MainMenuAction
 	private val copyAndCloseAction: MainMenuAction
@@ -86,8 +87,9 @@ class MainFrame(private val environment: Environment) {
 
 		schemeComboBox = createSchemeComboBox()
 		profileComboBox = createProfileComboBox()
+		submitter = Submitter(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
 
-		val submitAction = SubmitAction(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
+		val submitAction = SubmitAction(environment, requestManager, submitter)
 		this.submitAction = submitAction
 		applyChangeAction = ApplyChangeAction(refinedTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
@@ -297,6 +299,8 @@ class MainFrame(private val environment: Environment) {
 		editMenu.addSeparator()
 		addAction(editMenu, toggleFilterMarkdownAction)
 		editMenu.addSeparator()
+		addAction(editMenu, ToggleSubmitOnInvocationAction(environment.configurationProvider, environment.accelerators))
+		editMenu.addSeparator()
 		addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
 		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
 		menuBar.add(editMenu)
@@ -333,6 +337,17 @@ class MainFrame(private val environment: Environment) {
 
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
 			diffManager.updateRefined(Files.readString(Path.of(it)), true)
+		}
+
+		if (environment.configurationProvider.get(GuiConfiguration).submitOnInvocation &&
+			rawTextArea.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
+
+			var listener: ((DiffManager.State) -> Unit)? = null
+			listener = {
+				diffManager.removeListener(listener!!)
+				submitter.run()
+			}
+			diffManager.addListener(listener)
 		}
 	}
 
