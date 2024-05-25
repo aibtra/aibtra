@@ -28,7 +28,8 @@ data class GuiConfiguration(
 	val darkTheme: Boolean = true, // Dark mode is in general preferred by programmers: https://css-tricks.com/poll-results-light-on-dark-is-preferred/
 	val systemTray: Boolean = true,
 	val hotkeyEnabled: Boolean = false,
-	val pasteOnClose: Boolean = false
+	val pasteOnClose: Boolean = false,
+	val submitOnInvocation: Boolean = false
 ) {
 	@Serializable
 	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
