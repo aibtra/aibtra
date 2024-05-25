@@ -37,19 +37,31 @@ class DiffManager(
 				return raw
 			}
 
-			val rawNormalized : String
-			val rawOrg : String?
-			if (initial) {
-				rawNormalized = rawNormalizer.normalize(raw)
-				rawOrg = raw
+			// For the "initial" call, we are backing up raw to rawOrg,
+			// for all subsequent calls we are reusing this backup.
+			val rawOrg : String? = if (initial) {
+				raw
 			}
 			else {
-				rawNormalized = raw
-				rawOrg = null
+				it.input.rawOrg
 			}
 
-			updateState(it.input.copy(raw = rawNormalized, rawOrg = rawOrg, callback = callback), true, "updateRaw")
-			return rawNormalized
+			// We will apply the normalization as long as the raw text has not been manually changed.
+			// As long as there is no manual change, the raw text will be equal to the normalized version of rawOrg.
+			// If the raw text is not equal anymore, there must definitely have been a manual change.
+			// On the other hand, we will only overlook a manual change if the user manually normalizes the raw text to exactly the same as the normalized version of rawOrg.
+			// It is reasonable to continue normalizing after such kind of a change.
+			val rawNormalized : String = rawNormalizer.normalize(raw)
+			val rawOrgNormalized : String? = rawOrg?.let { rawNormalizer.normalize(rawOrg) }
+			val (rawNew, rawOrgNew) = if (rawNormalized == rawOrgNormalized) {
+				Pair(rawNormalized, rawOrg)
+			}
+			else {
+				Pair(raw, null)
+			}
+
+			updateState(it.input.copy(raw = rawNew, rawOrg = rawOrgNew, callback = callback), true, "updateRaw")
+			return rawNew
 		}
 	}
 
@@ -62,7 +74,7 @@ class DiffManager(
 			}
 
 			// Once starting the refinement, this will be no more the "initial" state, hence reset rawOrg
-			updateState(it.input.copy(ref = ref, rawOrg = null, finished = finished), finished, if (finished) "updateRefined" else null)
+			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRefined" else null)
 		}
 	}
 
