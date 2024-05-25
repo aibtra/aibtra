@@ -23,7 +23,7 @@ data class OpenAIConfiguration(
 			PROOFREAD_3_5, "gpt-3.5-turbo",
 			"Correct typos and grammar in the markdown following " +
 					"AND stay as close as possible to the original " +
-					"AND preserve block quotes and code block " +
+					"AND preserve block quotes and code blocks " +
 					"AND preserve the detected language:"
 		)
 
