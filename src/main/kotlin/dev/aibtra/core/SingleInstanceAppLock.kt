@@ -4,6 +4,7 @@
 
 package dev.aibtra.core
 
+import dev.aibtra.gui.Ui
 import java.io.RandomAccessFile
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -108,7 +109,7 @@ class SingleInstanceAppLock<T>(
 		// The other instance may just be starting up. Let's give it some time to create the port file after having created the lock file.
 		var existsChecks = 0
 		while (existsChecks < 10 && !Files.exists(portFile)) {
-			Thread.sleep(100)
+			Ui.sleepSafe(100)
 			existsChecks++
 		}
 
