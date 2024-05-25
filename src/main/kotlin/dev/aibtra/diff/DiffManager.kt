@@ -96,6 +96,12 @@ class DiffManager(
 		listeners.add(listener)
 	}
 
+	fun removeListener(listener: (State) -> Unit) {
+		Ui.assertEdt()
+
+		listeners.remove(listener)
+	}
+
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
 		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
 
