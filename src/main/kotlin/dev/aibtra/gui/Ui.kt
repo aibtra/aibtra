@@ -19,6 +19,13 @@ object Ui {
 		}
 	}
 
+	fun sleepSafe(millis: Long) {
+		try {
+			Thread.sleep(millis)
+		} catch (_: InterruptedException) {
+		}
+	}
+
 	fun createButton(action: DefaultAction): JButton {
 		require(!action.isSelectable())
 
