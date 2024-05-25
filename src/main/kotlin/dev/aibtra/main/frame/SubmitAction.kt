@@ -49,7 +49,7 @@ class SubmitAction(
 				OkCancelDialog("API Token") {
 					val panel = Panel(5, 3)
 					val width = if (GuiConfiguration.Fonts.DEFAULT_FONT_SIZE < 16) 400 else 800
-					panel.add(JLabel("<html><body style='width: $width'>You have to provide an API token to access the OpenAI API. The token will be <b>stored in plaintext</b> in a configuration file on your local disk!</body></html>"), 0, 0, span = 3)
+					panel.add(JLabel("<html><body style='width: $width'>Please provide an API token to access the OpenAI API.<br><br>It's recommended to create a dedicated token for this purpose to track usage. The token will be <b>stored in plaintext</b> in a configuration file on your local disk!</body></html>"), 0, 0, span = 3)
 
 					val editor = Editor.password("Token")
 					panel.add(editor, 2, 0)
