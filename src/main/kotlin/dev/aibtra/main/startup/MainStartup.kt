@@ -150,13 +150,19 @@ class MainStartup {
 			}
 
 			val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-			if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
+			for (tries in 0..3) {
 				try {
-					return clipboard.getData(DataFlavor.stringFlavor) as String
-				} catch (e: UnsupportedFlavorException) {
-					createLogger().error(e)
-				} catch (ioe: IOException) {
-					createLogger().error(ioe)
+					if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
+						try {
+							return clipboard.getData(DataFlavor.stringFlavor) as String
+						} catch (e: UnsupportedFlavorException) {
+							createLogger().error(e)
+						} catch (ioe: IOException) {
+							createLogger().error(ioe)
+						}
+					}
+				} catch (e: IllegalStateException) {
+					Ui.sleepSafe(50)
 				}
 			}
 
