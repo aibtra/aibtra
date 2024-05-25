@@ -91,6 +91,8 @@ class DiffManager(
 	}
 
 	fun addListener(listener: (State) -> Unit) {
+		Ui.assertEdt()
+
 		listeners.add(listener)
 	}
 
