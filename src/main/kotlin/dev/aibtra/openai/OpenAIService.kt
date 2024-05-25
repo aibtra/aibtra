@@ -126,6 +126,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 	private fun applyFixes(content: String, result: StringBuilder): Boolean {
 		var changed = false
 		changed = changed or ensureTrailingNewlines(content, result)
+		changed = changed or dropMarkdownPrefix(content, result)
 		return changed
 	}
 
@@ -137,6 +138,28 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 
 		result.append("\n".repeat(inputCount - resultCount))
+		return true
+	}
+
+	private fun dropMarkdownPrefix(content: String, result: StringBuilder): Boolean {
+		if (content.startsWith("```")) {
+			return false
+		}
+
+		// First process more specific, then more general prefix/suffix combinations
+		return removePrefixSuffix(result, MARKDOWN_PREFIX_1, MARKDOWN_SUFFIX_2) ||
+						removePrefixSuffix(result, MARKDOWN_PREFIX_1, MARKDOWN_SUFFIX_1) ||
+						removePrefixSuffix(result, MARKDOWN_PREFIX_2, MARKDOWN_SUFFIX_2) ||
+						removePrefixSuffix(result, MARKDOWN_PREFIX_2, MARKDOWN_SUFFIX_1)
+	}
+
+	private fun removePrefixSuffix(result: StringBuilder, prefix: String, suffix: String): Boolean {
+		if (!result.startsWith(prefix) || !result.endsWith(suffix)) {
+			return false
+		}
+
+		result.replace(0, prefix.length, "")
+		result.replace(result.length - suffix.length, result.length, "")
 		return true
 	}
 
@@ -166,5 +189,9 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 
 	companion object {
 		val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
+		const val MARKDOWN_PREFIX_1 = "```markdown\n"
+		const val MARKDOWN_PREFIX_2 = "```\n"
+		const val MARKDOWN_SUFFIX_1 = "\n```"
+		const val MARKDOWN_SUFFIX_2 = "\n```\n"
 	}
 }
