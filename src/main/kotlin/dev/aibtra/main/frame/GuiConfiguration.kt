@@ -8,7 +8,7 @@ package dev.aibtra.main.frame
 
 import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationFactory
-import dev.aibtra.main.startup.MainStartup
+import dev.aibtra.gui.Ui
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -25,7 +25,9 @@ import javax.swing.JLabel
 data class GuiConfiguration(
 	val fonts: Fonts = Fonts(),
 	val darkTheme: Boolean = true, // Dark mode is in general preferred by programmers: https://css-tricks.com/poll-results-light-on-dark-is-preferred/
-	val systemTray: Boolean = true
+	val systemTray: Boolean = true,
+	val hotkeyEnabled: Boolean = false,
+	val hotkeyStroke: String = "shift alt pressed R"
 ) {
 	@Serializable
 	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
@@ -46,6 +48,13 @@ data class GuiConfiguration(
 		fun isSystemTraySupported(): Boolean {
 			return SystemTray.isSupported()
 					&& SystemInfo.isWindows // The tray works reliably only on Windows; for example, on macOS, double-clicking the application icon does not work
+		}
+
+		fun isHotkeySupported(): Boolean {
+			return SystemInfo.isWindows
+							// GlobalScreen may slow down machine significantly in Debug mode, e.g. after a break point has been hit:
+							// the mouse cursor lags extremely behind.
+							&& !Ui.isDebugging()
 		}
 	}
 

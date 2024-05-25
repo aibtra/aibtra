@@ -37,6 +37,7 @@ class MainFrame(private val environment: Environment) {
 	private val toggleFilterMarkdownAction: MainMenuAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
+	private val toggleHotkeyAction: ToggleHotkeyAction
 
 	init {
 		frame = JFrame("Aibtra 1.0 alpha")
@@ -95,6 +96,7 @@ class MainFrame(private val environment: Environment) {
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, environment.configurationProvider, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, environment.configurationProvider, environment.accelerators)
 		toggleDarkModeAction = ToggleDarkModeAction(environment.theme, environment.configurationProvider, environment.accelerators)
+		toggleHotkeyAction = ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer)
 	}
 
 	fun show() {
@@ -296,6 +298,8 @@ class MainFrame(private val environment: Environment) {
 		addAction(editMenu, pasteAndSubmitAction)
 		editMenu.addSeparator()
 		addAction(editMenu, toggleFilterMarkdownAction)
+		editMenu.addSeparator()
+		addAction(editMenu, toggleHotkeyAction)
 		menuBar.add(editMenu)
 
 		val viewMenu = JMenu("View")
