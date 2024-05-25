@@ -71,7 +71,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									}
 								}
 
-								if (ensureTrailingNewlines(text, builder)) {
+								if (applyFixes(text, builder)) {
 									callback(Result(builder))
 								}
 							}
@@ -89,7 +89,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val messageOut = objNotNull<JSONObject>(choice, "message")
 									val message = objNotNull<String>(messageOut, "content")
 									val builder = StringBuilder(message)
-									ensureTrailingNewlines(text, builder)
+									applyFixes(text, builder)
 									callback(Result(builder))
 								}
 							}
@@ -121,6 +121,12 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		} finally {
 			connection.disconnect()
 		}
+	}
+
+	private fun applyFixes(content: String, result: StringBuilder): Boolean {
+		var changed = false
+		changed = changed or ensureTrailingNewlines(content, result)
+		return changed
 	}
 
 	private fun ensureTrailingNewlines(content: String, result: StringBuilder): Boolean {
