@@ -155,7 +155,7 @@ class DiffManager(
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
 
-					listeners.forEach { it(state) }
+					listeners.toList().forEach { it(state) }
 				}
 			}
 		}, forceUpdate)
