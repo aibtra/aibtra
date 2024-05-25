@@ -33,4 +33,12 @@ object Ui {
 		button.addActionListener(action)
 		return button
 	}
+
+	fun isDebugging(): Boolean {
+		return try {
+			java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("-agentlib:jdwp") > 0
+		} catch (e: NoClassDefFoundError) { // Default case when deployed
+			false
+		}
+	}
 }
