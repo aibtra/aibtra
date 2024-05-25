@@ -26,7 +26,7 @@ class CopyAndCloseAction(
 
 	init {
 		fun updateEnabledState() {
-			isEnabled = diffManager.state.ref.isNotBlank() && !requestManager.inProgress
+			isEnabled = !requestManager.inProgress
 		}
 
 		requestManager.addProgressListener {
