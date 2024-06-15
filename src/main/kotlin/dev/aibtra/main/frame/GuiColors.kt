@@ -32,7 +32,7 @@ data class GuiColors(
 			private val LIGHT_GREEN = Color(0x90, 0xEE, 0x90)
 			private val LIGHT_RED = Color(0xFF, 0x80, 0x80)
 			private val DARK_GREEN = Color(0x25, 0xA6, 0x25)
-			private val DARK_RED = Color(0xAB, 0x1A, 0x1A)
+			private val DARK_RED = Color(0xC6, 0x28, 0x28)
 
 			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_GREEN, LIGHT_RED)
 			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_GREEN, DARK_RED)
