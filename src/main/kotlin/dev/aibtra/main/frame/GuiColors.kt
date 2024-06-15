@@ -8,6 +8,7 @@ package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationFactory
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -19,27 +20,30 @@ import java.awt.Color
 
 @Serializable
 data class GuiColors(
-	val light: Colors = Colors.DEFAULTS_LIGHT,
-	val dark: Colors = Colors.DEFAULTS_DARK,
+	@SerialName("light.2") val light: Colors = Colors.DEFAULTS_LIGHT,
+	@SerialName("dark.2") val dark: Colors = Colors.DEFAULTS_DARK,
 ) {
 
 	@Serializable
 	data class Colors(
 		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundRemoved: Color, val rawBackgroundRemovedShadow: Color,
 		val refinedBackgroundModified: Color, val refinedBackgroundAdded: Color, val refinedBackgroundRemoved: Color, val refinedBackgroundRemovedShadow: Color,
+		val textColor: Color,
 	) {
 		companion object {
 			private val LIGHT_GREEN = Color(0x90, 0xEE, 0x90)
 			private val LIGHT_GREEN_SHADOW = Color(0x90, 0xEE, 0x90, SHADOW_ALPHA)
 			private val LIGHT_RED = Color(0xFF, 0x80, 0x80)
 			private val LIGHT_RED_SHADOW = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
+			private val LIGHT_TEXT = Color(0x10, 0x10, 0x10)
 			private val DARK_GREEN = Color(0x25, 0xA6, 0x25)
 			private val DARK_GREEN_SHADOW = Color(0x25, 0xA6, 0x25, SHADOW_ALPHA)
 			private val DARK_RED = Color(0xC6, 0x28, 0x28)
 			private val DARK_RED_SHADOW = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
+			private val DARK_TEXT = Color(0xCC, 0xCC, 0xCC)
 
-			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_SHADOW)
-			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED_SHADOW)
+			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_SHADOW, LIGHT_TEXT)
+			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED_SHADOW, DARK_TEXT)
 		}
 	}
 
