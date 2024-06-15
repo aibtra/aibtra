@@ -46,11 +46,11 @@ class RefinedTextArea(environment: Environment) {
 
 		hightlighter = Highlighter(textArea, environment.configurationProvider)
 
-		styleModified = HighlightStyle({ it.refinedBackgroundModified }, false, false, GapStyle.NONE)
-		styleAdded = HighlightStyle({ it.refinedBackgroundAdded }, false, false, GapStyle.NONE)
-		styleRemoved = HighlightStyle({ it.refinedBackgroundRemoved }, false, true, GapStyle.NONE)
-		styleGapLeft = HighlightStyle({ it.refinedBackgroundRemoved }, false, false, GapStyle.LEFT)
-		styleGapRight = HighlightStyle({ it.refinedBackgroundRemoved }, false, false, GapStyle.RIGHT)
+		styleModified = HighlightStyle({ it.refinedBackgroundModified }, { null }, false, false, GapStyle.NONE)
+		styleAdded = HighlightStyle({ it.refinedBackgroundAdded }, { null }, false, false, GapStyle.NONE)
+		styleRemoved = HighlightStyle({ it.refinedBackgroundRemoved }, { null }, false, true, GapStyle.NONE)
+		styleGapLeft = HighlightStyle({ it.refinedBackgroundRemoved }, { it.refinedBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
+		styleGapRight = HighlightStyle({ it.refinedBackgroundRemoved }, { it.refinedBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
 
 		textArea.addPropertyChangeListener { evt ->
 			if (evt.propertyName == "UI") {
@@ -163,7 +163,7 @@ class RefinedTextArea(environment: Environment) {
 		NONE, LEFT, RIGHT
 	}
 
-	class HighlightStyle(val color: (GuiColors.Colors) -> Color, val sprinkled: Boolean, val strikethrough: Boolean, val gapStyle: GapStyle)
+	class HighlightStyle(val color: (GuiColors.Colors) -> Color, val shadow: (GuiColors.Colors) -> Color?, val sprinkled: Boolean, val strikethrough: Boolean, val gapStyle: GapStyle)
 
 	class Highlighter(private val textArea: JTextArea, private val configurationProvider: ConfigurationProvider) {
 		private val highlightStyleToPainter = mutableMapOf<HighlightStyle, DefaultHighlighter.DefaultHighlightPainter>()
@@ -207,38 +207,25 @@ class RefinedTextArea(environment: Environment) {
 		private fun addHighlight(from: Int, to: Int, highlightStyle: HighlightStyle?, colors: GuiColors.Colors) {
 			highlightStyle?.let { style ->
 				val tag = textArea.highlighter.addHighlight(from, to, highlightStyleToPainter.computeIfAbsent(style) {
-					Painter(it, it.color(colors), textArea.foreground, textArea.background)
+					Painter(it, it.color(colors), it.shadow(colors), textArea.foreground, textArea.background)
 				})
 
 				ourHighlightTags.add(tag)
 			}
 		}
 
-		private class Painter(val style: HighlightStyle, highlightColor: Color, val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
+		private class Painter(val style: HighlightStyle, highlightColor: Color, val shadowColor: Color?, val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
 			private val texturePaint = if (style.sprinkled) createSprinkledTexturePaint(highlightColor, background) else null
 
 			override fun paintLayer(g: Graphics, offs0: Int, offs1: Int, bounds: Shape, c: JTextComponent, view: View): Shape {
-				val shape =
-					if (style.gapStyle != GapStyle.NONE
-						&& (offs0 == offs1 || offs0 == offs1 - 1)
-					) {
-						val shape = view.modelToView(offs0, Position.Bias.Forward, offs1, Position.Bias.Backward, bounds)
-						val r = if (shape is Rectangle) shape else shape.bounds
-						val oldColor = g.color
-						g.color = color
-
-						@Suppress("KotlinConstantConditions")
-						when (style.gapStyle) {
-							GapStyle.LEFT -> g.fillRect(r.x + r.width - 1, r.y, 1, r.height)
-							GapStyle.RIGHT -> g.fillRect(r.x, r.y, 1, r.height)
-							GapStyle.NONE -> require(false)
-						}
-						g.color = oldColor
-						r
-					}
-					else {
-						super.paintLayer(g, offs0, offs1, bounds, c, view)
-					}
+				val gap = style.gapStyle != GapStyle.NONE
+								&& (offs0 == offs1 || offs0 == offs1 - 1)
+				val shape = if (gap) {
+					view.modelToView(offs0, Position.Bias.Forward, offs1, Position.Bias.Backward, bounds)
+				}
+				else {
+					super.paintLayer(g, offs0, offs1, bounds, c, view)
+				}
 
 				texturePaint?.let { texturePaint ->
 					with(g as Graphics2D) {
@@ -250,6 +237,26 @@ class RefinedTextArea(environment: Environment) {
 							paint = lastPaint
 						}
 					}
+				}
+
+				if (gap) {
+					val r = if (shape is Rectangle) shape else shape.bounds
+					val oldColor = g.color
+
+					shadowColor?.let {
+						g.color = it
+						(g as Graphics2D).fill(shape)
+					}
+
+					g.color = color
+
+					@Suppress("KotlinConstantConditions")
+					when (style.gapStyle) {
+						GapStyle.LEFT -> g.fillRect(r.x + r.width - 1, r.y, 1, r.height)
+						GapStyle.RIGHT -> g.fillRect(r.x, r.y, 1, r.height)
+						GapStyle.NONE -> require(false)
+					}
+					g.color = oldColor
 				}
 
 				if (style.strikethrough) {

@@ -70,12 +70,12 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		val guiConfiguration = environment.guiConfiguration
 		textArea.font = guiConfiguration.fonts.monospacedFont
 
-		styleModified = RefinedTextArea.HighlightStyle({ it.rawBackgroundModified }, false, false, RefinedTextArea.GapStyle.NONE)
-		styleAdded = RefinedTextArea.HighlightStyle({ it.rawBackgroundAdded }, false, true, RefinedTextArea.GapStyle.NONE)
-		styleRemoved = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, false, false, RefinedTextArea.GapStyle.NONE)
-		styleGapLeft = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, false, false, RefinedTextArea.GapStyle.LEFT)
-		styleGapRight = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, false, false, RefinedTextArea.GapStyle.RIGHT)
-		styleFiltered = RefinedTextArea.HighlightStyle({ Color.gray }, true, false, RefinedTextArea.GapStyle.NONE)
+		styleModified = RefinedTextArea.HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, RefinedTextArea.GapStyle.NONE)
+		styleAdded = RefinedTextArea.HighlightStyle({ it.rawBackgroundAdded }, { null }, false, true, RefinedTextArea.GapStyle.NONE)
+		styleRemoved = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, RefinedTextArea.GapStyle.NONE)
+		styleGapLeft = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefinedTextArea.GapStyle.LEFT)
+		styleGapRight = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefinedTextArea.GapStyle.RIGHT)
+		styleFiltered = RefinedTextArea.HighlightStyle({ Color.gray }, { null }, true, false, RefinedTextArea.GapStyle.NONE)
 
 		highlighter = RefinedTextArea.Highlighter(textArea, configurationProvider)
 		undoManager = UndoManager()
