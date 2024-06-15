@@ -25,21 +25,27 @@ data class GuiColors(
 
 	@Serializable
 	data class Colors(
-		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundRemoved: Color,
-		val refinedBackgroundModified: Color, val refinedBackgroundAdded: Color, val refinedBackgroundRemoved: Color
+		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundRemoved: Color, val rawBackgroundRemovedShadow: Color,
+		val refinedBackgroundModified: Color, val refinedBackgroundAdded: Color, val refinedBackgroundRemoved: Color, val refinedBackgroundRemovedShadow: Color,
 	) {
 		companion object {
 			private val LIGHT_GREEN = Color(0x90, 0xEE, 0x90)
+			private val LIGHT_GREEN_SHADOW = Color(0x90, 0xEE, 0x90, SHADOW_ALPHA)
 			private val LIGHT_RED = Color(0xFF, 0x80, 0x80)
+			private val LIGHT_RED_SHADOW = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
 			private val DARK_GREEN = Color(0x25, 0xA6, 0x25)
+			private val DARK_GREEN_SHADOW = Color(0x25, 0xA6, 0x25, SHADOW_ALPHA)
 			private val DARK_RED = Color(0xC6, 0x28, 0x28)
+			private val DARK_RED_SHADOW = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
 
-			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_GREEN, LIGHT_RED)
-			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_GREEN, DARK_RED)
+			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_SHADOW)
+			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED_SHADOW)
 		}
 	}
 
 	companion object : ConfigurationFactory<GuiColors> {
+		private val SHADOW_ALPHA = 0x5F
+
 		override fun name(): String {
 			return "colors"
 		}
