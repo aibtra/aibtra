@@ -10,6 +10,8 @@ import javax.swing.JButton
 import javax.swing.SwingUtilities
 
 object Ui {
+	private val hiDPI = detectHiDPI()
+
 	fun assertEdt() {
 		require(SwingUtilities.isEventDispatchThread())
 	}
@@ -36,6 +38,14 @@ object Ui {
 	}
 
 	fun isHiDPI(): Boolean {
+		return hiDPI
+	}
+
+	fun toHiDPIPixel(pixels: Int): Int {
+		return if (hiDPI) 2 * pixels else pixels
+	}
+
+	private fun detectHiDPI(): Boolean {
 		val env = GraphicsEnvironment.getLocalGraphicsEnvironment()
 		val defaultScreenDevice = env.defaultScreenDevice
 		val defaultConfiguration = defaultScreenDevice.defaultConfiguration
