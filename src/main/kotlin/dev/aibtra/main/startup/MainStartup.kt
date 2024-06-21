@@ -149,10 +149,6 @@ class MainStartup {
 		}
 
 		private fun configureHotkey(environment: Environment) {
-			if (!environment.hotkeyListener.isSupported()) {
-				return
-			}
-
 			environment.hotkeyListener.configure {
 				showMainFrame(environment, true)
 			}
