@@ -21,13 +21,14 @@ class HotkeyListener(
 	private var runnable: Runnable? = null
 
 	fun configure(runnable: Runnable) {
+		if (!GuiConfiguration.isHotkeySupported()) {
+			this.runnable = null
+			return
+		}
+
 		this.runnable = runnable
 
 		update()
-	}
-
-	fun isSupported(): Boolean {
-		return GuiConfiguration.isHotkeySupported()
 	}
 
 	fun update() {
