@@ -11,9 +11,14 @@ import dev.aibtra.core.GlobalExceptionHandler
 import dev.aibtra.core.Logger
 import dev.aibtra.core.SingleInstanceAppLock
 import dev.aibtra.gui.Ui
+import dev.aibtra.gui.Ui.createButton
+import dev.aibtra.gui.Ui.toHiDPIPixel
+import dev.aibtra.gui.action.DefaultAction
 import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.dialogs.Dialogs
 import dev.aibtra.main.frame.*
+import joptsimple.OptionParser
+import joptsimple.OptionSet
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.awt.*
 import java.awt.datatransfer.DataFlavor
@@ -30,16 +35,19 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.logging.Formatter
 import java.util.logging.LogRecord
-import javax.swing.JMenuItem
-import javax.swing.JPopupMenu
-import javax.swing.SwingUtilities
+import javax.swing.*
 import kotlin.reflect.KClass
 
 class MainStartup {
 	companion object {
 		private const val COMMAND_SHOW = "SHOW"
 
-		fun start(paths: ApplicationPaths) {
+		fun start(paths: ApplicationPaths, args: Array<String>) {
+			val parser = OptionParser()
+			val backgroundOption = parser.accepts("background")
+			val options: OptionSet = parser.parse(*args)
+			val backgroundMode = options.has(backgroundOption)
+
 			configureLogging(paths)
 
 			FlatDarkLaf.setup() // required for very early (error dialogs) and to properly initialize the default font size
@@ -58,8 +66,16 @@ class MainStartup {
 
 				SwingUtilities.invokeAndWait {
 					installTrayIcon(application)
-					configureHotkey(application)
-					showMainFrame(application)
+					val hotkeyConfigured = configureHotkey(application)
+					if (backgroundMode) {
+						createLogger().info("Starting in background")
+						if (hotkeyConfigured) {
+							showBackgroundFrame()
+						}
+					}
+					else {
+						showMainFrame(application)
+					}
 				}
 				application
 			}, { command, application ->
@@ -91,6 +107,37 @@ class MainStartup {
 				if (setClipboard) {
 					frame.setText(getContentFromClipboard(environment.paths))
 				}
+			}
+		}
+
+		private fun showBackgroundFrame() {
+			Ui.runInEdt {
+				val frame = JFrame(MainFrame.FRAME_TITLE)
+				frame.iconImage = Icons.LOGO.getImageIcon(true).image
+				frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
+
+				frame.layout = BorderLayout()
+				val button = createButton(DefaultAction("Click here to confirm background mode") {
+					frame.isVisible = false
+				})
+
+				val buttonSize = toHiDPIPixel(128)
+				button.preferredSize = Dimension(buttonSize, buttonSize)
+				frame.add(button, BorderLayout.CENTER)
+
+				val label = JLabel("Aibtra needs to display a window upon startup, which you must confirm in order to activate the hotkey.")
+				val borderSize = toHiDPIPixel(2)
+				label.border = BorderFactory.createEmptyBorder(borderSize, borderSize, borderSize, borderSize)
+				frame.add(label, BorderLayout.SOUTH)
+
+				frame.pack()
+
+				val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize
+				val x = (screenSize.width - frame.width) / 2
+				val y = (screenSize.height - frame.height) / 2
+				frame.setLocation(x, y)
+
+				frame.isVisible = true
 			}
 		}
 
@@ -148,8 +195,8 @@ class MainStartup {
 			}
 		}
 
-		private fun configureHotkey(environment: Environment) {
-			environment.hotkeyListener.configure {
+		private fun configureHotkey(environment: Environment): Boolean {
+			return environment.hotkeyListener.configure {
 				showMainFrame(environment, true)
 			}
 		}

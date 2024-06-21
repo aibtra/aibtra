@@ -8,11 +8,11 @@ import java.nio.file.Path
 
 const val APPNAME = "Aibtra"
 
-fun main() {
+fun main(args: Array<String>) {
 	val appNameLowerCase = APPNAME.lowercase()
 	val paths = System.getProperty("$appNameLowerCase.settings")?.let {
 		ApplicationPaths(Path.of(it), APPNAME)
 	} ?: ApplicationPaths.initializeDefaultSettingsPath(APPNAME)
 
-	MainStartup.start(paths)
+	MainStartup.start(paths, args)
 }

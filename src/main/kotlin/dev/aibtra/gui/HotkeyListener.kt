@@ -20,15 +20,17 @@ class HotkeyListener(
 	private var nativeKeyListener: NativeKeyListener? = null
 	private var runnable: Runnable? = null
 
-	fun configure(runnable: Runnable) {
+	fun configure(runnable: Runnable): Boolean  {
+		val guiConfiguration = configurationProvider.get(GuiConfiguration)
+		val hotkeyEnabled = guiConfiguration.hotkeyEnabled
 		if (!GuiConfiguration.isHotkeySupported()) {
 			this.runnable = null
-			return
+			return hotkeyEnabled // For debugging, we still want to get "true" returned, if configured.
 		}
 
 		this.runnable = runnable
-
 		update()
+		return hotkeyEnabled
 	}
 
 	fun update() {
