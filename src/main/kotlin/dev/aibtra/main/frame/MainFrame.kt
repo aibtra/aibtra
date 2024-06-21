@@ -40,7 +40,7 @@ class MainFrame(private val environment: Environment) {
 	private val toggleDarkModeAction: ToggleDarkModeAction
 
 	init {
-		frame = JFrame("Aibtra 1.0 alpha")
+		frame = JFrame(FRAME_TITLE)
 		frame.iconImage = Icons.LOGO.getImageIcon(true).image
 
 		dialogDisplayer = create(frame)
@@ -409,5 +409,9 @@ class MainFrame(private val environment: Environment) {
 
 			preferredWidth = maxWidth + 30 // have some padding which should be sufficient for every L&F
 		}
+	}
+
+	companion object {
+		const val FRAME_TITLE = "Aibtra 1.0 alpha"
 	}
 }
