@@ -8,7 +8,6 @@ package dev.aibtra.main.frame
 
 import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationFactory
-import dev.aibtra.main.startup.MainStartup
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
