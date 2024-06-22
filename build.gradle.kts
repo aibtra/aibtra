@@ -15,8 +15,8 @@ val iconPath: String = when {
 val APP_NAME = "aibtra"
 
 plugins {
-    kotlin("jvm") version "1.8.10"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
+    kotlin("jvm") version "1.9.20"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.20"
     application
     id("org.beryx.runtime") version "1.12.7"
 }
@@ -52,8 +52,8 @@ tasks.withType<Test> {
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion("17")
-    targetCompatibility = JavaVersion.toVersion("17")
+    sourceCompatibility = JavaVersion.toVersion("21")
+    targetCompatibility = JavaVersion.toVersion("21")
 }
 
 application {
@@ -70,8 +70,8 @@ task("generateBuildProperties") {
         props["sha"] = commitSha
         props["time"] = buildTime
 
-        file("$buildDir/resources/main").mkdirs()
-        props.store(file("$buildDir/resources/main/build.properties").outputStream(), null)
+        file("${layout.buildDirectory.get().asFile}/resources/main").mkdirs()
+        props.store(file("${layout.buildDirectory.get().asFile}/resources/main/build.properties").outputStream(), null)
     }
 }
 
