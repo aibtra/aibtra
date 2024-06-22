@@ -43,4 +43,12 @@ object Ui {
 		val scaleY = defaultConfiguration.defaultTransform.scaleY
 		return scaleX > 1.0 || scaleY > 1.0
 	}
+
+	fun isDebugging(): Boolean {
+		return try {
+			java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("-agentlib:jdwp") > 0
+		} catch (e: NoClassDefFoundError) { // Default case when deployed
+			false
+		}
+	}
 }
