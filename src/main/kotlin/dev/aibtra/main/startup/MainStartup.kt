@@ -27,14 +27,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.logging.Formatter
 import java.util.logging.LogRecord
 import javax.swing.JMenuItem
 import javax.swing.JPopupMenu
 import javax.swing.SwingUtilities
-import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
 class MainStartup {
@@ -60,6 +58,7 @@ class MainStartup {
 
 				SwingUtilities.invokeAndWait {
 					installTrayIcon(application)
+					configureHotkey(application)
 					showMainFrame(application)
 				}
 				application
@@ -74,18 +73,23 @@ class MainStartup {
 			Logger.setup(paths.settingsPath.resolve("log.txt"))
 		}
 
-		private fun showMainFrame(environment: Environment) {
+		private fun showMainFrame(environment: Environment, forceSetClipboard: Boolean = false) {
 			Ui.runInEdt {
 				val existingFrame = environment.frameManager.getFrame()
-				if (existingFrame != null) {
+				val (frame, setClipboard) = if (existingFrame != null) {
 					existingFrame.toFront()
+					Pair(existingFrame, forceSetClipboard)
 				}
 				else {
 					val frame = MainFrame(environment)
 					frame.show()
-					frame.setText(getContentFromClipboard(environment.paths))
 
 					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, frame.dialogDisplayer).invoke()
+					Pair(frame, true)
+				}
+
+				if (setClipboard) {
+					frame.setText(getContentFromClipboard(environment.paths))
 				}
 			}
 		}
@@ -141,6 +145,16 @@ class MainStartup {
 				tray.add(trayIcon)
 			} catch (e: AWTException) {
 				createLogger().error(e)
+			}
+		}
+
+		private fun configureHotkey(environment: Environment) {
+			if (!environment.hotkeyListener.isSupported()) {
+				return
+			}
+
+			environment.hotkeyListener.configure {
+				showMainFrame(environment, true)
 			}
 		}
 

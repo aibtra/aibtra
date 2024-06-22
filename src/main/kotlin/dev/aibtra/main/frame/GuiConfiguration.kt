@@ -26,7 +26,8 @@ import javax.swing.JTextArea
 data class GuiConfiguration(
 	@SerialName("fonts.2") val fonts: Fonts = Fonts(),
 	val darkTheme: Boolean = true, // Dark mode is in general preferred by programmers: https://css-tricks.com/poll-results-light-on-dark-is-preferred/
-	val systemTray: Boolean = true
+	val systemTray: Boolean = true,
+	val hotkeyEnabled: Boolean = false,
 ) {
 	@Serializable
 	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
@@ -54,6 +55,13 @@ data class GuiConfiguration(
 		fun isSystemTraySupported(): Boolean {
 			return SystemTray.isSupported()
 					&& SystemInfo.isWindows // The tray works reliably only on Windows; for example, on macOS, double-clicking the application icon does not work
+		}
+
+		fun isHotkeySupported(): Boolean {
+			return SystemInfo.isWindows
+							// GlobalScreen may slow down machine significantly in Debug mode, e.g. after a break point has been hit:
+							// the mouse cursor lags extremely behind.
+							&& !Ui.isDebugging()
 		}
 	}
 

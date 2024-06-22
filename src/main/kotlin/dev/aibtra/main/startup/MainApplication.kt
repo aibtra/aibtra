@@ -6,6 +6,7 @@ package dev.aibtra.main.startup
 
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.DebugLog
+import dev.aibtra.gui.HotkeyListener
 import dev.aibtra.main.frame.*
 import kotlinx.coroutines.CoroutineDispatcher
 import java.util.*
@@ -22,5 +23,6 @@ class MainApplication(
 	override val timer = Timer(true)
 	override val frameManager = FrameManager()
 	override val theme = Theme(configurationProvider)
+	override val hotkeyListener = HotkeyListener(configurationProvider)
 	override val debugLog = DebugLog(configurationProvider.get(DebugLog.Config))
 }
