@@ -44,7 +44,7 @@ jobs:
           gradle-${{ runner.os }}-
 
     - name: Build with jpackage
-      run: ./gradlew clean jpackage
+      run: ./gradlew clean test jpackage
 
     - name: Bundle (Windows)
       if: matrix.os == 'windows-latest'
