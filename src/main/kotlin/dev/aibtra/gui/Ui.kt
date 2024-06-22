@@ -5,6 +5,7 @@
 package dev.aibtra.gui
 
 import dev.aibtra.gui.action.DefaultAction
+import java.awt.GraphicsEnvironment
 import javax.swing.JButton
 import javax.swing.SwingUtilities
 
@@ -32,5 +33,14 @@ object Ui {
 		val button = JButton(action.title)
 		button.addActionListener(action)
 		return button
+	}
+
+	fun isHiDPI(): Boolean {
+		val env = GraphicsEnvironment.getLocalGraphicsEnvironment()
+		val defaultScreenDevice = env.defaultScreenDevice
+		val defaultConfiguration = defaultScreenDevice.defaultConfiguration
+		val scaleX = defaultConfiguration.defaultTransform.scaleX
+		val scaleY = defaultConfiguration.defaultTransform.scaleY
+		return scaleX > 1.0 || scaleY > 1.0
 	}
 }
