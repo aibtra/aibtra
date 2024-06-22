@@ -14,7 +14,16 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macOS-latest]
 
+    env:
+      TAG: ${{ github.ref == 'refs/heads/next' && 'experimental' || github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || 'fail' }}
+
     steps:
+    - name: Fail if unsupported branch
+      if: env.TAG == 'fail'
+      run: |
+        echo "This workflow should not run on this branch."
+        exit 1
+
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -42,50 +51,50 @@ jobs:
       run: |
         cd build/jpackage
         dir
-        7z a -tzip aibtra-latest-windows.zip aibtra\*
+        7z a -tzip aibtra-${{ env.TAG }}-windows.zip aibtra\*
 
     - name: Bundle (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
         cd build/jpackage
         ls -al
-        tar -czf aibtra-latest-linux.tar.gz aibtra/*
+        tar -czf aibtra-${{ env.TAG }}-linux.tar.gz aibtra/*
 
     - name: Bundle (macOS)
       if: matrix.os == 'macOS-latest'
       run: |
         cd build/jpackage
         ls -al
-        tar -czf aibtra-latest-macos.tar.gz aibtra.app
+        tar -czf aibtra-${{ env.TAG }}-macos.tar.gz aibtra.app
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: binaries
-        path: build/jpackage/aibtra-latest-*
+        path: build/jpackage/aibtra-${{ env.TAG }}-*
 
   release:
     name: "Release"
     runs-on: "ubuntu-latest"
     needs: build
 
+    env:
+      TAG: ${{ github.ref == 'refs/heads/next' && 'experimental' || github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || 'fail' }}
+
     steps:
+    - name: Fail if unsupported branch
+      if: env.TAG == 'fail'
+      run: |
+        echo "This workflow should not run on this branch."
+        exit 1
+
     - name: Download artifacts
       uses: actions/download-artifact@v3
 
     - name: Determine release tag
       id: determine-tag
       run: |
-        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          echo "tag=stable" >> $GITHUB_ENV
-        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          echo "tag=latest" >> $GITHUB_ENV
-        elif [ "${{ github.ref }}" == "refs/heads/next" ]; then
-          echo "tag=experimental" >> $GITHUB_ENV
-        else
-          echo "This workflow should not run on this branch."
-          exit 1
-        fi
+        echo "tag=${{ env.TAG }}" >> $GITHUB_ENV
 
     - name: Upload release
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -93,6 +102,6 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "${{ env.tag }}"
         prerelease: ${{ github.ref != 'refs/heads/main' }}
-        title: ${{ github.ref_name == 'main' && 'Stable Release' || github.ref_name == 'develop' && 'Latest Build' || github.ref_name == 'next' && 'Experimental Build' }}
+        title: "tag=${{ env.TAG }} release"
         files: |
           binaries/*
