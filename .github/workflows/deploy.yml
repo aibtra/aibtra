@@ -51,6 +51,7 @@ jobs:
       run: |
         cd build/jpackage
         dir
+        echo "${{ env.TAG }}" > aibtra/app/aibtra.bundletype
         7z a -tzip aibtra-${{ env.TAG }}-windows.zip aibtra\*
 
     - name: Bundle (Linux)
@@ -58,6 +59,7 @@ jobs:
       run: |
         cd build/jpackage
         ls -al
+        echo "${{ env.TAG }}" > aibtra/lib/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-linux.tar.gz aibtra/*
 
     - name: Bundle (macOS)
@@ -65,6 +67,7 @@ jobs:
       run: |
         cd build/jpackage
         ls -al
+        echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-macos.tar.gz aibtra.app
 
     - name: Upload artifacts
