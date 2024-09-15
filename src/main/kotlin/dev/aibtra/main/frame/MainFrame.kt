@@ -58,7 +58,7 @@ class MainFrame(private val environment: Environment) {
 		val diffManagerRefresher = DelayedUiRefresher(100) {
 			diffManager.updateRaw(rawTextArea.getText())
 		}
-		rawTextArea.addListener {
+		rawTextArea.addContentListener {
 			diffManagerRefresher.refresh()
 		}
 
