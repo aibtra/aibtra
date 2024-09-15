@@ -16,6 +16,10 @@ data class OpenAIConfiguration(
 	@Serializable
 	class Profile(val name: String, val model: String, val instructions: String)
 
+	fun currentProfile(): Profile {
+		return profiles.find { it.name == defaultProfileName } ?: PROOFREAD
+	}
+
 	companion object : ConfigurationFactory<OpenAIConfiguration> {
 		const val PROOFREAD_TITLE = "Proofread (GPT-4o)"
 		private const val MODEL_4O = "gpt-4o"
