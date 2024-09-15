@@ -144,7 +144,7 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		return JScrollPane(textArea)
 	}
 
-	fun addListener(listen: () -> Unit) {
+	fun addContentListener(listen: () -> Unit) {
 		textArea.document.addDocumentListener(object : DocumentListener {
 			override fun insertUpdate(e: DocumentEvent) {
 				listen()
