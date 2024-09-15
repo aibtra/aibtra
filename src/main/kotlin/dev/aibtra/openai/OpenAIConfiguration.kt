@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
-	val profiles: List<Profile> = listOf(PROOFREAD, TO_STANDARD_ENGLISH),
+	val profiles: List<Profile> = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH),
 	val defaultProfileName: String = PROOFREAD_TITLE
 ) {
 	@Serializable
@@ -26,6 +26,14 @@ data class OpenAIConfiguration(
 					"AND stay as close as possible to the original " +
 					"AND do not change the markdown structure " +
 					"AND preserve the detected language:"
+		)
+
+		private val IMPROVE = Profile(
+			"Improve (GPT-4o)", MODEL_4O,
+			"Proofread " +
+							"AND improve wording, but stay close to the original, only apply changes to quite uncommon wording " +
+							"AND do not change the markdown structure or indentation or other special symbols " +
+							"AND preserve the detected language:"
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
