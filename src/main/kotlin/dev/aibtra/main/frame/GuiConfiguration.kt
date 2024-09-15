@@ -29,7 +29,8 @@ data class GuiConfiguration(
 	val systemTray: Boolean = true,
 	val hotkeyEnabled: Boolean = false,
 	val pasteOnClose: Boolean = false,
-	val submitOnInvocation: Boolean = false
+	val submitOnInvocation: Boolean = false,
+	val submitOnProfileChange: Boolean = false
 ) {
 	@Serializable
 	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
