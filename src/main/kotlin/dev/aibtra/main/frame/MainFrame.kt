@@ -228,13 +228,30 @@ class MainFrame(private val environment: Environment) {
 
 		comboBox.adjustWidth()
 
-		comboBox.addItemListener {
-			(comboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
-				configurationProvider.change(OpenAIConfiguration) {
-					it.copy(defaultProfileName = profile.name)
+		comboBox.addItemListener(object : ItemListener {
+			private var lastSelected: OpenAIConfiguration.Profile
+
+			init {
+				lastSelected = initialConfiguration.currentProfile()
+			}
+
+			override fun itemStateChanged(e: ItemEvent?) {
+				(comboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
+					configurationProvider.change(OpenAIConfiguration) {
+						it.copy(defaultProfileName = profile.name)
+					}
+
+					if (profile != lastSelected) {
+						if (environment.configurationProvider.get(GuiConfiguration).submitOnProfileChange) {
+							submitter.run()
+						}
+
+						lastSelected = profile
+					}
 				}
 			}
-		}
+		})
+
 		return comboBox
 	}
 
@@ -298,6 +315,7 @@ class MainFrame(private val environment: Environment) {
 		addAction(editMenu, toggleFilterMarkdownAction)
 		editMenu.addSeparator()
 		addAction(editMenu, ToggleSubmitOnInvocationAction(environment.configurationProvider, environment.accelerators))
+		addAction(editMenu, ToggleSubmitOnProfileChangeAction(environment.configurationProvider, environment.accelerators))
 		editMenu.addSeparator()
 		addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
 		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
