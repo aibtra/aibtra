@@ -210,9 +210,7 @@ class MainFrame(private val environment: Environment) {
 		val configurationProvider = environment.configurationProvider
 		val initialConfiguration = configurationProvider.get(OpenAIConfiguration)
 		val comboBox = ComboBoxWithPreferredSize(initialConfiguration.profiles.toTypedArray())
-		initialConfiguration.profiles.find { it.name == initialConfiguration.defaultProfileName }?.let {
-			comboBox.selectedItem = it
-		}
+		comboBox.selectedItem = initialConfiguration.currentProfile()
 
 		comboBox.renderer = object : DefaultListCellRenderer() {
 			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
