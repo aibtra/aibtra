@@ -17,6 +17,7 @@ import javax.swing.text.Position
 import javax.swing.text.View
 
 open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environment: Environment) {
+	private val scrollPane = JScrollPane(textArea)
 	private val configurationProvider = environment.configurationProvider
 	private val highlighter = Highlighter(textArea, configurationProvider)
 
@@ -28,8 +29,8 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		}
 	}
 
-	fun createControl(): Component {
-		return JScrollPane(textArea)
+	fun getControl(): Component {
+		return scrollPane
 	}
 
 	protected fun updateCharacterAttributes(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {

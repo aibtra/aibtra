@@ -259,8 +259,8 @@ class MainFrame(private val environment: Environment) {
 		val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
 		splitPane.resizeWeight = 0.5
 
-		val refControl = refTextArea.createControl()
-		splitPane.topComponent = rawTextArea.createControl()
+		val refControl = refTextArea.getControl()
+		splitPane.topComponent = rawTextArea.getControl()
 		splitPane.bottomComponent = refControl
 
 		var splitInitializing = true
