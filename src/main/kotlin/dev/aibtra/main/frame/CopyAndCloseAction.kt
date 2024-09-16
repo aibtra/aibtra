@@ -45,7 +45,7 @@ class CopyAndCloseAction(
 			updateEnabledState()
 		}
 
-		diffManager.addListener {
+		diffManager.addStateListener {
 			updateEnabledState()
 		}
 

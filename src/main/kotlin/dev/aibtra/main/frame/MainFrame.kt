@@ -62,7 +62,7 @@ class MainFrame(private val environment: Environment) {
 			diffManagerRefresher.refresh()
 		}
 
-		diffManager.addListener { state ->
+		diffManager.addStateListener { state ->
 			Ui.assertEdt()
 
 			val rawText = rawTextArea.getText()
@@ -360,10 +360,10 @@ class MainFrame(private val environment: Environment) {
 
 			var listener: ((DiffManager.State) -> Unit)? = null
 			listener = {
-				diffManager.removeListener(listener!!)
+				diffManager.removeStateListener(listener!!)
 				submitter.run()
 			}
-			diffManager.addListener(listener)
+			diffManager.addStateListener(listener)
 		}
 	}
 
