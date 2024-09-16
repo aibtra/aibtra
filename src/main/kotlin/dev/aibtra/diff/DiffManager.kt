@@ -29,7 +29,7 @@ class DiffManager(
 	val state: State
 		get() = data.state
 
-	fun updateRaw(raw: String, initial: Boolean = false, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, initial: Boolean = false, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
@@ -65,7 +65,7 @@ class DiffManager(
 		}
 	}
 
-	fun updateRef(ref: String, finished: Boolean) {
+	fun updateRefText(ref: String, finished: Boolean) {
 		Ui.assertEdt()
 
 		data.let {
