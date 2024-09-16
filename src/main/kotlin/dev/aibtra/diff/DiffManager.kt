@@ -65,7 +65,7 @@ class DiffManager(
 		}
 	}
 
-	fun updateRefined(ref: String, finished: Boolean) {
+	fun updateRef(ref: String, finished: Boolean) {
 		Ui.assertEdt()
 
 		data.let {
@@ -74,7 +74,7 @@ class DiffManager(
 			}
 
 			// Once starting the refinement, this will be no more the "initial" state, hence reset rawOrg
-			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRefined" else null)
+			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRef" else null)
 		}
 	}
 
@@ -254,7 +254,7 @@ class DiffManager(
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
 
-		fun getSelectedBlocksFromRefined(state: State, range: IntRange): List<DiffBlock> {
+		fun getSelectedBlocksFromRef(state: State, range: IntRange): List<DiffBlock> {
 			require(range.first >= 0 && range.last < state.refFormatted.length)
 
 			val refFrom = state.refChars[range.first].posRef

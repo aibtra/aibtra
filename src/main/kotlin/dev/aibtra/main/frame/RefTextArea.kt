@@ -18,7 +18,7 @@ import javax.swing.JTextArea
 import javax.swing.event.CaretListener
 import javax.swing.text.*
 
-class RefinedTextArea(environment: Environment) {
+class RefTextArea(environment: Environment) {
 	private val textArea: JTextArea
 	private val hightlighter: Highlighter
 	private val styleModified: HighlightStyle
@@ -46,11 +46,11 @@ class RefinedTextArea(environment: Environment) {
 
 		hightlighter = Highlighter(textArea, environment.configurationProvider)
 
-		styleModified = HighlightStyle({ it.refinedBackgroundModified }, { null }, false, false, GapStyle.NONE)
-		styleAdded = HighlightStyle({ it.refinedBackgroundAdded }, { null }, false, false, GapStyle.NONE)
-		styleRemoved = HighlightStyle({ it.refinedBackgroundRemoved }, { null }, false, true, GapStyle.NONE)
-		styleGapLeft = HighlightStyle({ it.refinedBackgroundRemoved }, { it.refinedBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
-		styleGapRight = HighlightStyle({ it.refinedBackgroundRemoved }, { it.refinedBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
+		styleModified = HighlightStyle({ it.refBackgroundModified }, { null }, false, false, GapStyle.NONE)
+		styleAdded = HighlightStyle({ it.refBackgroundAdded }, { null }, false, false, GapStyle.NONE)
+		styleRemoved = HighlightStyle({ it.refBackgroundRemoved }, { null }, false, true, GapStyle.NONE)
+		styleGapLeft = HighlightStyle({ it.refBackgroundRemoved }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
+		styleGapRight = HighlightStyle({ it.refBackgroundRemoved }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
 
 		textArea.addPropertyChangeListener { evt ->
 			if (evt.propertyName == "UI") {

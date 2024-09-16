@@ -34,17 +34,17 @@ class RequestManager(
 				notifyInProgress(true)
 
 				callback {
-					diffManager.updateRefined("", false) // signal started, so diff becomes reset
+					diffManager.updateRef("", false) // signal started, so diff becomes reset
 				}
 
-				var lastRefined: String? = null
+				var lastRef: String? = null
 				try {
-					operation.run(filtered.clean) { refined ->
-						lastRefined = refined
+					operation.run(filtered.clean) { ref ->
+						lastRef = ref
 
 						callback {
-							val res = filtered.recreate(refined)
-							diffManager.updateRefined(res.getOrThrow(), false)
+							val res = filtered.recreate(ref)
+							diffManager.updateRef(res.getOrThrow(), false)
 						}
 
 						this == currentRun.get()
@@ -53,14 +53,14 @@ class RequestManager(
 					Dialogs.showIOError(ioe, dialogDisplayer)
 				} finally {
 					if (this == currentRun.get()) {
-						lastRefined?.let {
+						lastRef?.let {
 							callback {
 								val res = filtered.recreate(it)
 								if (res.isFailure) {
-									diffManager.updateRefined("<FAILURE>", true)
+									diffManager.updateRef("<FAILURE>", true)
 								}
 								else {
-									diffManager.updateRefined(res.getOrThrow(), true)
+									diffManager.updateRef(res.getOrThrow(), true)
 								}
 							}
 						}
@@ -103,7 +103,7 @@ class RequestManager(
 	}
 
 	fun interface OpCallback {
-		fun callback(refined: String): Boolean
+		fun callback(ref: String): Boolean
 	}
 
 	fun interface Operation {
