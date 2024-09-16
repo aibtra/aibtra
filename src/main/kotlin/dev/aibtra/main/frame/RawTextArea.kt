@@ -8,7 +8,6 @@ import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffKind
 import dev.aibtra.text.FilteredText
 import java.awt.Color
-import java.awt.Component
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
 import javax.swing.*
@@ -19,39 +18,25 @@ import javax.swing.text.AttributeSet
 import javax.swing.text.DocumentFilter
 import javax.swing.undo.UndoManager
 
-class RawTextArea(private val textInitializer: TextInitializer, environment: Environment) {
-	private val textArea: JTextArea
-	private val highlighter: RefTextArea.Highlighter
+class RawTextArea(private val textInitializer: TextInitializer, environment: Environment) :
+	AbstractTextArea<RawTextArea.TextArea>(TextArea(), environment) {
 	private val undoManager: UndoManager
-	private val styleModified: RefTextArea.HighlightStyle
-	private val styleAdded: RefTextArea.HighlightStyle
-	private val styleRemoved: RefTextArea.HighlightStyle
-	private val styleGapLeft: RefTextArea.HighlightStyle
-	private val styleGapRight: RefTextArea.HighlightStyle
-	private val styleFiltered: RefTextArea.HighlightStyle
-	private val configurationProvider = environment.configurationProvider
+	private val styleModified: HighlightStyle
+	private val styleAdded: HighlightStyle
+	private val styleRemoved: HighlightStyle
+	private val styleGapLeft: HighlightStyle
+	private val styleGapRight: HighlightStyle
+	private val styleFiltered: HighlightStyle
 
 	private var ignoreUndoableEvents = false
 	private var diffChars: List<DiffChar> = listOf()
 	private var filteredText: FilteredText = FilteredText("", emptyMap(), setOf())
 
 	init {
-		var pasting = false
-		textArea = object : JTextArea() {
-			override fun paste() {
-				pasting = true
-				try {
-					super.paste()
-				} finally {
-					pasting = false
-				}
-			}
-		}
-
 		(textArea.document as AbstractDocument).let {
 			it.documentFilter = object : DocumentFilter() {
 				override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
-					val normalized: String = if (pasting && offset == 0 && length == fb.document.length) {
+					val normalized: String = if (textArea.pasting && offset == 0 && length == fb.document.length) {
 						textInitializer.initialize(text)
 					}
 					else {
@@ -70,14 +55,13 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		val guiConfiguration = environment.guiConfiguration
 		textArea.font = guiConfiguration.fonts.monospacedFont
 
-		styleModified = RefTextArea.HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, RefTextArea.GapStyle.NONE)
-		styleAdded = RefTextArea.HighlightStyle({ it.rawBackgroundAdded }, { null }, false, true, RefTextArea.GapStyle.NONE)
-		styleRemoved = RefTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, RefTextArea.GapStyle.NONE)
-		styleGapLeft = RefTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefTextArea.GapStyle.LEFT)
-		styleGapRight = RefTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefTextArea.GapStyle.RIGHT)
-		styleFiltered = RefTextArea.HighlightStyle({ Color.gray }, { null }, true, false, RefTextArea.GapStyle.NONE)
+		styleModified = HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, GapStyle.NONE)
+		styleAdded = HighlightStyle({ it.rawBackgroundAdded }, { null }, false, true, GapStyle.NONE)
+		styleRemoved = HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, GapStyle.NONE)
+		styleGapLeft = HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
+		styleGapRight = HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
+		styleFiltered = HighlightStyle({ Color.gray }, { null }, true, false, GapStyle.NONE)
 
-		highlighter = RefTextArea.Highlighter(textArea, configurationProvider)
 		undoManager = UndoManager()
 
 		textArea.document.addUndoableEditListener { e ->
@@ -104,7 +88,6 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 
 		textArea.addPropertyChangeListener { evt ->
 			if (evt.propertyName == "UI") {
-				highlighter.resetPainters()
 				updateCharacterAttributes()
 			}
 		}
@@ -140,10 +123,6 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		updateCharacterAttributes()
 	}
 
-	fun createControl(): Component {
-		return JScrollPane(textArea)
-	}
-
 	fun addContentListener(listen: () -> Unit) {
 		textArea.document.addDocumentListener(object : DocumentListener {
 			override fun insertUpdate(e: DocumentEvent) {
@@ -163,13 +142,13 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 	private fun updateCharacterAttributes() {
 		ignoreUndoableEvents = true
 		try {
-			highlighter.run(diffChars, ::getHighlighting)
+			updateCharacterAttributes(diffChars, ::getHighlighting)
 		} finally {
 			ignoreUndoableEvents = false
 		}
 	}
 
-	private fun getHighlighting(index: Int, char: DiffChar): RefTextArea.HighlightStyle? {
+	private fun getHighlighting(index: Int, char: DiffChar): HighlightStyle? {
 		if (filteredText.isFiltered(index)) {
 			return styleFiltered
 		}
@@ -186,5 +165,18 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 
 	fun interface TextInitializer {
 		fun initialize(text: String): String
+	}
+
+	class TextArea : JTextArea() {
+		var pasting = false
+
+		override fun paste() {
+			pasting = true
+			try {
+				super.paste()
+			} finally {
+				pasting = false
+			}
+		}
 	}
 }
