@@ -52,11 +52,11 @@ class MainFrame(private val environment: Environment) {
 			}, coroutineDispatcher, environment.debugLog
 		)
 
-		rawTextArea = RawTextArea({ text -> diffManager.updateRaw(text, initial = true) }, environment)
+		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, initial = true) }, environment)
 		refTextArea = RefTextArea(environment)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
-			diffManager.updateRaw(rawTextArea.getText())
+			diffManager.updateRawText(rawTextArea.getText())
 		}
 		rawTextArea.addContentListener {
 			diffManagerRefresher.refresh()
@@ -352,7 +352,7 @@ class MainFrame(private val environment: Environment) {
 		rawTextArea.setText(text)
 
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
-			diffManager.updateRef(Files.readString(Path.of(it)), true)
+			diffManager.updateRefText(Files.readString(Path.of(it)), true)
 		}
 
 		if (environment.configurationProvider.get(GuiConfiguration).submitOnInvocation &&
