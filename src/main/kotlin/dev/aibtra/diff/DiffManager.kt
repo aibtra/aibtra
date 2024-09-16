@@ -23,7 +23,7 @@ class DiffManager(
 	private val debugLog: DebugLog
 ) {
 	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
-	private val listeners = ArrayList<(State) -> Unit>()
+	private val stateListeners = ArrayList<(State) -> Unit>()
 
 	private var data: Data = Data(Input("", "", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0)
 	val state: State
@@ -102,16 +102,16 @@ class DiffManager(
 		}
 	}
 
-	fun addListener(listener: (State) -> Unit) {
+	fun addStateListener(listener: (State) -> Unit) {
 		Ui.assertEdt()
 
-		listeners.add(listener)
+		stateListeners.add(listener)
 	}
 
-	fun removeListener(listener: (State) -> Unit) {
+	fun removeStateListener(listener: (State) -> Unit) {
 		Ui.assertEdt()
 
-		listeners.remove(listener)
+		stateListeners.remove(listener)
 	}
 
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
@@ -167,7 +167,7 @@ class DiffManager(
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
 
-					listeners.toList().forEach { it(state) }
+					stateListeners.toList().forEach { it(state) }
 				}
 			}
 		}, forceUpdate)
