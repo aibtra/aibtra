@@ -25,7 +25,7 @@ class MainFrame(private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer
 	private val frame: JFrame
 	private val rawTextArea: RawTextArea
-	private val refinedTextArea: RefinedTextArea
+	private val refTextArea: RefTextArea
 	private val diffManager: DiffManager
 	private val requestManager: RequestManager
 	private val submitter: Submitter
@@ -53,7 +53,7 @@ class MainFrame(private val environment: Environment) {
 		)
 
 		rawTextArea = RawTextArea({ text -> diffManager.updateRaw(text, initial = true) }, environment)
-		refinedTextArea = RefinedTextArea(environment)
+		refTextArea = RefTextArea(environment)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
 			diffManager.updateRaw(rawTextArea.getText())
@@ -70,7 +70,7 @@ class MainFrame(private val environment: Environment) {
 				rawTextArea.setDiffCharsAndFilteredText(state.rawChars, state.filtered)
 			}
 
-			refinedTextArea.setText(state.refFormatted, state.refChars)
+			refTextArea.setText(state.refFormatted, state.refChars)
 		}
 
 		requestManager = RequestManager(diffManager, coroutineDispatcher, dialogDisplayer)
@@ -91,7 +91,7 @@ class MainFrame(private val environment: Environment) {
 
 		val submitAction = SubmitAction(environment, requestManager, submitter)
 		this.submitAction = submitAction
-		applyChangeAction = ApplyChangeAction(refinedTextArea, rawTextArea, diffManager, environment.accelerators)
+		applyChangeAction = ApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
 		pasteAndSubmitAction = PasteAndSubmitAction(environment, requestManager, diffManager, rawTextArea, submitAction)
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, environment.configurationProvider, environment.accelerators)
@@ -259,9 +259,9 @@ class MainFrame(private val environment: Environment) {
 		val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
 		splitPane.resizeWeight = 0.5
 
-		val refinedControl = refinedTextArea.createControl()
+		val refControl = refTextArea.createControl()
 		splitPane.topComponent = rawTextArea.createControl()
-		splitPane.bottomComponent = refinedControl
+		splitPane.bottomComponent = refControl
 
 		var splitInitializing = true
 		splitPane.addComponentListener(object : ComponentAdapter() {
@@ -287,10 +287,10 @@ class MainFrame(private val environment: Environment) {
 
 		container.add(splitPane, BorderLayout.CENTER)
 
-		refinedTextArea.addMouseListener(object : MouseAdapter() {
+		refTextArea.addMouseListener(object : MouseAdapter() {
 			override fun mouseReleased(e: MouseEvent) {
-				refinedTextArea.getSelectionRange()?.let {
-					val blocks = DiffManager.getSelectedBlocksFromRefined(diffManager.state, it)
+				refTextArea.getSelectionRange()?.let {
+					val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
 					if (blocks.isNotEmpty()) {
 						val popupMenu = JPopupMenu()
 						popupMenu.add(JMenuItem(applyChangeAction))
@@ -352,7 +352,7 @@ class MainFrame(private val environment: Environment) {
 		rawTextArea.setText(text)
 
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
-			diffManager.updateRefined(Files.readString(Path.of(it)), true)
+			diffManager.updateRef(Files.readString(Path.of(it)), true)
 		}
 
 		if (environment.configurationProvider.get(GuiConfiguration).submitOnInvocation &&

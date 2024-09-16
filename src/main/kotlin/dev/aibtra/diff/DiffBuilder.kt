@@ -242,9 +242,9 @@ class DiffBuilder(
 		private const val CLOSE_DISTANCE = 3
 	}
 
-	private class SequenceMedia(val raw: String, val refined: String) : QSequenceMedia {
-		override fun equals(leftIndex: Int, rightIndex: Int): Boolean = raw[leftIndex] == refined[rightIndex]
+	private class SequenceMedia(val raw: String, val ref: String) : QSequenceMedia {
+		override fun equals(leftIndex: Int, rightIndex: Int): Boolean = raw[leftIndex] == ref[rightIndex]
 		override fun getLeftLength(): Int = raw.length
-		override fun getRightLength(): Int = refined.length
+		override fun getRightLength(): Int = ref.length
 	}
 }

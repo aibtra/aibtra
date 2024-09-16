@@ -20,14 +20,14 @@ import java.awt.Color
 
 @Serializable
 data class GuiColors(
-	@SerialName("light.2") val light: Colors = Colors.DEFAULTS_LIGHT,
-	@SerialName("dark.2") val dark: Colors = Colors.DEFAULTS_DARK,
+	@SerialName("light.3") val light: Colors = Colors.DEFAULTS_LIGHT,
+	@SerialName("dark.3") val dark: Colors = Colors.DEFAULTS_DARK,
 ) {
 
 	@Serializable
 	data class Colors(
 		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundRemoved: Color, val rawBackgroundRemovedShadow: Color,
-		val refinedBackgroundModified: Color, val refinedBackgroundAdded: Color, val refinedBackgroundRemoved: Color, val refinedBackgroundRemovedShadow: Color,
+		val refBackgroundModified: Color, val refBackgroundAdded: Color, val refBackgroundRemoved: Color, val refBackgroundRemovedShadow: Color,
 		val textColor: Color,
 	) {
 		companion object {

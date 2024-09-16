@@ -21,14 +21,14 @@ import javax.swing.undo.UndoManager
 
 class RawTextArea(private val textInitializer: TextInitializer, environment: Environment) {
 	private val textArea: JTextArea
-	private val highlighter: RefinedTextArea.Highlighter
+	private val highlighter: RefTextArea.Highlighter
 	private val undoManager: UndoManager
-	private val styleModified: RefinedTextArea.HighlightStyle
-	private val styleAdded: RefinedTextArea.HighlightStyle
-	private val styleRemoved: RefinedTextArea.HighlightStyle
-	private val styleGapLeft: RefinedTextArea.HighlightStyle
-	private val styleGapRight: RefinedTextArea.HighlightStyle
-	private val styleFiltered: RefinedTextArea.HighlightStyle
+	private val styleModified: RefTextArea.HighlightStyle
+	private val styleAdded: RefTextArea.HighlightStyle
+	private val styleRemoved: RefTextArea.HighlightStyle
+	private val styleGapLeft: RefTextArea.HighlightStyle
+	private val styleGapRight: RefTextArea.HighlightStyle
+	private val styleFiltered: RefTextArea.HighlightStyle
 	private val configurationProvider = environment.configurationProvider
 
 	private var ignoreUndoableEvents = false
@@ -70,14 +70,14 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		val guiConfiguration = environment.guiConfiguration
 		textArea.font = guiConfiguration.fonts.monospacedFont
 
-		styleModified = RefinedTextArea.HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, RefinedTextArea.GapStyle.NONE)
-		styleAdded = RefinedTextArea.HighlightStyle({ it.rawBackgroundAdded }, { null }, false, true, RefinedTextArea.GapStyle.NONE)
-		styleRemoved = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, RefinedTextArea.GapStyle.NONE)
-		styleGapLeft = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefinedTextArea.GapStyle.LEFT)
-		styleGapRight = RefinedTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefinedTextArea.GapStyle.RIGHT)
-		styleFiltered = RefinedTextArea.HighlightStyle({ Color.gray }, { null }, true, false, RefinedTextArea.GapStyle.NONE)
+		styleModified = RefTextArea.HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, RefTextArea.GapStyle.NONE)
+		styleAdded = RefTextArea.HighlightStyle({ it.rawBackgroundAdded }, { null }, false, true, RefTextArea.GapStyle.NONE)
+		styleRemoved = RefTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, RefTextArea.GapStyle.NONE)
+		styleGapLeft = RefTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefTextArea.GapStyle.LEFT)
+		styleGapRight = RefTextArea.HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, RefTextArea.GapStyle.RIGHT)
+		styleFiltered = RefTextArea.HighlightStyle({ Color.gray }, { null }, true, false, RefTextArea.GapStyle.NONE)
 
-		highlighter = RefinedTextArea.Highlighter(textArea, configurationProvider)
+		highlighter = RefTextArea.Highlighter(textArea, configurationProvider)
 		undoManager = UndoManager()
 
 		textArea.document.addUndoableEditListener { e ->
@@ -169,7 +169,7 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		}
 	}
 
-	private fun getHighlighting(index: Int, char: DiffChar): RefinedTextArea.HighlightStyle? {
+	private fun getHighlighting(index: Int, char: DiffChar): RefTextArea.HighlightStyle? {
 		if (filteredText.isFiltered(index)) {
 			return styleFiltered
 		}
