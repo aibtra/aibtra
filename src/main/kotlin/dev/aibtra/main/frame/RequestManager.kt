@@ -34,7 +34,7 @@ class RequestManager(
 				notifyInProgress(true)
 
 				callback {
-					diffManager.updateRef("", false) // signal started, so diff becomes reset
+					diffManager.updateRefText("", false) // signal started, so diff becomes reset
 				}
 
 				var lastRef: String? = null
@@ -44,7 +44,7 @@ class RequestManager(
 
 						callback {
 							val res = filtered.recreate(ref)
-							diffManager.updateRef(res.getOrThrow(), false)
+							diffManager.updateRefText(res.getOrThrow(), false)
 						}
 
 						this == currentRun.get()
@@ -57,10 +57,10 @@ class RequestManager(
 							callback {
 								val res = filtered.recreate(it)
 								if (res.isFailure) {
-									diffManager.updateRef("<FAILURE>", true)
+									diffManager.updateRefText("<FAILURE>", true)
 								}
 								else {
-									diffManager.updateRef(res.getOrThrow(), true)
+									diffManager.updateRefText(res.getOrThrow(), true)
 								}
 							}
 						}

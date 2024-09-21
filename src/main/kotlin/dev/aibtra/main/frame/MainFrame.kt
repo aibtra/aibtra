@@ -20,6 +20,7 @@ import java.awt.event.*
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.swing.*
+import kotlin.reflect.KFunction2
 
 class MainFrame(private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer
@@ -39,6 +40,8 @@ class MainFrame(private val environment: Environment) {
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
 
+	private var inScrollPosUpdate = false
+
 	init {
 		frame = JFrame(FRAME_TITLE)
 		frame.iconImage = Icons.LOGO.getImageIcon(true).image
@@ -52,17 +55,20 @@ class MainFrame(private val environment: Environment) {
 			}, coroutineDispatcher, environment.debugLog
 		)
 
-		rawTextArea = RawTextArea({ text -> diffManager.updateRaw(text, initial = true) }, environment)
+		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, initial = true) }, environment)
 		refTextArea = RefTextArea(environment)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
-			diffManager.updateRaw(rawTextArea.getText())
+			diffManager.updateRawText(rawTextArea.getText())
 		}
-		rawTextArea.addListener {
+		rawTextArea.addContentListener {
 			diffManagerRefresher.refresh()
 		}
 
-		diffManager.addListener { state ->
+		configureScrolling(rawTextArea, DiffManager::updateRawScrollPos)
+		configureScrolling(refTextArea, DiffManager::updateRefScrollPos)
+
+		diffManager.addStateListener { state ->
 			Ui.assertEdt()
 
 			val rawText = rawTextArea.getText()
@@ -71,6 +77,13 @@ class MainFrame(private val environment: Environment) {
 			}
 
 			refTextArea.setText(state.refFormatted, state.refChars)
+		}
+
+		diffManager.addScrollListener { raw, ref ->
+			Ui.assertEdt()
+
+			rawTextArea.scrollTo(raw)
+			refTextArea.scrollTo(ref)
 		}
 
 		requestManager = RequestManager(diffManager, coroutineDispatcher, dialogDisplayer)
@@ -169,6 +182,21 @@ class MainFrame(private val environment: Environment) {
 		}
 	}
 
+	private fun configureScrolling(textArea: AbstractTextArea<*>, update: KFunction2<DiffManager, DiffManager.ScrollPos, Unit>) {
+		textArea.addScrollListener { pos ->
+			if (inScrollPosUpdate) {
+				return@addScrollListener
+			}
+
+			inScrollPosUpdate = true
+			try {
+				update(diffManager, pos)
+			} finally {
+				inScrollPosUpdate = false
+			}
+		}
+	}
+
 	private fun createSchemeComboBox(): JComboBox<Schemes.Scheme> {
 		val configurationProvider = environment.configurationProvider
 		val scheme = configurationProvider.get(Schemes)
@@ -259,8 +287,8 @@ class MainFrame(private val environment: Environment) {
 		val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
 		splitPane.resizeWeight = 0.5
 
-		val refControl = refTextArea.createControl()
-		splitPane.topComponent = rawTextArea.createControl()
+		val refControl = refTextArea.getControl()
+		splitPane.topComponent = rawTextArea.getControl()
 		splitPane.bottomComponent = refControl
 
 		var splitInitializing = true
@@ -352,7 +380,7 @@ class MainFrame(private val environment: Environment) {
 		rawTextArea.setText(text)
 
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
-			diffManager.updateRef(Files.readString(Path.of(it)), true)
+			diffManager.updateRefText(Files.readString(Path.of(it)), true)
 		}
 
 		if (environment.configurationProvider.get(GuiConfiguration).submitOnInvocation &&
@@ -360,10 +388,10 @@ class MainFrame(private val environment: Environment) {
 
 			var listener: ((DiffManager.State) -> Unit)? = null
 			listener = {
-				diffManager.removeListener(listener!!)
+				diffManager.removeStateListener(listener!!)
 				submitter.run()
 			}
-			diffManager.addListener(listener)
+			diffManager.addStateListener(listener)
 		}
 	}
 

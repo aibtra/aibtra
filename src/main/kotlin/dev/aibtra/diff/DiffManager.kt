@@ -15,6 +15,7 @@ import dev.aibtra.text.FilteredText
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
+import java.util.function.Consumer
 
 class DiffManager(
 	initialConfig: Config,
@@ -23,13 +24,15 @@ class DiffManager(
 	private val debugLog: DebugLog
 ) {
 	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
-	private val listeners = ArrayList<(State) -> Unit>()
+	private val stateListeners = ArrayList<(State) -> Unit>()
+	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
 
-	private var data: Data = Data(Input("", "", "", initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0)
+	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
+	private var inScrollPosUpdate = false
 	val state: State
 		get() = data.state
 
-	fun updateRaw(raw: String, initial: Boolean = false, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, initial: Boolean = false, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
@@ -39,7 +42,7 @@ class DiffManager(
 
 			// For the "initial" call, we are backing up raw to rawOrg,
 			// for all subsequent calls we are reusing this backup.
-			val rawOrg : String? = if (initial) {
+			val rawOrg: String? = if (initial) {
 				raw
 			}
 			else {
@@ -51,8 +54,8 @@ class DiffManager(
 			// If the raw text is not equal anymore, there must definitely have been a manual change.
 			// On the other hand, we will only overlook a manual change if the user manually normalizes the raw text to exactly the same as the normalized version of rawOrg.
 			// It is reasonable to continue normalizing after such kind of a change.
-			val rawNormalized : String = rawNormalizer.normalize(raw)
-			val rawOrgNormalized : String? = rawOrg?.let { rawNormalizer.normalize(rawOrg) }
+			val rawNormalized: String = rawNormalizer.normalize(raw)
+			val rawOrgNormalized: String? = rawOrg?.let { rawNormalizer.normalize(rawOrg) }
 			val (rawNew, rawOrgNew) = if (rawNormalized == rawOrgNormalized) {
 				Pair(rawNormalized, rawOrg)
 			}
@@ -65,7 +68,7 @@ class DiffManager(
 		}
 	}
 
-	fun updateRef(ref: String, finished: Boolean) {
+	fun updateRefText(ref: String, finished: Boolean) {
 		Ui.assertEdt()
 
 		data.let {
@@ -76,6 +79,44 @@ class DiffManager(
 			// Once starting the refinement, this will be no more the "initial" state, hence reset rawOrg
 			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRef" else null)
 		}
+	}
+
+	fun updateRawScrollPos(rawScrollPos: ScrollPos) {
+		Ui.assertEdt()
+
+		runUpdateScrollPos(Consumer {
+			if (it.rawScrollPos == rawScrollPos) {
+				return@Consumer
+			}
+
+			val refScrollPos = mapScrollPos(rawScrollPos,
+				{ s -> s.raw },
+				{ s -> s.ref },
+				{ b -> b.rawFrom },
+				{ b -> b.refFrom },
+				{ b -> b.rawTo },
+				{ b -> b.refTo })
+			updateScrollPos(rawScrollPos, refScrollPos)
+		})
+	}
+
+	fun updateRefScrollPos(refScrollPos: ScrollPos) {
+		Ui.assertEdt()
+
+		runUpdateScrollPos(Consumer {
+			if (it.refScrollPos == refScrollPos) {
+				return@Consumer
+			}
+
+			val rawScrollPos = mapScrollPos(refScrollPos,
+				{ s -> s.ref },
+				{ s -> s.raw },
+				{ b -> b.refFrom },
+				{ b -> b.rawFrom },
+				{ b -> b.refTo },
+				{ b -> b.rawTo })
+			updateScrollPos(rawScrollPos, refScrollPos)
+		})
 	}
 
 	fun updateInitial(): String? {
@@ -102,23 +143,29 @@ class DiffManager(
 		}
 	}
 
-	fun addListener(listener: (State) -> Unit) {
+	fun addStateListener(listener: (State) -> Unit) {
 		Ui.assertEdt()
 
-		listeners.add(listener)
+		stateListeners.add(listener)
 	}
 
-	fun removeListener(listener: (State) -> Unit) {
+	fun removeStateListener(listener: (State) -> Unit) {
 		Ui.assertEdt()
 
-		listeners.remove(listener)
+		stateListeners.remove(listener)
+	}
+
+	fun addScrollListener(listener: (raw: ScrollPos, ref: ScrollPos) -> Unit) {
+		Ui.assertEdt()
+
+		scrollListeners.add(listener)
 	}
 
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
 		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
 
 		val lastState = data.state
-		data = Data(input, lastState, data.sequenceId + 1)
+		data = Data(input, lastState, data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
 		if (debugOperationName != null) {
 			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", data.input.raw, null)
 			writeDebugFile(data.sequenceId, debugOperationName, "input-clean", data.state.filtered.clean, null)
@@ -157,7 +204,7 @@ class DiffManager(
 				callback {
 					Ui.assertEdt()
 
-					val data = Data(input.copy(callback = null), state, this@DiffManager.data.sequenceId + 1)
+					val data = Data(input.copy(callback = null), state, this@DiffManager.data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
 					this@DiffManager.data = data
 					input.callback?.run()
 
@@ -167,10 +214,38 @@ class DiffManager(
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
 
-					listeners.toList().forEach { it(state) }
+					stateListeners.toList().forEach { it(state) }
 				}
 			}
 		}, forceUpdate)
+	}
+
+	private fun runUpdateScrollPos(consumer: Consumer<Data>) {
+		require(!inScrollPosUpdate)
+
+		inScrollPosUpdate = true
+		try {
+			data.let {
+				consumer.accept(it)
+			}
+		} finally {
+			inScrollPosUpdate = false
+		}
+	}
+
+	private fun updateScrollPos(rawScrollPos: ScrollPos, refScrollPos: ScrollPos) {
+		if (rawScrollPos == data.rawScrollPos && refScrollPos == data.refScrollPos) {
+			return
+		}
+
+		if (rawScrollPos.bottom > data.state.raw.length ||
+			refScrollPos.bottom > data.state.ref.length) {
+			return
+		}
+
+		data = Data(data.input, data.state, data.sequenceId, rawScrollPos, refScrollPos)
+
+		scrollListeners.toList().forEach { it(rawScrollPos, refScrollPos) }
 	}
 
 	private fun computeRawTo(raw: String, ref: String, endBalancerCharCount: Int, lastState: State): Int {
@@ -245,11 +320,62 @@ class DiffManager(
 		}
 	}
 
+	private fun mapScrollPos(
+		pos: ScrollPos,
+		srcText: (state: State) -> String, dstText: (state: State) -> String,
+		srcFrom: (block: DiffBlock) -> Int, dstFrom: (block: DiffBlock) -> Int,
+		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int
+	): ScrollPos {
+		return ScrollPos(
+			mapScrollPos(pos.top, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo),
+			mapScrollPos(pos.bottom, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo)
+		)
+	}
+
+	@Suppress("NAME_SHADOWING")
+	private fun mapScrollPos(
+		srcPos: Int,
+		srcText: (state: State) -> String, dstText: (state: State) -> String,
+		srcFrom: (block: DiffBlock) -> Int, dstFrom: (block: DiffBlock) -> Int,
+		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int
+	): Int {
+		val state = data.state
+		val srcMax = srcText(state).length - 1
+		val dstMax = dstText(state).length - 1
+		val beforeIndex = state.blocks.binarySearch {
+			srcFrom(it).compareTo(srcPos)
+		}.let {
+			if (it < 0) -it - 2 else it
+		}
+
+		if (beforeIndex < 0) {
+			return srcPos
+		}
+
+		if (beforeIndex >= state.blocks.size) {
+			return dstMax - Math.max(0, Math.min(dstMax - (srcMax - srcPos), dstMax))
+		}
+
+		val lowerBlock = state.blocks[beforeIndex]
+		val srcTo = srcTo(lowerBlock)
+		val dstTo = dstTo(lowerBlock)
+		if (srcPos >= srcTo) {
+			return Math.min(dstTo + (srcPos - srcTo), dstMax)
+		}
+
+		val srcFrom = srcFrom(lowerBlock)
+		val dstFrom = dstFrom(lowerBlock)
+		require(srcPos >= srcFrom)
+
+		val ratio = (srcPos - srcFrom) / (srcTo - srcFrom).toDouble()
+		return dstFrom + ((dstTo - dstFrom) * ratio).toInt()
+	}
+
 	class State(val raw: String, val rawTo: Int, val rawChars: List<DiffChar>, val filtered: FilteredText, val ref: String, val refFormatted: String, val refChars: List<DiffChar>, val blocks: List<DiffBlock>)
 
-	private data class Input(val raw: String, val rawOrg: String?, val ref: String, val config: Config, val finished: Boolean, val callback: Runnable?)
+	private data class Input(val raw: String, val rawOrg: String?, val rawScrollPos: ScrollPos, val ref: String, val refScrollPos: ScrollPos, val config: Config, val finished: Boolean, val callback: Runnable?)
 
-	private class Data(val input: Input, val state: State, val sequenceId: Int)
+	private class Data(val input: Input, val state: State, val sequenceId: Int, val rawScrollPos: ScrollPos, val refScrollPos: ScrollPos)
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
@@ -296,5 +422,11 @@ class DiffManager(
 
 	fun interface RawNormalizer {
 		fun normalize(text: String): String
+	}
+
+	data class ScrollPos(val top: Int, val bottom: Int) {
+		companion object {
+			val INITIAL = ScrollPos(0, 0)
+		}
 	}
 }
