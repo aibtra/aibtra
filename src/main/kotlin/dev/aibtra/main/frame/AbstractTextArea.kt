@@ -6,7 +6,9 @@ package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffChar
+import dev.aibtra.diff.DiffManager
 import java.awt.*
+import java.awt.geom.Point2D
 import java.awt.geom.Rectangle2D
 import java.awt.image.BufferedImage
 import javax.swing.JScrollPane
@@ -35,6 +37,50 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 
 	protected fun updateCharacterAttributes(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
 		highlighter.run(chars, highlightStyle)
+	}
+
+	fun scrollTo(pos: DiffManager.ScrollPos) {
+		if (pos == createScrollPos()) {
+			return
+		}
+
+		if (pos.top == 0) {
+			textArea.scrollRectToVisible(Rectangle(0, 0, 0, 0))
+			return
+		}
+
+		if (pos.bottom >= textArea.text.length - 1) {
+			val height = textArea.visibleRect.height
+			textArea.scrollRectToVisible(Rectangle(0, textArea.height - height, 0, height))
+			return
+		}
+
+		val top = textArea.modelToView2D(pos.top)
+		val bottom = textArea.modelToView2D(pos.bottom)
+		if (top == null || bottom == null) {
+			return
+		}
+
+		val topBounds = top.bounds
+		val bottomBounds = bottom.bounds
+		textArea.scrollRectToVisible(Rectangle(topBounds.x, topBounds.y, 0, bottomBounds.y + bottomBounds.height - topBounds.y))
+	}
+
+	fun addScrollListener(callback: (pos: DiffManager.ScrollPos) -> Unit) {
+		scrollPane.viewport.addChangeListener {
+			callback(createScrollPos())
+		}
+	}
+
+	private fun createScrollPos(): DiffManager.ScrollPos {
+		val rect = scrollPane.viewport.viewRect
+		val topModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), rect.y.toDouble()))
+		val bottomModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), (rect.y + rect.height).toDouble()))
+		if (topModel < 0 || bottomModel < 0) {
+			return DiffManager.ScrollPos(0, 0)
+		}
+
+		return DiffManager.ScrollPos(topModel, bottomModel)
 	}
 
 	private class Highlighter(private val textArea: JTextArea, private val configurationProvider: ConfigurationProvider) {
