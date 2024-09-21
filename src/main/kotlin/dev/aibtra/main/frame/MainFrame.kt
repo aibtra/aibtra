@@ -20,6 +20,7 @@ import java.awt.event.*
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.swing.*
+import kotlin.reflect.KFunction2
 
 class MainFrame(private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer
@@ -38,6 +39,8 @@ class MainFrame(private val environment: Environment) {
 	private val toggleFilterMarkdownAction: MainMenuAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
+
+	private var inScrollPosUpdate = false
 
 	init {
 		frame = JFrame(FRAME_TITLE)
@@ -62,6 +65,9 @@ class MainFrame(private val environment: Environment) {
 			diffManagerRefresher.refresh()
 		}
 
+		configureScrolling(rawTextArea, DiffManager::updateRawScrollPos)
+		configureScrolling(refTextArea, DiffManager::updateRefScrollPos)
+
 		diffManager.addStateListener { state ->
 			Ui.assertEdt()
 
@@ -71,6 +77,13 @@ class MainFrame(private val environment: Environment) {
 			}
 
 			refTextArea.setText(state.refFormatted, state.refChars)
+		}
+
+		diffManager.addScrollListener { raw, ref ->
+			Ui.assertEdt()
+
+			rawTextArea.scrollTo(raw)
+			refTextArea.scrollTo(ref)
 		}
 
 		requestManager = RequestManager(diffManager, coroutineDispatcher, dialogDisplayer)
@@ -165,6 +178,21 @@ class MainFrame(private val environment: Environment) {
 			}
 			else {
 				it.copy(x = location.x, y = location.y, width = size.width, height = size.height, maximized = false)
+			}
+		}
+	}
+
+	private fun configureScrolling(textArea: AbstractTextArea<*>, update: KFunction2<DiffManager, DiffManager.ScrollPos, Unit>) {
+		textArea.addScrollListener { pos ->
+			if (inScrollPosUpdate) {
+				return@addScrollListener
+			}
+
+			inScrollPosUpdate = true
+			try {
+				update(diffManager, pos)
+			} finally {
+				inScrollPosUpdate = false
 			}
 		}
 	}
