@@ -54,7 +54,7 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 			setup(object : FlatLightLaf() {
 				override fun getDefaults(): UIDefaults {
 					val defaults = super.getDefaults()
-					defaults["TextArea.foreground"] = guiColors.dark.textColor
+					defaults["TextArea.foreground"] = guiColors.light.textColor
 					return defaults
 				}
 			})
