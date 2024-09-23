@@ -34,8 +34,8 @@ class MainFrame(private val environment: Environment) {
 	private val applyChangeAction: MainMenuAction
 	private val copyAndCloseAction: MainMenuAction
 	private val pasteAndSubmitAction: MainMenuAction
-	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val profileComboBox: JComboBox<OpenAIConfiguration.Profile>
+	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val toggleFilterMarkdownAction: MainMenuAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
@@ -98,8 +98,8 @@ class MainFrame(private val environment: Environment) {
 			}
 		}
 
-		schemeComboBox = createSchemeComboBox()
 		profileComboBox = createProfileComboBox()
+		schemeComboBox = createSchemeComboBox()
 		submitter = Submitter(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
 
 		val submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
@@ -132,9 +132,9 @@ class MainFrame(private val environment: Environment) {
 
 		val mainToolBar = ToolBar(environment.theme, true)
 		mainToolBar.add(submitAction)
-		mainToolBar.add(schemeComboBox)
-		mainToolBar.add(Box.createRigidArea(Dimension(5, 0)))
 		mainToolBar.add(profileComboBox)
+		mainToolBar.add(Box.createRigidArea(Dimension(5, 0)))
+		mainToolBar.add(schemeComboBox)
 		mainToolBar.add(applyChangeAction)
 		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(pasteAndSubmitAction)
