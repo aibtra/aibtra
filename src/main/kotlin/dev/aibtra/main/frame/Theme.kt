@@ -12,6 +12,7 @@ import dev.aibtra.configuration.ConfigurationProvider
 import java.awt.Frame
 import javax.swing.SwingUtilities
 import javax.swing.UIDefaults
+import javax.swing.plaf.ColorUIResource
 
 
 class Theme(val configurationProvider: ConfigurationProvider) {
@@ -45,7 +46,7 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 				override fun getDefaults(): UIDefaults {
 					val defaults = super.getDefaults()
 					defaults["TextArea.background"] = defaults["Panel.background"]
-					defaults["TextArea.foreground"] = guiColors.dark.textColor
+					defaults["TextArea.foreground"] = ColorUIResource(guiColors.dark.textColor)
 					return defaults
 				}
 			})
@@ -54,7 +55,7 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 			setup(object : FlatLightLaf() {
 				override fun getDefaults(): UIDefaults {
 					val defaults = super.getDefaults()
-					defaults["TextArea.foreground"] = guiColors.light.textColor
+					defaults["TextArea.foreground"] = ColorUIResource(guiColors.light.textColor)
 					return defaults
 				}
 			})
