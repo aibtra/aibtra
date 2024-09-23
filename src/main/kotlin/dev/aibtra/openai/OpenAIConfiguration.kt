@@ -14,7 +14,7 @@ data class OpenAIConfiguration(
 	val defaultProfileName: String = PROOFREAD_TITLE
 ) {
 	@Serializable
-	class Profile(val name: String, val model: String, val instructions: String)
+	class Profile(val name: String, val model: String, val instructions: String, val supportsSchemes: Boolean = false)
 
 	fun currentProfile(): Profile {
 		return profiles.find { it.name == defaultProfileName } ?: PROOFREAD
@@ -29,21 +29,24 @@ data class OpenAIConfiguration(
 			"Correct typos and grammar in the markdown following " +
 					"AND stay as close as possible to the original " +
 					"AND do not change the markdown structure " +
-					"AND preserve the detected language:"
+					"AND preserve the detected language:",
+			true
 		)
 
 		private val IMPROVE = Profile(
-			"Improve (GPT-4o)", MODEL_4O,
+			"Improve Text (GPT-4o)", MODEL_4O,
 			"Proofread " +
 							"AND improve wording, but stay close to the original, only apply changes to quite uncommon wording " +
 							"AND do not change the markdown structure or indentation or other special symbols " +
-							"AND preserve the detected language:"
+							"AND preserve the detected language:",
+			true
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
 			"To Standard English (GPT-4o)", MODEL_4O,
 			"Rewrite to Standard English " +
-					"BUT stay as close as possible to the original:"
+					"BUT stay as close as possible to the original:",
+			true
 		)
 
 		override fun name(): String = "openai"

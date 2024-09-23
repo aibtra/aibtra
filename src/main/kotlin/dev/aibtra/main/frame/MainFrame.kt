@@ -101,6 +101,9 @@ class MainFrame(private val environment: Environment) {
 
 		profileComboBox = createProfileComboBox()
 		schemeComboBox = createSchemeComboBox()
+
+		updateSchemesEnabledState()
+
 		submitter = Submitter(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
 
 		val submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
@@ -276,12 +279,20 @@ class MainFrame(private val environment: Environment) {
 						}
 
 						lastSelected = profile
+
+						updateSchemesEnabledState()
 					}
 				}
 			}
 		})
 
 		return comboBox
+	}
+
+	private fun updateSchemesEnabledState() {
+		(profileComboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
+			schemeComboBox.isEnabled = profile.supportsSchemes
+		}
 	}
 
 	private fun fillContent(container: Container) {
