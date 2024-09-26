@@ -30,21 +30,19 @@ class DiffManager(
 	val state: State
 		get() = data.state
 
-	fun updateRawText(raw: String, config: Config, initial: Boolean = false, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, config: Config, normalization: Normalization = Normalization.asIs, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
-			if (it.input.raw == raw && config == it.input.config && !initial && callback == null) {
+			if (it.input.raw == raw && config == it.input.config && normalization == Normalization.asIs && callback == null) {
 				return raw
 			}
 
 			// For the "initial" call, we are backing up raw to rawOrg,
 			// for all subsequent calls we are reusing this backup.
-			val rawOrg: String? = if (initial) {
-				raw
-			}
-			else {
-				it.input.rawOrg
+			val rawOrg: String? = when (normalization) {
+				Normalization.initialize -> raw
+				Normalization.asIs -> it.input.rawOrg
 			}
 
 			// We will apply the normalization as long as the raw text has not been manually changed.
@@ -374,5 +372,9 @@ class DiffManager(
 		companion object {
 			val INITIAL = ScrollPos(0, 0)
 		}
+	}
+
+	enum class Normalization {
+		initialize, asIs
 	}
 }
