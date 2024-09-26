@@ -24,6 +24,7 @@ class DelayedUiRefresher(
 			val timer = Timer(delay) {
 				run()
 			}
+			timer.isRepeats = false
 
 			this.timer = timer
 			timer.start()
