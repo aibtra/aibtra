@@ -58,7 +58,7 @@ class MainFrame(private val environment: Environment) {
 
 		profileManager = ProfileManager(environment.configurationProvider)
 
-		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, initial = true) }, environment)
+		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.initialize) }, environment)
 		rawTextArea.setWordWrap(profileManager.profile().wordWrap)
 		refTextArea = RefTextArea(environment)
 		refTextArea.setWordWrap(profileManager.profile().wordWrap)
