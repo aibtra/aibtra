@@ -17,8 +17,8 @@ class ApplyChangeAction(
 ) :
 	MainMenuAction("applyChange", "Apply", Icons.ACCEPT, "Apply", "alt LEFT", accelerators, ActionRunnable {
 		val state = diffManager.state
-		val rawText = state.raw
-		val refText = state.ref
+		val rawText = state.diff.raw
+		val refText = state.diff.ref
 		require(rawTextArea.getText() == rawText)
 
 		refTextArea.getSelectionRange()?.let {
@@ -30,7 +30,7 @@ class ApplyChangeAction(
 			}.collect(Collectors.joining(",")))
 
 			for (block in blocks) {
-				rawTextArea.replaceText(block.rawFrom, block.rawTo, state.ref.substring(block.refFrom, block.refTo))
+				rawTextArea.replaceText(block.rawFrom, block.rawTo, state.diff.ref.substring(block.refFrom, block.refTo))
 			}
 		}
 	}) {

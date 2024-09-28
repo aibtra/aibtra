@@ -135,11 +135,12 @@ class DiffFormatterTest {
 
 	private fun assert(raw: String, rawCharsExpected: String, ref: String, refFullCharsExpected: String, refKeptCharsExpected: String, rawTo: Int = raw.length) {
 		val blocks = DiffBuilder(raw.substring(0, rawTo), ref, true, true, true).build()
-		val rawFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(raw, rawTo, ref, blocks)
+		val diff = Diff(raw, rawTo, ref, blocks, false)
+		val rawFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 		val rawCharsActual = formatChars(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
-		val refFullFormatted = DiffFormatter(DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED).format(raw, rawTo, ref, blocks)
+		val refFullFormatted = DiffFormatter(DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED).format(diff)
 		val refFullCharsActual = formatChars(raw, ref, refFullFormatted.second, DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED)
-		val refKeptFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED).format(raw, rawTo, ref, blocks)
+		val refKeptFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED).format(diff)
 		val refKeptCharsActual = formatChars(raw, ref, refKeptFormatted.second, DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED)
 
 		Assertions.assertEquals(
