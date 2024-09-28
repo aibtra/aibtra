@@ -5,7 +5,11 @@
 package dev.aibtra.diff
 
 class DiffFormatter(private val mode: Mode) {
-	fun format(raw: String, rawTo: Int, ref: String, blocks: List<DiffBlock>): Pair<String, List<DiffChar>> {
+	fun format(diff: Diff): Pair<String, List<DiffChar>> {
+		val raw = diff.raw
+		val rawTo = diff.rawTo
+		val ref = diff.ref
+		val blocks = diff.blocks
 		if (ref.isEmpty() && blocks.isEmpty()) {
 			return when (mode) {
 				Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED -> {

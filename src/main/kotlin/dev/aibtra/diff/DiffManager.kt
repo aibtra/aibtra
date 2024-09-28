@@ -27,7 +27,7 @@ class DiffManager(
 	private val stateListeners = ArrayList<(State) -> Unit>()
 	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
 
-	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, initialConfig, true, null), State("", 0, listOf(), FilteredText.asIs(""), "", "", listOf(), listOf()), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
+	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, initialConfig, true, null), State(listOf(), FilteredText.asIs(""), "", listOf(), Diff.INITIAL), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
 	private var inScrollPosUpdate = false
 	val state: State
 		get() = data.state
@@ -90,8 +90,8 @@ class DiffManager(
 			}
 
 			val refScrollPos = mapScrollPos(rawScrollPos,
-				{ s -> s.raw },
-				{ s -> s.ref },
+				{ s -> s.diff.raw },
+				{ s -> s.diff.ref },
 				{ b -> b.rawFrom },
 				{ b -> b.refFrom },
 				{ b -> b.rawTo },
@@ -109,8 +109,8 @@ class DiffManager(
 			}
 
 			val rawScrollPos = mapScrollPos(refScrollPos,
-				{ s -> s.ref },
-				{ s -> s.raw },
+				{ s -> s.diff.ref },
+				{ s -> s.diff.raw },
 				{ b -> b.refFrom },
 				{ b -> b.rawFrom },
 				{ b -> b.refTo },
@@ -182,8 +182,9 @@ class DiffManager(
 				val finished = input.finished
 				val rawTo = if (finished) raw.length else computeRawTo(raw, ref, config.endBalancerCharCount, lastState)
 				val blocks = if (ref.isNotEmpty()) DiffBuilder(raw.substring(0, rawTo), ref, true, true, true).build() else listOf()
+				val diff = Diff(raw, rawTo, ref, blocks, finished)
 
-				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(raw, rawTo, ref, blocks)
+				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 				require(rawFormatted.length == raw.length)
 
 				val filtered: FilteredText = if (config.filterMarkdown) {
@@ -199,8 +200,8 @@ class DiffManager(
 				else {
 					DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED
 				}
-				val (refFormatted, refChars) = DiffFormatter(mode).format(raw, rawTo, ref, blocks)
-				val state = State(raw, rawTo, rawChars, filtered, ref, refFormatted, refChars, blocks)
+				val (refFormatted, refChars) = DiffFormatter(mode).format(diff)
+				val state = State(rawChars, filtered, refFormatted, refChars, diff)
 				callback {
 					Ui.assertEdt()
 
@@ -209,7 +210,7 @@ class DiffManager(
 					input.callback?.run()
 
 					if (debugOperationName != null) {
-						writeDebugFile(data.sequenceId, debugOperationName, "state-raw", data.state.raw, data.state.rawChars)
+						writeDebugFile(data.sequenceId, debugOperationName, "state-raw", data.state.diff.raw, data.state.rawChars)
 						writeDebugFile(data.sequenceId, debugOperationName, "state-clean", data.state.filtered.clean, null)
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
@@ -238,8 +239,8 @@ class DiffManager(
 			return
 		}
 
-		if (rawScrollPos.bottom > data.state.raw.length ||
-			refScrollPos.bottom > data.state.ref.length) {
+		if (rawScrollPos.bottom > data.state.diff.raw.length ||
+			refScrollPos.bottom > data.state.diff.ref.length) {
 			return
 		}
 
@@ -249,20 +250,20 @@ class DiffManager(
 	}
 
 	private fun computeRawTo(raw: String, ref: String, endBalancerCharCount: Int, lastState: State): Int {
-		if (lastState.rawTo == 0 // if not yet initialized, our best guess it to use equal length
-			|| raw != lastState.raw // if raw has changed, everything could have changed, hence reset
+		if (lastState.diff.rawTo == 0 // if not yet initialized, our best guess it to use equal length
+			|| raw != lastState.diff.raw // if raw has changed, everything could have changed, hence reset
 			|| ref.isEmpty()  // if ref is empty or shrank, this is a new request, hence reset
-			|| ref.length < lastState.ref.length
+			|| ref.length < lastState.diff.ref.length
 		) {
 			return Math.min(raw.length, ref.length)
 		}
 
-		var rawTo = lastState.rawTo
-		var refTo = lastState.ref.length
+		var rawTo = lastState.diff.rawTo
+		var refTo = lastState.diff.ref.length
 		var rawCount = 0
 		var refCount = 0
 		var allCount = 0
-		for (block in lastState.blocks.reversed()) {
+		for (block in lastState.diff.blocks.reversed()) {
 			val equal = rawTo - block.rawTo
 			val refEqual = refTo - block.refTo
 			require(equal == refEqual)
@@ -286,8 +287,8 @@ class DiffManager(
 		}
 
 		val imbalance = rawCount - refCount
-		val balancedRawTo = lastState.rawTo - imbalance
-		return Math.min(raw.length, Math.max(balancedRawTo, lastState.rawTo))
+		val balancedRawTo = lastState.diff.rawTo - imbalance
+		return Math.min(raw.length, Math.max(balancedRawTo, lastState.diff.rawTo))
 	}
 
 	private fun writeDebugFile(sequenceId: Int, operationName: String, type: String, text: String, diffChars: List<DiffChar>?) {
@@ -342,7 +343,7 @@ class DiffManager(
 		val state = data.state
 		val srcMax = srcText(state).length - 1
 		val dstMax = dstText(state).length - 1
-		val beforeIndex = state.blocks.binarySearch {
+		val beforeIndex = state.diff.blocks.binarySearch {
 			srcFrom(it).compareTo(srcPos)
 		}.let {
 			if (it < 0) -it - 2 else it
@@ -352,11 +353,11 @@ class DiffManager(
 			return srcPos
 		}
 
-		if (beforeIndex >= state.blocks.size) {
+		if (beforeIndex >= state.diff.blocks.size) {
 			return dstMax - Math.max(0, Math.min(dstMax - (srcMax - srcPos), dstMax))
 		}
 
-		val lowerBlock = state.blocks[beforeIndex]
+		val lowerBlock = state.diff.blocks[beforeIndex]
 		val srcTo = srcTo(lowerBlock)
 		val dstTo = dstTo(lowerBlock)
 		if (srcPos >= srcTo) {
@@ -371,7 +372,7 @@ class DiffManager(
 		return dstFrom + ((dstTo - dstFrom) * ratio).toInt()
 	}
 
-	class State(val raw: String, val rawTo: Int, val rawChars: List<DiffChar>, val filtered: FilteredText, val ref: String, val refFormatted: String, val refChars: List<DiffChar>, val blocks: List<DiffBlock>)
+	class State(val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff)
 
 	private data class Input(val raw: String, val rawOrg: String?, val rawScrollPos: ScrollPos, val ref: String, val refScrollPos: ScrollPos, val config: Config, val finished: Boolean, val callback: Runnable?)
 
@@ -385,10 +386,10 @@ class DiffManager(
 
 			val refFrom = state.refChars[range.first].posRef
 			val refTo = state.refChars[range.last].posRef
-			require(refFrom >= 0 && refTo < state.ref.length)
+			require(refFrom >= 0 && refTo < state.diff.ref.length)
 
 			val selected = ArrayList<DiffBlock>()
-			for (block in state.blocks) {
+			for (block in state.diff.blocks) {
 				if (block.refFrom == block.refTo
 					&& refFrom <= block.refFrom
 					&& block.refFrom <= refTo + 1

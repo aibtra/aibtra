@@ -72,7 +72,7 @@ class MainFrame(private val environment: Environment) {
 			Ui.assertEdt()
 
 			val rawText = rawTextArea.getText()
-			if (rawText == state.raw) {
+			if (rawText == state.diff.raw) {
 				rawTextArea.setDiffCharsAndFilteredText(state.rawChars, state.filtered)
 			}
 
