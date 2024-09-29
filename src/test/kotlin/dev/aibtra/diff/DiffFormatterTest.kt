@@ -14,9 +14,15 @@ class DiffFormatterTest {
 		assert(
 			"Everything is equal.",
 			"                    ",
+			"01234567890123456789",
+			"01234567890123456789",
 			"Everything is equal.",
 			"                    ",
-			"                    "
+			"01234567890123456789",
+			"01234567890123456789",
+			"                    ",
+			"01234567890123456789",
+			"01234567890123456789"
 		)
 	}
 
@@ -25,8 +31,14 @@ class DiffFormatterTest {
 		assert(
 			"Some text yet to be processed",
 			"-----------------------------",
+			"01234567890123456789012345678",
+			"-----------------------------",
 			"",
 			"-----------------------------",
+			"01234567890123456789012345678",
+			"-----------------------------",
+			"",
+			"",
 			""
 		)
 	}
@@ -36,9 +48,15 @@ class DiffFormatterTest {
 		assert(
 			"Ther is a typo.",
 			"   ><          ",
+			"012345678901234",
+			"012446789012345",
 			"There is a typo.",
 			"    +           ",
-			"    +           "
+			"0123445678901234",
+			"0123456789012345",
+			"    +           ",
+			"0123345678901234",
+			"0123456789012345"
 		)
 	}
 
@@ -47,9 +65,15 @@ class DiffFormatterTest {
 		assert(
 			"There is a typo.",
 			"<               ",
+			"0123456789012345",
+			"0234567890123456",
 			"xThere is a typo.",
 			"+                ",
-			"+                "
+			"00123456789012345",
+			"01234567890123456",
+			"+                ",
+			"-0123456789012345",
+			"01234567890123456"
 		)
 	}
 
@@ -58,9 +82,15 @@ class DiffFormatterTest {
 		assert(
 			"There is a typo.",
 			"               >",
+			"0123456789012345",
+			"0123456789012346",
 			"There is a typo.x",
 			"                +",
-			"                +"
+			"01234567890123456",
+			"01234567890123456",
+			"                +",
+			"01234567890123455",
+			"01234567890123456"
 		)
 	}
 
@@ -69,9 +99,15 @@ class DiffFormatterTest {
 		assert(
 			"Thereeee is a typo.",
 			"     ---           ",
+			"0123456789012345678",
+			"0123444456789012345",
 			"There is a typo.",
 			"     ---           ",
-			"    ><          "
+			"0123456789012345678",
+			"0123444456789012345",
+			"    ><          ",
+			"0123559012345678",
+			"0123456789012345"
 		)
 	}
 
@@ -80,9 +116,15 @@ class DiffFormatterTest {
 		assert(
 			"xThere is a typo.",
 			"-                ",
+			"01234567890123456",
+			"-0123456789012345",
 			"There is a typo.",
 			"-                ",
-			"<               "
+			"01234567890123456",
+			"-0123456789012345",
+			"<               ",
+			"0234567890123456",
+			"0123456789012345"
 		)
 	}
 
@@ -91,9 +133,15 @@ class DiffFormatterTest {
 		assert(
 			"There is a typo.x",
 			"                -",
+			"01234567890123456",
+			"01234567890123455",
 			"There is a typo.",
 			"                -",
-			"               >"
+			"01234567890123456",
+			"01234567890123455",
+			"               >",
+			"0123456789012346",
+			"0123456789012345"
 		)
 	}
 
@@ -102,9 +150,15 @@ class DiffFormatterTest {
 		assert(
 			"Theree is a typo.",
 			"     ~~~         ",
+			"01234567890123456",
+			"01234555777777777",
 			"There is",
 			"     ---+++",
+			"01234567888",
+			"01234555567",
 			"     ~~~",
+			"01234555",
+			"01234567",
 			rawTo = 8
 		)
 	}
@@ -114,9 +168,15 @@ class DiffFormatterTest {
 		assert(
 			"Theree is a typo.",
 			"     -           ",
+			"01234567890123456",
+			"01234456777777777",
 			"There is",
 			"     -   ",
+			"012345678",
+			"012344567",
 			"    ><  ",
+			"01235578",
+			"01234567",
 			rawTo = 9
 		)
 	}
@@ -126,26 +186,38 @@ class DiffFormatterTest {
 		assert(
 			"Theree is a typo.",
 			"     -           ",
+			"01234567890123456",
+			"01234456788888888",
 			"There is ",
 			"     -    ",
+			"0123456789",
+			"0123445678",
 			"    ><   ",
+			"012355789",
+			"012345678",
 			rawTo = 10
 		)
 	}
 
-	private fun assert(raw: String, rawCharsExpected: String, ref: String, refFullCharsExpected: String, refKeptCharsExpected: String, rawTo: Int = raw.length) {
+	private fun assert(raw: String, rawCharsExpected: String, rawCharsRawPossExpected: String, rawCharsRefPossExpected: String, ref: String, refFullCharsExpected: String, refFullCharsRawPossExpected: String, refFullCharsRefPossExpected: String, refKeptCharsExpected: String, refKeptCharsRawPossExpected: String, refKeptCharsRefPossExpected: String, rawTo: Int = raw.length) {
 		val blocks = DiffBuilder(raw.substring(0, rawTo), ref, true, true, true).build()
 		val diff = Diff(raw, rawTo, ref, blocks, false)
 		val rawFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 		val rawCharsActual = formatChars(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
+		val rawCharsRawPossActual = formatRawCharPoss(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
+		val rawCharsRefPossActual = formatRefCharPoss(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
 		val refFullFormatted = DiffFormatter(DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED).format(diff)
 		val refFullCharsActual = formatChars(raw, ref, refFullFormatted.second, DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED)
+		val refFullCharsRawPossActual = formatRawCharPoss(raw, ref, refFullFormatted.second, DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED)
+		val refFullCharsRefPossActual = formatRefCharPoss(raw, ref, refFullFormatted.second, DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED)
 		val refKeptFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED).format(diff)
 		val refKeptCharsActual = formatChars(raw, ref, refKeptFormatted.second, DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED)
+		val refKeptCharsRawPossActual = formatRawCharPoss(raw, ref, refKeptFormatted.second, DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED)
+		val refKeptCharsRefPossActual = formatRefCharPoss(raw, ref, refKeptFormatted.second, DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED)
 
 		Assertions.assertEquals(
-			format(raw, rawCharsExpected, ref, refFullCharsExpected, refKeptCharsExpected),
-			format(raw, rawCharsActual, ref, refFullCharsActual, refKeptCharsActual)
+			format(raw, rawCharsExpected, rawCharsRawPossExpected, rawCharsRefPossExpected, ref, refFullCharsExpected, refFullCharsRawPossExpected, refFullCharsRefPossExpected, refKeptCharsExpected, refKeptCharsRawPossExpected, refKeptCharsRefPossExpected),
+			format(raw, rawCharsActual, rawCharsRawPossActual, rawCharsRefPossActual, ref, refFullCharsActual, refFullCharsRawPossActual, refFullCharsRefPossActual, refKeptCharsActual, refKeptCharsRawPossActual, refKeptCharsRefPossActual)
 		)
 	}
 
@@ -160,13 +232,41 @@ class DiffFormatterTest {
 		return text.toString()
 	}
 
-	private fun format(rawText: String, rawChars: String, refFullText: String, refFullChars: String, refKeptChars: String): String {
+	private fun formatRawCharPoss(rawText: String, refText: String, chars: List<DiffChar>, mode: DiffFormatter.Mode): String {
+		assertChars(rawText, refText, chars, mode)
+
+		val text = StringBuilder()
+		for (char in chars) {
+			text.append(if (char.posRaw >= 0) (char.posRaw % 10 + '0'.code).toChar() else '-')
+		}
+
+		return text.toString()
+	}
+
+	private fun formatRefCharPoss(rawText: String, refText: String, chars: List<DiffChar>, mode: DiffFormatter.Mode): String {
+		assertChars(rawText, refText, chars, mode)
+
+		val text = StringBuilder()
+		for (char in chars) {
+			text.append(if (char.posRef >= 0) (char.posRef % 10 + '0'.code).toChar() else '-')
+		}
+
+		return text.toString()
+	}
+
+	private fun format(rawText: String, rawChars: String, rawCharsRawPoss: String, rawCharsRefPoss: String, refFullText: String, refFullChars: String, refFullCharsRawPoss: String, refFullCharsRefPoss: String, refKeptChars: String, refKeptCharsRawPoss: String, refKeptCharsRefPoss: String): String {
 		val text = StringBuilder()
 		text.append("\"$rawText\",\n")
 		text.append("\"$rawChars\",\n")
+		text.append("\"$rawCharsRawPoss\",\n")
+		text.append("\"$rawCharsRefPoss\",\n")
 		text.append("\"$refFullText\",\n")
 		text.append("\"$refFullChars\",\n")
-		text.append("\"$refKeptChars\"\n")
+		text.append("\"$refFullCharsRawPoss\",\n")
+		text.append("\"$refFullCharsRefPoss\",\n")
+		text.append("\"$refKeptChars\",\n")
+		text.append("\"$refKeptCharsRawPoss\",\n")
+		text.append("\"$refKeptCharsRefPoss\"\n")
 		return text.toString()
 	}
 
@@ -176,37 +276,5 @@ class DiffFormatterTest {
 			DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED -> Assertions.assertEquals(refText.length, chars.size)
 			DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED -> {}
 		}
-
-		var raw = -1
-		var ref = -1
-		for (char in chars) {
-			when (mode) {
-				DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED -> {
-					Assertions.assertTrue(char.posRaw == raw || char.posRaw == raw + 1)
-					Assertions.assertTrue(char.posRef >= ref)
-				}
-
-				DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED -> {
-					Assertions.assertTrue(char.posRef == ref || char.posRef == ref + 1)
-					Assertions.assertTrue(char.posRaw >= raw)
-				}
-
-				DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED -> {
-					Assertions.assertTrue(char.posRef == ref || char.posRef == ref + 1)
-					Assertions.assertTrue(char.posRaw >= raw)
-				}
-			}
-
-			raw = char.posRaw
-			ref = char.posRef
-		}
-
-		when (mode) {
-			DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED -> Assertions.assertTrue(raw == rawText.length - 1 || rawText.isEmpty() && raw == 0)
-			DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED -> Assertions.assertTrue(ref == refText.length - 1 || refText.isEmpty() && ref == 0)
-			DiffFormatter.Mode.REPLACE_MODIFIED_BY_ADDED_REMOVED -> {}
-		}
-
-		Assertions.assertTrue(ref == refText.length - 1 || refText.isEmpty() && ref == 0)
 	}
 }
