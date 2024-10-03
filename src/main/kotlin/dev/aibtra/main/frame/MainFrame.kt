@@ -7,6 +7,7 @@ package dev.aibtra.main.frame
 import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.core.WorkingMode
 import dev.aibtra.diff.DiffManager
+import dev.aibtra.diff.DiffManager.State
 import dev.aibtra.gui.DelayedUiRefresher
 import dev.aibtra.gui.Ui
 import dev.aibtra.gui.dialogs.DialogDisplayer
@@ -78,7 +79,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		configureScrolling(rawTextArea, DiffManager::updateRawScrollPos)
 		configureScrolling(refTextArea, DiffManager::updateRefScrollPos)
 
-		diffManager.addStateListener { state ->
+		diffManager.addStateListener { state, _ ->
 			Ui.assertEdt()
 
 			val rawText = rawTextArea.getText()
@@ -463,9 +464,9 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 	}
 
 	private fun configureSubmitOnInvocation() {
-		var listener: ((DiffManager.State) -> Unit)? = null
-		listener = { state ->
-			if (state.diff.raw.isNotEmpty()) {
+		var listener: ((state: State, last: State) -> Unit)? = null
+		listener = { state, last ->
+			if (state.diff.raw.isNotEmpty() && last.diff.raw.isEmpty()) {
 				diffManager.removeStateListener(listener!!)
 
 				if (profileManager.profile().submitOnInvocation &&
