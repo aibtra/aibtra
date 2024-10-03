@@ -160,10 +160,9 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		mainToolBar.add(profileComboBox)
 		mainToolBar.add(Box.createRigidArea(Dimension(5, 0)))
 		mainToolBar.add(schemeComboBox)
+		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(applyChangeAction)
-		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(pasteAndSubmitAction)
-		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(toggleShowDiffBeforeAfterAction)
 		mainToolBar.add(toggleDarkModeAction)
 
