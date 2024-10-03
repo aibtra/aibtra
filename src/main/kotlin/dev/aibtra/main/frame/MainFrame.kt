@@ -179,7 +179,11 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		val centerPane = Container()
 		centerPane.layout = BorderLayout()
 		pane.add(centerPane, BorderLayout.CENTER)
-		fillContent(centerPane)
+
+		val rawControl = createRawControl()
+		val refControl = createRefControl()
+		val splitPane = createSplitPane(rawControl, refControl)
+		centerPane.add(splitPane, BorderLayout.CENTER)
 
 		frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
 		frame.isVisible = true
@@ -198,6 +202,55 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 				bottomToolBar.dispose()
 			}
 		})
+	}
+
+	private fun createRawControl(): Component {
+		return rawTextArea.getControl()
+	}
+
+	private fun createRefControl(): Component {
+		val control = refTextArea.getControl()
+		refTextArea.addMouseListener(object : MouseAdapter() {
+			override fun mouseReleased(e: MouseEvent) {
+				refTextArea.getSelectionRange()?.let {
+					val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
+					if (blocks.isNotEmpty()) {
+						val popupMenu = JPopupMenu()
+						popupMenu.add(JMenuItem(applyChangeAction))
+						popupMenu.show(e.component, e.x, e.y)
+					}
+				}
+			}
+		})
+		return control
+	}
+
+	private fun createSplitPane(rawControl: Component, refControl: Component): JSplitPane {
+		val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
+		splitPane.resizeWeight = 0.5
+		splitPane.topComponent = rawControl
+		splitPane.bottomComponent = refControl
+		var splitInitializing = true
+		splitPane.addComponentListener(object : ComponentAdapter() {
+			override fun componentResized(e: ComponentEvent?) {
+				if (splitInitializing) {
+					splitInitializing = false
+
+					val location = environment.configurationProvider.get(Layout).dividerLocation
+					if (location > 0) {
+						splitPane.dividerLocation = location
+					}
+				}
+			}
+		})
+		splitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY) {
+			if (!splitInitializing) {
+				environment.configurationProvider.change(Layout) {
+					it.copy(dividerLocation = splitPane.dividerLocation)
+				}
+			}
+		}
+		return splitPane
 	}
 
 	fun checkClose(runnable: Runnable) {
@@ -337,52 +390,6 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 			}
 		}
 		return submitter
-	}
-
-	private fun fillContent(container: Container) {
-		val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
-		splitPane.resizeWeight = 0.5
-
-		val refControl = refTextArea.getControl()
-		splitPane.topComponent = rawTextArea.getControl()
-		splitPane.bottomComponent = refControl
-
-		var splitInitializing = true
-		splitPane.addComponentListener(object : ComponentAdapter() {
-			override fun componentResized(e: ComponentEvent?) {
-				if (splitInitializing) {
-					splitInitializing = false
-
-					val location = environment.configurationProvider.get(Layout).dividerLocation
-					if (location > 0) {
-						splitPane.dividerLocation = location
-					}
-				}
-			}
-		})
-
-		splitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY) {
-			if (!splitInitializing) {
-				environment.configurationProvider.change(Layout) {
-					it.copy(dividerLocation = splitPane.dividerLocation)
-				}
-			}
-		}
-
-		container.add(splitPane, BorderLayout.CENTER)
-
-		refTextArea.addMouseListener(object : MouseAdapter() {
-			override fun mouseReleased(e: MouseEvent) {
-				refTextArea.getSelectionRange()?.let {
-					val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
-					if (blocks.isNotEmpty()) {
-						val popupMenu = JPopupMenu()
-						popupMenu.add(JMenuItem(applyChangeAction))
-						popupMenu.show(e.component, e.x, e.y)
-					}
-				}
-			}
-		})
 	}
 
 	private fun fillMenuBar(menuBar: JMenuBar) {
