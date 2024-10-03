@@ -8,11 +8,14 @@ import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffManager
 import java.awt.*
+import java.awt.event.MouseEvent
+import java.awt.event.MouseMotionAdapter
 import java.awt.geom.Point2D
 import java.awt.geom.Rectangle2D
 import java.awt.image.BufferedImage
 import javax.swing.JScrollPane
 import javax.swing.JTextArea
+import javax.swing.event.CaretListener
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.text.DefaultHighlighter
@@ -82,6 +85,65 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 				listen()
 			}
 		})
+	}
+
+	fun addSelectionListener(listen: (range: IntRange?) -> Unit) {
+		var currentText = ""
+		textArea.document.addDocumentListener(object : DocumentListener {
+			override fun insertUpdate(e: DocumentEvent) {
+				currentText = textArea.text
+			}
+
+			override fun removeUpdate(e: DocumentEvent) {
+				currentText = textArea.text
+			}
+
+			override fun changedUpdate(e: DocumentEvent) {
+				currentText = textArea.text
+			}
+		})
+
+		var lastSelectionRange: IntRange? = null
+		val notify = fun() {
+			val selectionRange: IntRange? = getSelectionRange()
+			if (currentText == textArea.text && lastSelectionRange != selectionRange) {
+				listen(selectionRange)
+				lastSelectionRange = selectionRange
+			}
+		}
+
+		val caretListener = CaretListener { e ->
+			e?.let {
+				notify()
+			}
+		}
+		textArea.addCaretListener(caretListener)
+		textArea.addMouseMotionListener(object : MouseMotionAdapter() {
+			override fun mouseDragged(e: MouseEvent?) {
+				notify()
+			}
+		})
+	}
+
+	fun getSelectionRange(): IntRange? {
+		val start = textArea.selectionStart
+		val end = textArea.selectionEnd.let {
+			val length = textArea.text.length
+			if (it <= length) {
+				it
+			}
+			else {
+				// Unicode characters which may occupy two Java characters, like U+1F60A, may confuse the selection range.
+				// In such cases, it seems that the end index may be one character too large. This can be reproduced when having
+				// "Hi!\n\nThank for the test repository and detailed information. " in raw text and
+				// "Hi!\n\nThank you for the test repository and the detailed information. U+1F60A" in the refined text and
+				// selecting " U+1F60A".
+				require(it == length + 1)
+				it - 1
+			}
+		}
+
+		return if (start < end) IntRange(start, end - 1) else null
 	}
 
 	fun addScrollListener(callback: (pos: DiffManager.ScrollPos) -> Unit) {
