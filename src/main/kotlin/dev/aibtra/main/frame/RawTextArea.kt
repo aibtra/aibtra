@@ -126,22 +126,6 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		updateCharacterAttributes()
 	}
 
-	fun addContentListener(listen: () -> Unit) {
-		textArea.document.addDocumentListener(object : DocumentListener {
-			override fun insertUpdate(e: DocumentEvent) {
-				listen()
-			}
-
-			override fun removeUpdate(e: DocumentEvent) {
-				listen()
-			}
-
-			override fun changedUpdate(e: DocumentEvent) {
-				listen()
-			}
-		})
-	}
-
 	private fun updateCharacterAttributes() {
 		ignoreUndoableEvents = true
 		try {
