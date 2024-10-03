@@ -8,11 +8,8 @@ import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffKind
 import java.awt.*
-import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
-import java.awt.event.MouseMotionAdapter
 import javax.swing.JTextArea
-import javax.swing.event.CaretListener
 import javax.swing.text.*
 
 class RefTextArea(environment: Environment) :
@@ -25,7 +22,7 @@ class RefTextArea(environment: Environment) :
 	private val configurationProvider: ConfigurationProvider
 	private val documentFilter = NonEditableDocumentFilter()
 
-	private var state: State = State("", listOf())
+	private var state: State = State(listOf())
 
 	init {
 		// We are using a JTextArea and Highlighters instead of a JEditorPane/JTextPane, because these have some bugs related to layouting, especially wrapping of lines which are critical for us.
@@ -54,27 +51,6 @@ class RefTextArea(environment: Environment) :
 		configurationProvider = environment.configurationProvider
 	}
 
-	fun getSelectionRange(): IntRange? {
-		val start = textArea.selectionStart
-		val end = textArea.selectionEnd.let {
-			val length = textArea.text.length
-			if (it <= length) {
-				it
-			}
-			else {
-				// Unicode characters which may occupy two Java characters, like U+1F60A, may confuse the selection range.
-				// In such cases, it seems that the end index may be one character too large. This can be reproduced when having
-				// "Hi!\n\nThank for the test repository and detailed information. " in raw text and
-				// "Hi!\n\nThank you for the test repository and the detailed information. U+1F60A" in the refined text and
-				// selecting " U+1F60A".
-				require(it == length + 1)
-				it - 1
-			}
-		}
-
-		return if (start < end) IntRange(start, end - 1) else null
-	}
-
 	fun setText(text: String, chars: List<DiffChar>) {
 		require(text.length == chars.size)
 
@@ -97,7 +73,7 @@ class RefTextArea(environment: Environment) :
 			documentFilter.locked = true
 		}
 
-		state = State(text, chars)
+		state = State(chars)
 
 		require(text == textArea.text)
 
@@ -123,30 +99,7 @@ class RefTextArea(environment: Environment) :
 		}
 	}
 
-	fun addSelectionListener(listen: (range: IntRange?) -> Unit) {
-		var lastSelectionRange: IntRange? = null
-		val notify = fun() {
-			val selectionRange: IntRange? = getSelectionRange()
-			if (state.text == textArea.text && lastSelectionRange != selectionRange) {
-				listen(selectionRange)
-				lastSelectionRange = selectionRange
-			}
-		}
-
-		val caretListener = CaretListener { e ->
-			e?.let {
-				notify()
-			}
-		}
-		textArea.addCaretListener(caretListener)
-		textArea.addMouseMotionListener(object : MouseMotionAdapter() {
-			override fun mouseDragged(e: MouseEvent?) {
-				notify()
-			}
-		})
-	}
-
-	private data class State(val text: String, val diffChars: List<DiffChar>)
+	private data class State(val diffChars: List<DiffChar>)
 
 	private class NonEditableDocumentFilter : DocumentFilter() {
 		var locked = true
