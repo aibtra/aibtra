@@ -163,9 +163,9 @@ class DiffManager(
 		val lastState = data.state
 		data = Data(input, lastState, data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
 		if (debugOperationName != null) {
-			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", data.input.raw, null)
+			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", input.raw, null)
 			writeDebugFile(data.sequenceId, debugOperationName, "input-clean", data.state.filtered.clean, null)
-			writeDebugFile(data.sequenceId, debugOperationName, "input-ref", data.input.ref, null)
+			writeDebugFile(data.sequenceId, debugOperationName, "input-ref", input.ref, null)
 		}
 
 		sequentialRunner.schedule(object : Run {
