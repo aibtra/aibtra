@@ -13,6 +13,8 @@ import java.awt.geom.Rectangle2D
 import java.awt.image.BufferedImage
 import javax.swing.JScrollPane
 import javax.swing.JTextArea
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import javax.swing.text.DefaultHighlighter
 import javax.swing.text.JTextComponent
 import javax.swing.text.Position
@@ -64,6 +66,22 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		val topBounds = top.bounds
 		val bottomBounds = bottom.bounds
 		textArea.scrollRectToVisible(Rectangle(topBounds.x, topBounds.y, 0, bottomBounds.y + bottomBounds.height - topBounds.y))
+	}
+
+	fun addContentListener(listen: () -> Unit) {
+		textArea.document.addDocumentListener(object : DocumentListener {
+			override fun insertUpdate(e: DocumentEvent) {
+				listen()
+			}
+
+			override fun removeUpdate(e: DocumentEvent) {
+				listen()
+			}
+
+			override fun changedUpdate(e: DocumentEvent) {
+				listen()
+			}
+		})
 	}
 
 	fun addScrollListener(callback: (pos: DiffManager.ScrollPos) -> Unit) {
