@@ -22,7 +22,7 @@ class DiffManager(
 	private val debugLog: DebugLog
 ) {
 	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
-	private val stateListeners = ArrayList<(State) -> Unit>()
+	private val stateListeners = ArrayList<(State, State) -> Unit>()
 	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
 
 	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, INITIAL_CONFIG, true, null), State(listOf(), FilteredText.asIs(""), "", listOf(), Diff.INITIAL), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
@@ -140,13 +140,13 @@ class DiffManager(
 		}
 	}
 
-	fun addStateListener(listener: (State) -> Unit) {
+	fun addStateListener(listener: (state: State, last: State) -> Unit) {
 		Ui.assertEdt()
 
 		stateListeners.add(listener)
 	}
 
-	fun removeStateListener(listener: (State) -> Unit) {
+	fun removeStateListener(listener: (state: State, last: State) -> Unit) {
 		Ui.assertEdt()
 
 		stateListeners.remove(listener)
@@ -161,8 +161,8 @@ class DiffManager(
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
 		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
 
-		val lastState = data.state
-		data = Data(input, lastState, data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
+		val dataState = data.state
+		data = Data(input, dataState, data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
 		if (debugOperationName != null) {
 			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", input.raw, null)
 			writeDebugFile(data.sequenceId, debugOperationName, "input-clean", data.state.filtered.clean, null)
@@ -201,6 +201,7 @@ class DiffManager(
 					Ui.assertEdt()
 
 					val data = Data(input.copy(callback = null), state, this@DiffManager.data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
+					val lastState = this@DiffManager.data.state
 					this@DiffManager.data = data
 					input.callback?.run()
 
@@ -210,7 +211,7 @@ class DiffManager(
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
 
-					stateListeners.toList().forEach { it(state) }
+					stateListeners.toList().forEach { it(state, lastState) }
 				}
 			}
 		}, forceUpdate)
