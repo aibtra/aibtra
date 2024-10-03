@@ -33,13 +33,13 @@ object Dialogs {
 	}
 
 	fun showInfoDialog(title: String, message: String, dialogDisplayer: DialogDisplayer) {
-		LOG.warn(message)
+		LOG.info(message)
 
 		showOptionPane(title, message, dialogDisplayer, JOptionPane.INFORMATION_MESSAGE, "OptionPane.infoIcon")
 	}
 
 	fun showConfirmationDialog(title: String, message: String, okText: String, dialogDisplayer: DialogDisplayer, okRunnable: Runnable) {
-		LOG.warn(message)
+		LOG.info(message)
 
 		showOptionPane(title, message, dialogDisplayer, JOptionPane.INFORMATION_MESSAGE, "OptionPane.infoIcon", arrayOf(okText, "Cancel"), okText) {
 			if (it == 0) {
