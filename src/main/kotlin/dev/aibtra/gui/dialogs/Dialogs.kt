@@ -48,6 +48,19 @@ object Dialogs {
 		}
 	}
 
+	fun showYesNoCancelDialog(title: String, message: String, yesText: String, noText: String, dialogDisplayer: DialogDisplayer, okRunnable: Consumer<Boolean>) {
+		LOG.warn(message)
+
+		showOptionPane(title, message, dialogDisplayer, JOptionPane.INFORMATION_MESSAGE, "OptionPane.infoIcon", arrayOf(yesText, noText, "Cancel"), yesText) {
+			if (it == 0) {
+				okRunnable.accept(true)
+			}
+			else if (it == 1) {
+				okRunnable.accept(false)
+			}
+		}
+	}
+
 	private fun showOptionPane(title: String, message: String, dialogDisplayer: DialogDisplayer, messageType: Int, iconKey: String) {
 		showOptionPane(title, message, dialogDisplayer, messageType, iconKey, null, null, null)
 	}
