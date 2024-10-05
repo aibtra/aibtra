@@ -25,7 +25,7 @@ open class ToolBarAction(
 	val toolBarText: String?
 
 	init {
-		require((toolBarIcon == null) == (toolBarText == null))
+		require((toolBarIcon == null) || (toolBarText != null))
 
 		this.toolBarIcon = toolBarIcon
 		this.toolBarText = toolBarText
