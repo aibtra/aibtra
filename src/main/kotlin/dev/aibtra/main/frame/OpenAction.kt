@@ -25,6 +25,6 @@ class OpenAction(workFile: WorkFile, parent: Component, environment: Environment
 			return@checkSave
 		}
 
-		workFile.load(selectedFile.toPath())
+		workFile.load(selectedFile.toPath(), null)
 	}
 })

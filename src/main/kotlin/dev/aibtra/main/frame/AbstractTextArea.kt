@@ -5,6 +5,7 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
+import dev.aibtra.core.Logger
 import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffManager
 import java.awt.*
@@ -18,12 +19,11 @@ import javax.swing.JTextArea
 import javax.swing.event.CaretListener
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
-import javax.swing.text.DefaultHighlighter
-import javax.swing.text.JTextComponent
-import javax.swing.text.Position
-import javax.swing.text.View
+import javax.swing.text.*
 
 open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environment: Environment) {
+	private val LOG = Logger.getLogger(this::class)
+
 	private val scrollPane = JScrollPane(textArea)
 	private val configurationProvider = environment.configurationProvider
 	private val highlighter = Highlighter(textArea, configurationProvider)
@@ -71,6 +71,19 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		textArea.scrollRectToVisible(Rectangle(topBounds.x, topBounds.y, 0, bottomBounds.y + bottomBounds.height - topBounds.y))
 	}
 
+	fun scrollToLine(line: Int) {
+		if (line < 0 || line >= textArea.lineCount) {
+			return
+		}
+
+		try {
+			val startOffset = textArea.getLineStartOffset(line)
+			val rectangle = textArea.modelToView2D(startOffset)
+			textArea.scrollRectToVisible(rectangle.bounds)
+		} catch (ex: BadLocationException) {
+			LOG.error(ex)
+		}
+	}
 	fun addContentListener(listen: () -> Unit) {
 		textArea.document.addDocumentListener(object : DocumentListener {
 			override fun insertUpdate(e: DocumentEvent) {
