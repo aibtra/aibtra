@@ -44,11 +44,6 @@ class MainStartup {
 		private const val COMMAND_SHOW = "SHOW"
 
 		fun start(paths: ApplicationPaths, args: Array<String>) {
-			val parser = OptionParser()
-			val backgroundOption = parser.accepts("background")
-			val options: OptionSet = parser.parse(*args)
-			val backgroundMode = options.has(backgroundOption)
-
 			configureLogging(paths)
 
 			FlatDarkLaf.setup() // required for very early (error dialogs) and to properly initialize the default font size
@@ -65,32 +60,39 @@ class MainStartup {
 				val application = MainApplication(paths, configurationProvider, buildInfo, coroutineDispatcher, systemTrayEnabled)
 				application.theme.update()
 
+				val arguments = Arguments(args.toList())
 				SwingUtilities.invokeAndWait {
 					installTrayIcon(application)
 					val hotkeyConfigured = configureHotkey(application)
-					if (backgroundMode) {
+					if (arguments.options.backgroundMode) {
 						createLogger().info("Starting in background")
 						if (hotkeyConfigured) {
 							showBackgroundFrame()
 						}
 					}
 					else {
-						showMainFrame(application)
+						invoke(arguments, application)
 					}
 				}
 				application
-			}, { command, application ->
+			}, { command, arguments, application ->
 				require(command == COMMAND_SHOW)
 
-				showMainFrame(application)
-			}).startup(COMMAND_SHOW)
+				invoke(Arguments(arguments), application)
+			}).startup(COMMAND_SHOW, args.asList())
 		}
 
 		private fun configureLogging(paths: ApplicationPaths) {
 			Logger.setup(paths.settingsPath.resolve("log.txt"))
 		}
 
-		private fun showMainFrame(environment: Environment, forceSetClipboard: Boolean = false) {
+		private fun invoke(arguments: Arguments, environment: Environment) {
+			showMainFrame(arguments.options, environment)
+		}
+
+		private fun showMainFrame(options: Options, environment: Environment, forceSetClipboard: Boolean = false) {
+			createLogger().info("show main frame: options=$options")
+
 			Ui.runInEdt {
 				val existingFrame = environment.frameManager.getFrame()
 				val (frame, setClipboard) = if (existingFrame != null) {
@@ -169,7 +171,7 @@ class MainStartup {
 			}
 			val openAction = JMenuItem("Open")
 			openAction.addActionListener {
-				showMainFrame(environment)
+				showMainFrame(Options.NONE, environment)
 				popup.isVisible = false
 			}
 			popup.add(openAction)
@@ -181,7 +183,7 @@ class MainStartup {
 			trayIcon.addMouseListener(object : MouseAdapter() {
 				override fun mouseClicked(e: MouseEvent) {
 					if (e.button == MouseEvent.BUTTON1) {
-						showMainFrame(environment)
+						showMainFrame(Options.NONE, environment)
 					}
 					else if (e.button == MouseEvent.BUTTON3) {
 						val location = MouseInfo.getPointerInfo().location
@@ -198,7 +200,7 @@ class MainStartup {
 
 		private fun configureHotkey(environment: Environment): Boolean {
 			return environment.hotkeyListener.configure {
-				showMainFrame(environment, true)
+				showMainFrame(Options.NONE, environment, true)
 			}
 		}
 
@@ -288,6 +290,25 @@ class MainStartup {
 					true
 				} as ConfigurationFile<Any>
 			} as ConfigurationFile<D>
+		}
+	}
+
+	private data class Options(val backgroundMode : Boolean) {
+		companion object {
+			val NONE: Options = Options(false)
+		}
+	}
+
+	private class Arguments(args: List<String>) {
+		val params: List<String>
+		val options: Options
+
+		init {
+			val parser = OptionParser()
+			val backgroundOption = parser.accepts("background")
+			val optionsSet: OptionSet = parser.parse(*args.toTypedArray())
+			params = optionsSet.nonOptionArguments().stream().map { o -> o.toString() }.toList()
+			options = Options(optionsSet.has(backgroundOption))
 		}
 	}
 }
