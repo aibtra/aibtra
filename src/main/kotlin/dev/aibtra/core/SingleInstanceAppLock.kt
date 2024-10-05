@@ -15,13 +15,13 @@ import java.nio.file.Path
 class SingleInstanceAppLock<T>(
 	private val appPath: Path,
 	val initialize: () -> T?,
-	val runCommand: (command: String, state: T) -> Unit
+	val runCommand: (command: String, params: List<String>, state: T) -> Unit
 ) {
-	fun startup(startupCommand: String) {
+	fun startup(command: String, args: List<String>) {
 		val loopbackAddress = InetAddress.getLoopbackAddress()
 		val lockFile = appPath.resolve("lock")
 		val portFile = appPath.resolve("lock.port")
-		if (tryConnectToExistingInstance(lockFile, portFile, loopbackAddress, startupCommand)) {
+		if (tryConnectToExistingInstance(lockFile, portFile, loopbackAddress, command, args)) {
 			return
 		}
 
@@ -40,7 +40,7 @@ class SingleInstanceAppLock<T>(
 
 				if (fileLock == null) {
 					// This might be the result of a concurrent start-up of another instance, hence give it a second try.
-					if (tryConnectToExistingInstance(lockFile, portFile, loopbackAddress, startupCommand)) {
+					if (tryConnectToExistingInstance(lockFile, portFile, loopbackAddress, command, args)) {
 						return
 					}
 
@@ -70,7 +70,14 @@ class SingleInstanceAppLock<T>(
 					while (true) {
 						try {
 							server.accept().use {
-								runCommand(String(it.getInputStream().readAllBytes()), state)
+								val line = String(it.getInputStream().readAllBytes())
+								val tokens = line.trimEnd().split("\t")
+								if (tokens.isEmpty()) {
+									LOG.error("Invalid command line: ${line}")
+								}
+								else {
+									runCommand(tokens[0], tokens.subList(1, tokens.size), state)
+								}
 							}
 						} catch (e: Exception) {
 							if (server.isClosed) {
@@ -93,7 +100,7 @@ class SingleInstanceAppLock<T>(
 		}
 	}
 
-	private fun tryConnectToExistingInstance(lockFile: Path, portFile: Path, loopbackAddress: InetAddress, startupCommand: String): Boolean {
+	private fun tryConnectToExistingInstance(lockFile: Path, portFile: Path, loopbackAddress: InetAddress, command: String, params: List<String>): Boolean {
 		if (!Files.exists(lockFile)) {
 			return false
 		}
@@ -117,10 +124,11 @@ class SingleInstanceAppLock<T>(
 			val port = String(Files.readAllBytes(portFile)).toInt()
 			val socket = Socket(loopbackAddress, port)
 
-			LOG.info("Connected to running instance, sending '${startupCommand}'")
+			LOG.info("Connected to running instance, sending '${command}'")
 
 			val outputStream = socket.getOutputStream()
-			outputStream.write(startupCommand.toByteArray())
+			val commandWithParams = command + params.joinToString(separator = "\t", prefix = "\t")
+			outputStream.write(commandWithParams.toByteArray())
 			socket.shutdownOutput()
 			try {
 				socket.getInputStream().read()
