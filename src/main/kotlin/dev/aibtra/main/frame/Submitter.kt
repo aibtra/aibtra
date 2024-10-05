@@ -13,6 +13,13 @@ import dev.aibtra.text.FilteredText
 import javax.swing.JLabel
 
 class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {
+	init {
+		commandControl.registerEnterListener { ev ->
+			run()
+			ev.consume()
+		}
+	}
+
 	fun run() {
 		val configurationProvider = environment.configurationProvider
 		val configuration = configurationProvider.get(OpenAIConfiguration)

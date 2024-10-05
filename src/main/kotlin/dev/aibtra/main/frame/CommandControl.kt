@@ -4,18 +4,18 @@ import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.openai.OpenAIConfiguration
 import dev.aibtra.openai.OpenAIConfiguration.Profile
 import java.awt.BorderLayout
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
+import java.util.function.Consumer
 import java.util.stream.Collectors
-import javax.swing.JComponent
-import javax.swing.JPanel
-import javax.swing.JTextArea
-import javax.swing.SwingUtilities
-import javax.swing.UIManager
+import javax.swing.*
 
 class CommandControl(val configurationProvider: ConfigurationProvider) {
 	private val beforeArea = JTextArea()
 	private val commandArea = JTextArea()
 	private val afterArea = JTextArea()
 	private val panel = JPanel()
+	private val enterListeners = ArrayList<(ev: KeyEvent) -> Unit>()
 
 	private var profile : Profile? = null
 
@@ -35,6 +35,20 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 		configurationProvider.get(OpenAIConfiguration).lastCommands.firstOrNull()?.let {
 			commandArea.text = it
 		}
+
+		commandArea.addKeyListener(object : KeyAdapter() {
+			override fun keyPressed(e: KeyEvent) {
+				when {
+					e.keyCode == KeyEvent.VK_ENTER && e.isShiftDown -> {
+						commandArea.insert("\n", commandArea.caretPosition)
+						e.consume()
+					}
+					e.keyCode == KeyEvent.VK_ENTER -> {
+						enterListeners.forEach(Consumer { it(e) })
+					}
+				}
+			}
+		})
 	}
 
 	fun setProfile(profile: Profile?) {
@@ -79,8 +93,12 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 		return panel
 	}
 
+	fun registerEnterListener(enterListener: (ev: KeyEvent) -> Unit) {
+		enterListeners.add(enterListener)
+	}
+
 	private fun setConstantText(text: String, textArea: JTextArea) {
-		if (text.length > 0) {
+		if (text.isNotEmpty()) {
 			textArea.text = text
 			textArea.isVisible = true
 		}
