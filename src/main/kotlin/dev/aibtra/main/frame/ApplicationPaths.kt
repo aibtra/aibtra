@@ -9,18 +9,36 @@ import java.nio.file.Path
 
 class ApplicationPaths(
 	val settingsPath: Path,
-	val appName: String
+	val appName: String,
+	private val propertyPrefix: String
 ) {
 	fun getProperty(key: String): String? {
-		return System.getProperty("${appName.lowercase()}.$key")
+		return System.getProperty("${propertyPrefix}.$key")
 	}
 
 	companion object {
-		fun initializeDefaultSettingsPath(appName: String): ApplicationPaths {
+		fun initialize(appName: String, propertyPrefix: String): ApplicationPaths {
+			val customSettingsPath = System.getProperty(propertyPrefix + ".settings")
+			val settingsPath = if (customSettingsPath != null) {
+				Path.of(customSettingsPath)
+			}
+			else {
+				getDefaultSettingsPath(appName)
+			}
+
+			// Ensure to create the directory if it doesn't exist
+			if (!Files.isDirectory(settingsPath)) {
+				Files.createDirectories(settingsPath)
+			}
+
+			return ApplicationPaths(settingsPath, appName, propertyPrefix)
+		}
+
+		private fun getDefaultSettingsPath(appName: String): Path {
 			val appNameLowerCase = appName.lowercase()
 			val userHome = System.getProperty("user.home")
 			val os = System.getProperty("os.name").lowercase()
-			val appDataDir: String = when {
+			val settingsPath: String = when {
 				os.contains("win") -> {
 					val appData = System.getenv("APPDATA")
 					"$appData\\$appName\\"
@@ -39,13 +57,7 @@ class ApplicationPaths(
 				}
 			}
 
-			// Ensure to create the directory if it doesn't exist
-			val directory = Path.of(appDataDir)
-			if (!Files.isDirectory(directory)) {
-				Files.createDirectories(directory)
-			}
-
-			return ApplicationPaths(directory, appName)
+			return Path.of(settingsPath)
 		}
 	}
 }
