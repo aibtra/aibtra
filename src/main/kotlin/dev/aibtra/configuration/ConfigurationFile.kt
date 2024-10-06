@@ -44,7 +44,7 @@ internal class ConfigurationFile<D>(
 			ignoreUnknownKeys = true
 		}
 
-		fun <D> load(path: Path, serializer: KSerializer<D>, default: D, failureCallback: Consumer<IOException>): ConfigurationFile<D> {
+		fun <D> load(path: Path, serializer: KSerializer<D>, default: D, failureCallback: (Exception) -> Boolean): ConfigurationFile<D> {
 			return try {
 				val contentString = Files.readString(path)
 				val content = json.decodeFromString(serializer, contentString)
@@ -66,14 +66,11 @@ internal class ConfigurationFile<D>(
 					is IOException, is SerializationException -> {
 						LOG.error(e)
 
-						failureCallback.accept(if (e is IOException) {
-							e
+						val recreateFile = failureCallback(e)
+						if (recreateFile) {
+							store(path, default, serializer)
 						}
-						else  {
-							IOException(e)
-						})
-
-						ConfigurationFile(path, false, serializer, default)
+						ConfigurationFile(path, recreateFile, serializer, default)
 					}
 
 					else -> throw e
