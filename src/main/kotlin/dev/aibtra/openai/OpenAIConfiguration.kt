@@ -14,7 +14,7 @@ data class OpenAIConfiguration(
 	val defaultProfileName: String = PROOFREAD_TITLE
 ) {
 	@Serializable
-	class Profile(
+	data class Profile(
 		val name: String,
 		val model: String,
 		val instructions: String,
