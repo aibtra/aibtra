@@ -35,7 +35,7 @@ class DiffBuilder(
 			blocks = mergeBlocks(blocks, ::mergeClose)
 		}
 		if (fixCommon) {
-			// This only becomes important when merging blocks, because these blocks won't be "optimal" anymore
+			// This only becomes important when joining close blocks, because these blocks won't be "optimal" anymore
 			// and hence may allow optimizations.
 			blocks = fixCommon(blocks)
 		}
