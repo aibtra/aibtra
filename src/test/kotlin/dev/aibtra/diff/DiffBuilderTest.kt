@@ -187,14 +187,10 @@ class DiffBuilderTest {
 
 	private fun assert(raw: String, rawBlocksCoreExpected: String, rawBlocksAdjustedExpected: String, ref: String, refBlocksCoreExcepted: String, refBlocksAdjustedExpected: String, rawAlignedCoreExpected: String, refAlignedCoreExpected: String, rawAlignedAdjustedExcepted: String, refAlignedAdjustedExcepted: String) {
 		val blocksCore = DiffBuilder(raw, ref, false, false, false).build()
-		val rawBlocksCoreActual = StringBuilder(" ".repeat(raw.length))
-		val refBlocksCoreActual = StringBuilder(" ".repeat(ref.length))
-		formatBlocks(blocksCore, rawBlocksCoreActual, refBlocksCoreActual)
+		val (rawBlocksCoreActual, refBlocksCoreActual) = formatBlocks(raw, ref, blocksCore)
 
 		val blocksAdjusted = DiffBuilder(raw, ref, true, true, true).build()
-		val rawBlocksAdjustedActual = StringBuilder(" ".repeat(raw.length))
-		val refBlocksAdjustedActual = StringBuilder(" ".repeat(ref.length))
-		formatBlocks(blocksAdjusted, rawBlocksAdjustedActual, refBlocksAdjustedActual)
+		val (rawBlocksAdjustedActual, refBlocksAdjustedActual) = formatBlocks(raw, ref, blocksAdjusted)
 
 		val rawAlignedCoreActual = StringBuilder()
 		val refAlignedCoreActual = StringBuilder()
@@ -206,35 +202,44 @@ class DiffBuilderTest {
 
 		Assertions.assertEquals(
 			format(raw, rawBlocksCoreExpected, rawBlocksAdjustedExpected, ref, refBlocksCoreExcepted, refBlocksAdjustedExpected, rawAlignedCoreExpected, refAlignedCoreExpected, rawAlignedAdjustedExcepted, refAlignedAdjustedExcepted),
-			format(raw, rawBlocksCoreActual.toString(), rawBlocksAdjustedActual.toString(), ref, refBlocksCoreActual.toString(), refBlocksAdjustedActual.toString(), rawAlignedCoreActual.toString(), refAlignedCoreActual.toString(), rawAlignedAdjustedActual.toString(), refAlignedAdjustedActual.toString())
+			format(raw, rawBlocksCoreActual, rawBlocksAdjustedActual, ref, refBlocksCoreActual, refBlocksAdjustedActual, rawAlignedCoreActual.toString(), refAlignedCoreActual.toString(), rawAlignedAdjustedActual.toString(), refAlignedAdjustedActual.toString())
 		)
 	}
 
-	private fun formatBlocks(blocks: List<DiffBlock>, formattedRaw: StringBuilder, formattedRef: StringBuilder) {
-		for (block in blocks) {
-			if (block.rawFrom < block.rawTo) {
-				for (i in block.rawFrom until block.rawTo) {
-					formattedRaw[i] = '*'
-				}
-			}
-			else if (block.rawTo < formattedRaw.length) {
-				formattedRaw[block.rawTo] = '|'
-			}
-			else {
-				formattedRaw.append("|")
-			}
+	companion object {
+		fun formatBlocks(raw: String, ref: String, blocksCore: List<DiffBlock>): Pair<String, String> {
+			return formatBlocks(Diff.OrgDiff(raw, raw.length, ref, ref.length, ref, ref.length, blocksCore))
+		}
 
-			if (block.refFrom < block.refTo) {
-				for (i in block.refFrom until block.refTo) {
-					formattedRef[i] = '*'
+		fun formatBlocks(diff: Diff.OrgDiff): Pair<String, String> {
+			val rawBlocksCoreActual = StringBuilder(" ".repeat(diff.raw.length))
+			val refBlocksCoreActual = StringBuilder(" ".repeat(diff.ref.length))
+			for (block in diff.blocks) {
+				if (block.rawFrom < block.rawTo) {
+					for (i in block.rawFrom until block.rawTo) {
+						rawBlocksCoreActual[i] = '*'
+					}
+				}
+				else if (block.rawTo < rawBlocksCoreActual.length) {
+					rawBlocksCoreActual[block.rawTo] = '|'
+				}
+				else {
+					rawBlocksCoreActual.append("|")
+				}
+
+				if (block.refFrom < block.refTo) {
+					for (i in block.refFrom until block.refTo) {
+						refBlocksCoreActual[i] = '*'
+					}
+				}
+				else if (block.refTo < refBlocksCoreActual.length) {
+					refBlocksCoreActual[block.refTo] = '|'
+				}
+				else {
+					refBlocksCoreActual.append("|")
 				}
 			}
-			else if (block.refTo < formattedRef.length) {
-				formattedRef[block.refTo] = '|'
-			}
-			else {
-				formattedRef.append("|")
-			}
+			return Pair(rawBlocksCoreActual.toString(), refBlocksCoreActual.toString())
 		}
 	}
 
