@@ -4,21 +4,27 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-
 class ToggleSubmitOnProfileChangeAction(
-	configurationProvider: ConfigurationProvider,
+	profileManager: ProfileManager,
 	accelerators: Accelerators
 ) :
-	MainMenuConfigurationBooleanAction<GuiConfiguration>("toggleSubmitOnProfileChange",
+	MainMenuProfileBooleanAction("toggleSubmitOnProfileChange",
 		"Submit on Profile Change",
 		null,
 		null,
 		null,
 		accelerators,
-		configurationProvider,
-		GuiConfiguration,
-		{ config -> config.submitOnProfileChange },
-		{ config: GuiConfiguration, value: Boolean -> config.copy(submitOnProfileChange = value) },
-		{ config: GuiConfiguration -> }
-	)
+		profileManager,
+		{ profile -> profile.submitOnProfileChange },
+		{ profile, value ->
+			profile.copy(submitOnProfileChange = value)
+		},
+		{
+		}
+	) {
+	init {
+		profileManager.addListener { _, _ ->
+			updateState()
+		}
+	}
+}

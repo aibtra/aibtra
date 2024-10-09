@@ -299,7 +299,7 @@ class MainFrame(private val environment: Environment) {
 		profileManager.addListener { lastName, name ->
 			val profile = profileManager.profile()
 			diffManager.setConfig(profile.diffConfig)
-			if (environment.configurationProvider.get(GuiConfiguration).submitOnProfileChange && lastName != name) {
+			if (profileManager.profile().submitOnProfileChange && lastName != name) {
 				submitter.run()
 			}
 		}
@@ -363,9 +363,6 @@ class MainFrame(private val environment: Environment) {
 		addAction(editMenu, copyAndCloseAction)
 		addAction(editMenu, pasteAndSubmitAction)
 		editMenu.addSeparator()
-		addAction(editMenu, ToggleSubmitOnInvocationAction(environment.configurationProvider, environment.accelerators))
-		addAction(editMenu, ToggleSubmitOnProfileChangeAction(environment.configurationProvider, environment.accelerators))
-		editMenu.addSeparator()
 		addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
 		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
 		menuBar.add(editMenu)
@@ -387,6 +384,9 @@ class MainFrame(private val environment: Environment) {
 		val profileMenu = JMenu("Profile")
 		addAction(profileMenu, toggleFilterMarkdownAction)
 		addAction(profileMenu, toggleShowDiffBeforeAfterAction)
+		profileMenu.addSeparator()
+		addAction(profileMenu, ToggleSubmitOnInvocationAction(profileManager, environment.accelerators))
+		addAction(profileMenu, ToggleSubmitOnProfileChangeAction(profileManager, environment.accelerators))
 		menuBar.add(profileMenu)
 
 		val schemeMenu = JMenu("Scheme")
@@ -407,7 +407,7 @@ class MainFrame(private val environment: Environment) {
 			diffManager.updateRefText(Files.readString(Path.of(it)), true)
 		}
 
-		if (environment.configurationProvider.get(GuiConfiguration).submitOnInvocation &&
+		if (profileManager.profile().submitOnInvocation &&
 			rawTextArea.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
 
 			var listener: ((DiffManager.State) -> Unit)? = null
