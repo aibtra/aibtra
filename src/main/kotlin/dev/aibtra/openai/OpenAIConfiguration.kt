@@ -14,7 +14,12 @@ data class OpenAIConfiguration(
 	val defaultProfileName: String = PROOFREAD_TITLE
 ) {
 	@Serializable
-	class Profile(val name: String, val model: String, val instructions: String, val supportsSchemes: Boolean = false)
+	class Profile(
+		val name: String,
+		val model: String,
+		val instructions: String,
+		val supportsSchemes: Boolean = false
+	)
 
 	fun currentProfile(): Profile {
 		return profiles.find { it.name == defaultProfileName } ?: PROOFREAD
@@ -27,9 +32,9 @@ data class OpenAIConfiguration(
 		private val PROOFREAD = Profile(
 			PROOFREAD_TITLE, MODEL_4O,
 			"Correct typos and grammar in the markdown following " +
-					"AND stay as close as possible to the original " +
-					"AND do not change the markdown structure " +
-					"AND preserve the detected language:",
+							"AND stay as close as possible to the original " +
+							"AND do not change the markdown structure " +
+							"AND preserve the detected language:",
 			true
 		)
 
@@ -45,7 +50,7 @@ data class OpenAIConfiguration(
 		private val TO_STANDARD_ENGLISH = Profile(
 			"To Standard English (GPT-4o)", MODEL_4O,
 			"Rewrite to Standard English " +
-					"BUT stay as close as possible to the original:",
+							"BUT stay as close as possible to the original:",
 			true
 		)
 
