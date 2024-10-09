@@ -1,17 +1,31 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
+import dev.aibtra.core.WorkingMode
 import dev.aibtra.openai.OpenAIConfiguration
 
-class ProfileManager(val configurationProvider: ConfigurationProvider) {
+class ProfileManager(initialWorkingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
 
 	private val listeners = ArrayList<(OpenAIConfiguration.Profile.Name, OpenAIConfiguration.Profile.Name) -> Unit>()
 
-	private var name: OpenAIConfiguration.Profile.Name = configurationProvider.get(OpenAIConfiguration).currentProfile().name
+	var workingMode: WorkingMode = initialWorkingMode
+		set(workingMode) {
+			// If the frame has workingMode != open set, we won't override this by open
+			if (workingMode != WorkingMode.open && field != workingMode) {
+				val currentProfile = profile()
+				configurationProvider.change(OpenAIConfiguration) {
+					it.copy(workingModeToDefaultProfileId = it.workingModeToDefaultProfileId.plus(field to currentProfile.name.id))
+				}
+
+				field = workingMode
+			}
+		}
+
+	private var name: OpenAIConfiguration.Profile.Name = configurationProvider.get(OpenAIConfiguration).currentProfile(workingMode).name
 
 	fun profile(): OpenAIConfiguration.Profile {
 		val configuration = configurationProvider.get(OpenAIConfiguration)
-		return configuration.profile(name.id) ?: configuration.currentProfile()
+		return configuration.profile(name.id) ?: configuration.currentProfile(workingMode)
 	}
 
 	fun setProfile(name: OpenAIConfiguration.Profile.Name) {
@@ -23,7 +37,7 @@ class ProfileManager(val configurationProvider: ConfigurationProvider) {
 		this.name = name
 
 		configurationProvider.change(OpenAIConfiguration) {
-			it.copy(defaultProfileId = name.id)
+			it.copy(workingModeToDefaultProfileId = it.workingModeToDefaultProfileId.plus(workingMode to name.id))
 		}
 
 		fireChanged(lastName, name)
@@ -31,10 +45,10 @@ class ProfileManager(val configurationProvider: ConfigurationProvider) {
 
 	fun updateCurrentProfile(update: (OpenAIConfiguration.Profile) -> OpenAIConfiguration.Profile): OpenAIConfiguration.Profile {
 		configurationProvider.change(OpenAIConfiguration) {
-			OpenAIConfiguration.replaceProfile(it, it.currentProfile()) { profile -> update(profile) }
+			OpenAIConfiguration.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
 		}
 		fireChanged(name, name)
-		return configurationProvider.get(OpenAIConfiguration).currentProfile()
+		return configurationProvider.get(OpenAIConfiguration).currentProfile(workingMode)
 	}
 
 	fun addListener(listener: (OpenAIConfiguration.Profile.Name, OpenAIConfiguration.Profile.Name) -> Unit) {

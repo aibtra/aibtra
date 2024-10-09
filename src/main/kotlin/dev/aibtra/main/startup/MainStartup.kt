@@ -10,6 +10,7 @@ import dev.aibtra.configuration.ConfigurationFile
 import dev.aibtra.core.GlobalExceptionHandler
 import dev.aibtra.core.Logger
 import dev.aibtra.core.SingleInstanceAppLock
+import dev.aibtra.core.WorkingMode
 import dev.aibtra.gui.Ui
 import dev.aibtra.gui.Ui.createButton
 import dev.aibtra.gui.Ui.toHiDPIPixel
@@ -90,40 +91,42 @@ class MainStartup {
 			val params = arguments.params
 			val fileToOpen = if (params.size == 1) (params.first() as? String)?.let { Path.of(it) } else null
 			if (fileToOpen != null) {
-				showMainFrame(arguments.options, environment, fileToOpen)
+				showMainFrame(WorkingMode.file, arguments.options, environment, fileToOpen)
 			}
 			else {
-				showMainFrame(arguments.options, environment, null)
+				showMainFrame(WorkingMode.open, arguments.options, environment, null)
 			}
 		}
 
-		private fun showMainFrame(options: Options, environment: Environment, fileToOpen: Path?, forceSetClipboard: Boolean = false) {
-			createLogger().info("show main frame: file=$fileToOpen;options=$options")
+		private fun showMainFrame(workingMode: WorkingMode, options: Options, environment: Environment, fileToOpen: Path?) {
+			createLogger().info("show main frame: workingMode=$workingMode;file=$fileToOpen;options=$options")
 
 			Ui.runInEdt {
 				environment.frameManager.getFrame()?.let {
 					it.toFront()
-					it.checkClose {
-						if (fileToOpen != null || forceSetClipboard) {
-							setMainFrameContent(fileToOpen, it, environment)
+					if (workingMode != WorkingMode.open) {
+						it.checkClose {
+							if (fileToOpen != null || workingMode == WorkingMode.clipboard) {
+								setMainFrameContent(workingMode, options, fileToOpen, it, environment)
+							}
 						}
 					}
 				} ?: run {
-					val frame = MainFrame(environment)
+					val frame = MainFrame(workingMode, environment)
 					frame.show()
 
 					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.paths, frame.dialogDisplayer).invoke()
-					setMainFrameContent(fileToOpen, frame, environment)
+					setMainFrameContent(workingMode, options, fileToOpen, frame, environment)
 				}
 			}
 		}
 
-		private fun setMainFrameContent(fileToOpen: Path?, frame: MainFrame, environment: Environment) {
+		private fun setMainFrameContent(workingMode: WorkingMode, options: Options, fileToOpen: Path?, frame: MainFrame, environment: Environment) {
 			if (fileToOpen != null) {
 				frame.openFile(fileToOpen)
 			}
 			else {
-				frame.setText(getContentFromClipboard(environment.paths))
+				frame.setText(getContentFromClipboard(environment.paths), workingMode)
 			}
 		}
 
@@ -185,7 +188,7 @@ class MainStartup {
 			}
 			val openAction = JMenuItem("Open")
 			openAction.addActionListener {
-				showMainFrame(Options.NONE, environment, null)
+				showMainFrame(WorkingMode.open, Options.NONE, environment, null)
 				popup.isVisible = false
 			}
 			popup.add(openAction)
@@ -197,7 +200,7 @@ class MainStartup {
 			trayIcon.addMouseListener(object : MouseAdapter() {
 				override fun mouseClicked(e: MouseEvent) {
 					if (e.button == MouseEvent.BUTTON1) {
-						showMainFrame(Options.NONE, environment, null)
+						showMainFrame(WorkingMode.open, Options.NONE, environment, null)
 					}
 					else if (e.button == MouseEvent.BUTTON3) {
 						val location = MouseInfo.getPointerInfo().location
@@ -214,7 +217,7 @@ class MainStartup {
 
 		private fun configureHotkey(environment: Environment): Boolean {
 			return environment.hotkeyListener.configure {
-				showMainFrame(Options.NONE, environment, null, true)
+				showMainFrame(WorkingMode.clipboard, Options.NONE, environment, null)
 			}
 		}
 

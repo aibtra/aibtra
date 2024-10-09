@@ -5,6 +5,7 @@
 package dev.aibtra.openai
 
 import dev.aibtra.configuration.ConfigurationFactory
+import dev.aibtra.core.WorkingMode
 import dev.aibtra.diff.DiffManager
 import kotlinx.serialization.Serializable
 
@@ -12,7 +13,7 @@ import kotlinx.serialization.Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
 	val profiles: List<Profile> = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH),
-	val defaultProfileId: String = PROOFREAD_ID
+	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID
 ) {
 
 	@Serializable
@@ -44,8 +45,10 @@ data class OpenAIConfiguration(
 		return profiles.find { it.name.id == id }
 	}
 
-	fun currentProfile(): Profile {
-		return profiles.find { it.name.id == defaultProfileId } ?: PROOFREAD
+	fun currentProfile(workingMode: WorkingMode): Profile {
+		return profiles.find {
+			it.name.id == workingModeToDefaultProfileId.getOrDefault(workingMode, WORKING_MODE_TO_DEFAULT_PROFILE_ID[workingMode])
+		} ?: PROOFREAD
 	}
 
 	companion object : ConfigurationFactory<OpenAIConfiguration> {
@@ -53,6 +56,11 @@ data class OpenAIConfiguration(
 		const val CONTENT_KEYWORD = "CONTENT"
 		private const val CONTENT_MACRO = "\${${CONTENT_KEYWORD}}"
 		private const val MODEL_4O = "gpt-4o"
+		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
+			WorkingMode.clipboard to PROOFREAD_ID,
+			WorkingMode.file to PROOFREAD_ID,
+			WorkingMode.open to PROOFREAD_ID
+		)
 
 		private val PROOFREAD = Profile(
 			Profile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),

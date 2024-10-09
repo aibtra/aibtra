@@ -5,6 +5,7 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationFactory
+import dev.aibtra.core.WorkingMode
 import dev.aibtra.diff.DiffManager
 import dev.aibtra.gui.DelayedUiRefresher
 import dev.aibtra.gui.Ui
@@ -22,7 +23,7 @@ import java.nio.file.Path
 import javax.swing.*
 import kotlin.reflect.KFunction2
 
-class MainFrame(private val environment: Environment) {
+class MainFrame(initialWorkingMode: WorkingMode, private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer
 	private val frame: JFrame
 	private val rawTextArea: RawTextArea
@@ -57,7 +58,7 @@ class MainFrame(private val environment: Environment) {
 			}, coroutineDispatcher, environment.debugLog
 		)
 
-		profileManager = ProfileManager(environment.configurationProvider)
+		profileManager = ProfileManager(initialWorkingMode, environment.configurationProvider)
 
 		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.initialize) }, environment)
 		rawTextArea.setWordWrap(profileManager.profile().wordWrap)
@@ -287,7 +288,7 @@ class MainFrame(private val environment: Environment) {
 		val configurationProvider = environment.configurationProvider
 		val initialConfiguration = configurationProvider.get(OpenAIConfiguration)
 		val comboBox = ComboBoxWithPreferredSize(initialConfiguration.profiles.map { it.name }.toTypedArray())
-		comboBox.selectedItem = initialConfiguration.currentProfile().name
+		comboBox.selectedItem = initialConfiguration.currentProfile(profileManager.workingMode).name
 
 		comboBox.renderer = object : DefaultListCellRenderer() {
 			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
@@ -309,7 +310,7 @@ class MainFrame(private val environment: Environment) {
 			private var lastSelected: OpenAIConfiguration.Profile.Name
 
 			init {
-				lastSelected = initialConfiguration.currentProfile().name
+				lastSelected = initialConfiguration.currentProfile(profileManager.workingMode).name
 			}
 
 			override fun itemStateChanged(e: ItemEvent?) {
@@ -436,11 +437,18 @@ class MainFrame(private val environment: Environment) {
 		menuBar.add(helpMenu)
 	}
 
-	fun setText(text: String) {
-		rawTextArea.initializeText(text)
 
-		environment.paths.getProperty("simulateOutputTextFile")?.let {
-			diffManager.updateRefText(Files.readString(Path.of(it)), true)
+	fun setText(text: String, workingMode: WorkingMode) {
+		require(workingMode == WorkingMode.open || workingMode == WorkingMode.clipboard)
+
+		updateWorkingMode(workingMode)
+
+		if (workingMode == WorkingMode.clipboard || rawTextArea.getText().isEmpty()) {
+			rawTextArea.initializeText(text)
+
+			environment.paths.getProperty("simulateOutputTextFile")?.let {
+				diffManager.updateRefText(Files.readString(Path.of(it)), true)
+			}
 		}
 	}
 
@@ -481,7 +489,13 @@ class MainFrame(private val environment: Environment) {
 	}
 
 	fun openFile(fileToOpen: Path) {
+		updateWorkingMode(WorkingMode.file)
 		workFile.load(fileToOpen)
+	}
+
+	private fun updateWorkingMode(workingMode: WorkingMode) {
+		profileManager.workingMode = workingMode
+		profileComboBox.selectedItem = profileManager.profile().name
 	}
 
 	@Serializable
