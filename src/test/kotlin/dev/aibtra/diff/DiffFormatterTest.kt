@@ -169,7 +169,7 @@ class DiffFormatterTest {
 			"Theree is a typo.",
 			"     -           ",
 			"01234567890123456",
-			"01234456777777777",
+			"01234455556666777",
 			"There is",
 			"     -   ",
 			"012345678",
@@ -187,7 +187,7 @@ class DiffFormatterTest {
 			"Theree is a typo.",
 			"     -           ",
 			"01234567890123456",
-			"01234456788888888",
+			"01234455566677788",
 			"There is ",
 			"     -    ",
 			"0123456789",
@@ -201,7 +201,7 @@ class DiffFormatterTest {
 
 	private fun assert(raw: String, rawCharsExpected: String, rawCharsRawPossExpected: String, rawCharsRefPossExpected: String, ref: String, refFullCharsExpected: String, refFullCharsRawPossExpected: String, refFullCharsRefPossExpected: String, refKeptCharsExpected: String, refKeptCharsRawPossExpected: String, refKeptCharsRefPossExpected: String, rawTo: Int = raw.length) {
 		val blocks = DiffBuilder(raw.substring(0, rawTo), ref, true, true, true).build()
-		val diff = Diff(raw, rawTo, ref, blocks, false)
+		val diff = Diff(raw, ref, blocks, Diff.OrgDiff(raw, ref, ref, raw.length, ref.length, blocks), rawTo == raw.length)
 		val rawFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 		val rawCharsActual = formatChars(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
 		val rawCharsRawPossActual = formatRawCharPoss(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
