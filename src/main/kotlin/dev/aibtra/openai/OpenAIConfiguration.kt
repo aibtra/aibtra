@@ -21,7 +21,9 @@ data class OpenAIConfiguration(
 		val model: String,
 		val supportsSchemes: Boolean = false,
 		val instructions: List<Instruction>,
-		val diffConfig: DiffManager.Config
+		val diffConfig: DiffManager.Config,
+		val submitOnInvocation: Boolean = false,
+		val submitOnProfileChange: Boolean = false
 	) {
 
 		@Serializable
