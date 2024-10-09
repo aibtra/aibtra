@@ -365,7 +365,6 @@ class DiffManager(
 	data class Config(
 		val filterMarkdown: Boolean = true,
 		val showRefBeforeAndAfter: Boolean = true,
-		val debugLogDirectory: String? = null
 	) {
 		companion object : ConfigurationFactory<Config> {
 			override fun name(): String = "diff"
