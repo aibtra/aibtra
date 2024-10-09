@@ -4,16 +4,22 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-
 class ToggleSubmitOnInvocationAction(
-	configurationProvider: ConfigurationProvider,
+	profileManager: ProfileManager,
 	accelerators: Accelerators
 ) :
-	MainMenuConfigurationBooleanAction<GuiConfiguration>("toggleSubmitOnInvocation", "Submit on Invocation", null, null, null, accelerators,
-		configurationProvider,
-		GuiConfiguration,
-		{ config -> config.submitOnInvocation },
-		{ config: GuiConfiguration, value: Boolean -> config.copy(submitOnInvocation = value) },
-		{ config: GuiConfiguration -> }
-	)
+	MainMenuProfileBooleanAction("toggleSubmitOnInvocation", "Submit on Invocation", null, null, null, accelerators,
+		profileManager,
+		{ profile -> profile.submitOnInvocation },
+		{ profile, value ->
+			profile.copy(submitOnInvocation = value)
+		},
+		{
+		}
+	) {
+	init {
+		profileManager.addListener { _, _ ->
+			updateState()
+		}
+	}
+}
