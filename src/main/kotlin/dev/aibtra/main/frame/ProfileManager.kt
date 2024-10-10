@@ -43,6 +43,17 @@ class ProfileManager(initialWorkingMode: WorkingMode, val configurationProvider:
 		fireChanged(lastName, name)
 	}
 
+	fun overrideProfile(id: String) {
+		val name = configurationProvider.get(OpenAIConfiguration).profile(id)?.name
+		if (name == null || name.id == this.name.id) {
+			return
+		}
+
+		this.name = name
+
+		fireChanged(name, name)
+	}
+
 	fun updateCurrentProfile(update: (OpenAIConfiguration.Profile) -> OpenAIConfiguration.Profile): OpenAIConfiguration.Profile {
 		configurationProvider.change(OpenAIConfiguration) {
 			OpenAIConfiguration.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
