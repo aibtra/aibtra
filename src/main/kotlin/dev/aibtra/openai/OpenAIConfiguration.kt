@@ -11,26 +11,32 @@ import kotlinx.serialization.Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
 	val profiles: List<Profile> = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH),
-	val defaultProfileName: String = PROOFREAD_TITLE
+	val defaultProfileId: String = PROOFREAD_ID
 ) {
+
 	@Serializable
 	data class Profile(
-		val name: String,
+		val name: Name,
 		val model: String,
 		val instructions: String,
 		val supportsSchemes: Boolean = false
-	)
+	) {
+
+		@Serializable
+		data class Name(val id: String, val title: String)
+	}
 
 	fun currentProfile(): Profile {
-		return profiles.find { it.name == defaultProfileName } ?: PROOFREAD
+		return profiles.find { it.name.id == defaultProfileId } ?: PROOFREAD
 	}
 
 	companion object : ConfigurationFactory<OpenAIConfiguration> {
-		const val PROOFREAD_TITLE = "Proofread (GPT-4o)"
+		private const val PROOFREAD_ID = "proofread"
 		private const val MODEL_4O = "gpt-4o"
 
 		private val PROOFREAD = Profile(
-			PROOFREAD_TITLE, MODEL_4O,
+			Profile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),
+			MODEL_4O,
 			"Correct typos and grammar in the markdown following " +
 							"AND stay as close as possible to the original " +
 							"AND do not change the markdown structure " +
@@ -39,7 +45,8 @@ data class OpenAIConfiguration(
 		)
 
 		private val IMPROVE = Profile(
-			"Improve Text (GPT-4o)", MODEL_4O,
+			Profile.Name("improve", "Improve Text (GPT-4o)"),
+			MODEL_4O,
 			"Proofread " +
 							"AND improve wording, but stay close to the original, only apply changes to quite uncommon wording " +
 							"AND do not change the markdown structure or indentation or other special symbols " +
@@ -48,7 +55,8 @@ data class OpenAIConfiguration(
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
-			"To Standard English (GPT-4o)", MODEL_4O,
+			Profile.Name("to-standard-english", "To Standard English (GPT-4o)"),
+			MODEL_4O,
 			"Rewrite to Standard English " +
 							"BUT stay as close as possible to the original:",
 			true
