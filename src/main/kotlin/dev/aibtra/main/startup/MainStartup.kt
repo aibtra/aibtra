@@ -124,10 +124,10 @@ class MainStartup {
 
 		private fun setMainFrameContent(workingMode: WorkingMode, options: Options, fileToOpen: Path?, frame: MainFrame, environment: Environment) {
 			if (fileToOpen != null) {
-				frame.openFile(fileToOpen)
+				frame.openFile(fileToOpen, options.profile)
 			}
 			else {
-				frame.setText(getContentFromClipboard(environment.paths), workingMode)
+				frame.setText(getContentFromClipboard(environment.paths), workingMode, options.profile)
 			}
 		}
 
@@ -315,9 +315,9 @@ class MainStartup {
 		}
 	}
 
-	private data class Options(val backgroundMode : Boolean) {
+	private data class Options(val backgroundMode : Boolean, val profile: String?) {
 		companion object {
-			val NONE: Options = Options(false)
+			val NONE: Options = Options(false, null)
 		}
 	}
 
@@ -328,9 +328,10 @@ class MainStartup {
 		init {
 			val parser = OptionParser()
 			val backgroundOption = parser.accepts("background")
+			val profileOption = parser.accepts("profile").withRequiredArg().ofType(String::class.java)
 			val optionsSet: OptionSet = parser.parse(*args.toTypedArray())
 			params = optionsSet.nonOptionArguments().stream().map { o -> o.toString() }.toList()
-			options = Options(optionsSet.has(backgroundOption))
+			options = Options(optionsSet.has(backgroundOption), profileOption.value(optionsSet))
 		}
 	}
 }
