@@ -247,7 +247,7 @@ class MainFrame(private val environment: Environment) {
 			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
 				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
 				if (value is OpenAIConfiguration.Profile) {
-					label.text = value.name
+					label.text = value.name.title
 				}
 				else {
 					label.text = "<default instructions>"
@@ -269,7 +269,7 @@ class MainFrame(private val environment: Environment) {
 			override fun itemStateChanged(e: ItemEvent?) {
 				(comboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
 					configurationProvider.change(OpenAIConfiguration) {
-						it.copy(defaultProfileName = profile.name)
+						it.copy(defaultProfileId = profile.name.id)
 					}
 
 					if (profile != lastSelected) {
