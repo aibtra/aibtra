@@ -498,11 +498,10 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		menuBar.add(helpMenu)
 	}
 
-
-	fun setText(text: String, workingMode: WorkingMode) {
+	fun setText(text: String, workingMode: WorkingMode, profileId: String?) {
 		require(workingMode == WorkingMode.OPEN || workingMode == WorkingMode.CLIPBOARD)
 
-		updateWorkingMode(workingMode)
+		updateWorkingMode(workingMode, profileId)
 
 		if (workingMode == WorkingMode.CLIPBOARD || rawTextArea.getText().isEmpty()) {
 			rawTextArea.initializeText(text)
@@ -554,12 +553,16 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		} ?: "") + FRAME_TITLE
 	}
 
-	fun openFile(fileToOpen: Path) {
-		updateWorkingMode(WorkingMode.FILE)
+	fun openFile(fileToOpen: Path, profileId: String?) {
+		updateWorkingMode(WorkingMode.FILE, profileId)
 		workFile.load(fileToOpen)
 	}
 
-	private fun updateWorkingMode(workingMode: WorkingMode) {
+	private fun updateWorkingMode(workingMode: WorkingMode, profileId: String?) {
+		profileId?.let {
+			profileManager.overrideProfile(it)
+		}
+
 		profileManager.workingMode = workingMode
 		profileComboBox.selectedItem = profileManager.profile().name
 	}
