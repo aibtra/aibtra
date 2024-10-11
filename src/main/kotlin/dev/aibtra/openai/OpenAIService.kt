@@ -15,6 +15,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.io.StringReader
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
@@ -36,7 +37,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		messagesIn.add(messageIn)
 		input["messages"] = messagesIn
 
-		val url = URL("https://api.openai.com/v1/chat/completions")
+		val url = URI("https://api.openai.com/v1/chat/completions").toURL()
 		val connection = url.openConnection() as HttpURLConnection
 		try {
 			connection.doOutput = true
