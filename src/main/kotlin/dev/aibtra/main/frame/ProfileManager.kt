@@ -34,6 +34,14 @@ class ProfileManager(val configurationProvider: ConfigurationProvider) {
 		fireChanged(lastName, name)
 	}
 
+	fun updateCurrentProfile(update: (OpenAIConfiguration.Profile) -> OpenAIConfiguration.Profile): OpenAIConfiguration.Profile {
+		configurationProvider.change(OpenAIConfiguration) {
+			OpenAIConfiguration.replaceProfile(it, it.currentProfile()) { profile -> update(profile) }
+		}
+		fireChanged(name, name)
+		return configurationProvider.get(OpenAIConfiguration).currentProfile()
+	}
+
 	fun addListener(listener: (OpenAIConfiguration.Profile.Name, OpenAIConfiguration.Profile.Name) -> Unit) {
 		listeners.add(listener)
 	}
