@@ -16,7 +16,6 @@ import java.io.InputStreamReader
 import java.io.StringReader
 import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URL
 import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
@@ -126,19 +125,20 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 
 	private fun applyFixes(content: String, result: StringBuilder): Boolean {
 		var changed = false
-		changed = changed or ensureTrailingNewlines(content, result)
+		changed = changed or ensureLeadingAndTrailingWhitespaces(content, result)
 		changed = changed or dropMarkdownPrefix(content, result)
 		return changed
 	}
 
-	private fun ensureTrailingNewlines(content: String, result: StringBuilder): Boolean {
-		val inputCount = content.takeLastWhile { it == '\n' }.count()
-		val resultCount = result.takeLastWhile { it == '\n' }.count()
-		if (resultCount >= inputCount) {
-			return false
-		}
+	private fun ensureLeadingAndTrailingWhitespaces(content: String, result: StringBuilder): Boolean {
+		val leadingWhitespaces = content.takeWhile { it.isWhitespace() }
+		val trailingWhitespaces = content.takeLastWhile { it.isWhitespace() }
+		val trimmedResult = result.toString().trim()
 
-		result.append("\n".repeat(inputCount - resultCount))
+		result.clear()
+		result.append(leadingWhitespaces)
+		result.append(trimmedResult)
+		result.append(trailingWhitespaces)
 		return true
 	}
 
