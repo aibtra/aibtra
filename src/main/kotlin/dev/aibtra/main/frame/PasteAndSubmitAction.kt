@@ -14,6 +14,7 @@ import java.io.IOException
 class PasteAndSubmitAction(
 	environment: Environment,
 	requestManager: RequestManager,
+	profileManager: ProfileManager,
 	diffManager: DiffManager,
 	rawTextArea: RawTextArea,
 	submitAction: SubmitAction
@@ -24,7 +25,7 @@ class PasteAndSubmitAction(
 			try {
 				val text = clipboard.getData(DataFlavor.stringFlavor) as String
 				rawTextArea.setText(text)
-				diffManager.updateRawText(text, initial = true, callback = {
+				diffManager.updateRawText(text, profileManager.profile().diffConfig, initial = true, callback = {
 					submitAction.perform()
 				})
 			} catch (e: UnsupportedFlavorException) {
