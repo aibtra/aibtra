@@ -5,6 +5,7 @@
 package dev.aibtra.openai
 
 import dev.aibtra.configuration.ConfigurationFactory
+import dev.aibtra.diff.DiffManager
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,7 +20,8 @@ data class OpenAIConfiguration(
 		val name: Name,
 		val model: String,
 		val supportsSchemes: Boolean = false,
-		val instructions: List<Instruction>
+		val instructions: List<Instruction>,
+		val diffConfig: DiffManager.Config
 	) {
 
 		@Serializable
@@ -61,7 +63,8 @@ data class OpenAIConfiguration(
 									"AND preserve the detected language:"
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
-			)
+			),
+			DiffManager.Config(true, false)
 		)
 
 		private val IMPROVE = Profile(
@@ -76,7 +79,8 @@ data class OpenAIConfiguration(
 									"AND preserve the detected language:"
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
-			)
+			),
+			DiffManager.Config(true, false)
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
@@ -89,7 +93,8 @@ data class OpenAIConfiguration(
 									"BUT stay as close as possible to the original:"
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
-			)
+			),
+			DiffManager.Config(true, false)
 		)
 
 		override fun name(): String = "openai"
