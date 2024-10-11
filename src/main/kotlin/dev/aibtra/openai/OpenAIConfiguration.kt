@@ -95,5 +95,16 @@ data class OpenAIConfiguration(
 		override fun name(): String = "openai"
 
 		override fun default(): OpenAIConfiguration = OpenAIConfiguration()
+
+		fun replaceProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile, change: (Profile) -> Profile): OpenAIConfiguration {
+			return originalConfig.copy(profiles = originalConfig.profiles.map { profile ->
+				if (profile === targetProfile) {
+					change(profile)
+				}
+				else {
+					profile
+				}
+			})
+		}
 	}
 }
