@@ -4,7 +4,6 @@
 
 package dev.aibtra.diff
 
-import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.core.DebugLog
 import dev.aibtra.core.Logger
 import dev.aibtra.gui.Callback
@@ -18,7 +17,6 @@ import kotlinx.serialization.Serializable
 import java.util.function.Consumer
 
 class DiffManager(
-	initialConfig: Config,
 	private val rawNormalizer: RawNormalizer,
 	coroutineDispatcher: CoroutineDispatcher,
 	private val debugLog: DebugLog
@@ -27,16 +25,16 @@ class DiffManager(
 	private val stateListeners = ArrayList<(State) -> Unit>()
 	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
 
-	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, initialConfig, true, null), State(listOf(), FilteredText.asIs(""), "", listOf(), Diff.INITIAL), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
+	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, INITIAL_CONFIG, true, null), State(listOf(), FilteredText.asIs(""), "", listOf(), Diff.INITIAL), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
 	private var inScrollPosUpdate = false
 	val state: State
 		get() = data.state
 
-	fun updateRawText(raw: String, initial: Boolean = false, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, config: Config, initial: Boolean = false, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
-			if (it.input.raw == raw && !initial && callback == null) {
+			if (it.input.raw == raw && config == it.input.config && !initial && callback == null) {
 				return raw
 			}
 
@@ -63,7 +61,7 @@ class DiffManager(
 				Pair(raw, null)
 			}
 
-			updateState(it.input.copy(raw = rawNew, rawOrg = rawOrgNew, callback = callback), true, "updateRaw")
+			updateState(it.input.copy(raw = rawNew, rawOrg = rawOrgNew, config = config, callback = callback), true, "updateRaw")
 			return rawNew
 		}
 	}
@@ -336,6 +334,7 @@ class DiffManager(
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
+		val INITIAL_CONFIG = Config(false, false)
 
 		fun getSelectedBlocksFromRef(state: State, range: IntRange): List<DiffBlock> {
 			require(range.first >= 0 && range.last < state.refFormatted.length)
@@ -365,15 +364,7 @@ class DiffManager(
 	data class Config(
 		val filterMarkdown: Boolean = true,
 		val showRefBeforeAndAfter: Boolean = true,
-	) {
-		companion object : ConfigurationFactory<Config> {
-			override fun name(): String = "diff"
-
-			override fun default(): Config {
-				return Config()
-			}
-		}
-	}
+	)
 
 	fun interface RawNormalizer {
 		fun normalize(text: String): String

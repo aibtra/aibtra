@@ -6,16 +6,27 @@ package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffManager
+import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.text.Schemes
 
 class ToggleShowRefBeforeAndAfterAction(
 	diffManager: DiffManager,
-	configurationProvider: ConfigurationProvider,
+	profileManager: ProfileManager,
 	accelerators: Accelerators
 ) :
-	MainMenuConfigurationBooleanAction<DiffManager.Config>("toggleShowRefBeforeAndAfter", "Show Diff Before/After", Icons.SHOW_REMOVED, "Before/After", null, accelerators,
-		configurationProvider,
-		DiffManager.Config,
-		{ config -> config.showRefBeforeAndAfter },
-		{ config: DiffManager.Config, value: Boolean -> config.copy(showRefBeforeAndAfter = value) },
-		{ config: DiffManager.Config -> diffManager.setConfig(config) }
-	)
+	MainMenuProfileBooleanAction("toggleShowRefBeforeAndAfter", "Show Diff Before/After", Icons.SHOW_REMOVED, "Before/After", null, accelerators,
+		profileManager,
+		{ profile -> profile.diffConfig.showRefBeforeAndAfter },
+		{ profile, value ->
+			profile.copy(diffConfig = profile.diffConfig.copy(showRefBeforeAndAfter = value))
+		},
+		{ profile ->
+			diffManager.setConfig(profile.diffConfig)
+		}
+	) {
+	init {
+		profileManager.addListener { _, _ ->
+			updateState()
+		}
+	}
+}
