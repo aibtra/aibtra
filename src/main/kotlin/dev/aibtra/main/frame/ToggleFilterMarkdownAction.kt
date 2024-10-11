@@ -4,18 +4,26 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffManager
 
 class ToggleFilterMarkdownAction(
 	diffManager: DiffManager,
-	configurationProvider: ConfigurationProvider,
+	profileManager: ProfileManager,
 	accelerators: Accelerators
 ) :
-	MainMenuConfigurationBooleanAction<DiffManager.Config>("toggleFilterMarkdown", "Filter Markdown", null, null, null, accelerators,
-		configurationProvider,
-		DiffManager.Config,
-		{ config -> config.filterMarkdown },
-		{ config: DiffManager.Config, value: Boolean -> config.copy(filterMarkdown = value) },
-		{ config: DiffManager.Config -> diffManager.setConfig(config) }
-	)
+	MainMenuProfileBooleanAction("toggleFilterMarkdown", "Filter Markdown", null, null, null, accelerators,
+		profileManager,
+		{ profile -> profile.diffConfig.filterMarkdown },
+		{ profile, value ->
+			profile.copy(diffConfig = profile.diffConfig.copy(filterMarkdown = value))
+		},
+		{ profile ->
+			diffManager.setConfig(profile.diffConfig)
+		}
+	) {
+	init {
+		profileManager.addListener { _, _ ->
+			updateState()
+		}
+	}
+}

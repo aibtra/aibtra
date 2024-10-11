@@ -52,18 +52,18 @@ class MainFrame(private val environment: Environment) {
 		val coroutineDispatcher = environment.coroutineDispatcher
 		val mainScope = environment.mainScope
 		diffManager = DiffManager(
-			environment.configurationProvider.get(DiffManager.Config), {
+			{
 				TextNormalizer(environment.configurationProvider.get(Schemes).current().textNormalizerConfig).normalize(it)
 			}, coroutineDispatcher, mainScope, environment.debugLog
 		)
 
 		profileManager = ProfileManager(environment.configurationProvider)
 
-		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, initial = true) }, environment)
+		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, initial = true) }, environment)
 		refTextArea = RefTextArea(environment)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
-			diffManager.updateRawText(rawTextArea.getText())
+			diffManager.updateRawText(rawTextArea.getText(), profileManager.profile().diffConfig)
 		}
 		rawTextArea.addContentListener {
 			diffManagerRefresher.refresh()
@@ -111,9 +111,9 @@ class MainFrame(private val environment: Environment) {
 		this.submitAction = submitAction
 		applyChangeAction = ApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
-		pasteAndSubmitAction = PasteAndSubmitAction(environment, requestManager, diffManager, rawTextArea, submitAction)
-		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, environment.configurationProvider, environment.accelerators)
-		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, environment.configurationProvider, environment.accelerators)
+		pasteAndSubmitAction = PasteAndSubmitAction(environment, requestManager, profileManager, diffManager, rawTextArea, submitAction)
+		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, profileManager, environment.accelerators)
+		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, profileManager, environment.accelerators)
 		toggleDarkModeAction = ToggleDarkModeAction(environment.theme, environment.configurationProvider, environment.accelerators)
 
 		profileManager.fireInitialization() // to adjust all actions
@@ -300,6 +300,8 @@ class MainFrame(private val environment: Environment) {
 	private fun createSubmitter(): Submitter {
 		val submitter = Submitter(environment, requestManager, dialogDisplayer) { profileManager.profile() }
 		profileManager.addListener { lastName, name ->
+			val profile = profileManager.profile()
+			diffManager.setConfig(profile.diffConfig)
 			if (environment.configurationProvider.get(GuiConfiguration).submitOnProfileChange && lastName != name) {
 				submitter.run()
 			}
@@ -364,8 +366,6 @@ class MainFrame(private val environment: Environment) {
 		addAction(editMenu, copyAndCloseAction)
 		addAction(editMenu, pasteAndSubmitAction)
 		editMenu.addSeparator()
-		addAction(editMenu, toggleFilterMarkdownAction)
-		editMenu.addSeparator()
 		addAction(editMenu, ToggleSubmitOnInvocationAction(environment.configurationProvider, environment.accelerators))
 		addAction(editMenu, ToggleSubmitOnProfileChangeAction(environment.configurationProvider, environment.accelerators))
 		editMenu.addSeparator()
@@ -374,8 +374,6 @@ class MainFrame(private val environment: Environment) {
 		menuBar.add(editMenu)
 
 		val viewMenu = JMenu("View")
-		addAction(viewMenu, toggleShowDiffBeforeAfterAction)
-		viewMenu.addSeparator()
 		addAction(viewMenu, toggleDarkModeAction)
 		if (GuiConfiguration.isSystemTraySupported()) {
 			addAction(viewMenu, ToggleSystemTrayAction(environment.configurationProvider, environment.accelerators))
@@ -388,6 +386,11 @@ class MainFrame(private val environment: Environment) {
 		addAction(onPasteMenu, TextNormalizerAction.createChangeDoubleToSingleBlockQuotes(environment.configurationProvider, environment.accelerators))
 		addAction(onPasteMenu, TextNormalizerAction.createFixMissingEmptyLineAfterBlockQuote(environment.configurationProvider, environment.accelerators))
 		addAction(onPasteMenu, TextNormalizerAction.createRewrapBlockQuotes(environment.configurationProvider, environment.accelerators))
+
+		val profileMenu = JMenu("Profile")
+		addAction(profileMenu, toggleFilterMarkdownAction)
+		addAction(profileMenu, toggleShowDiffBeforeAfterAction)
+		menuBar.add(profileMenu)
 
 		val schemeMenu = JMenu("Scheme")
 		schemeMenu.add(onPasteMenu)
