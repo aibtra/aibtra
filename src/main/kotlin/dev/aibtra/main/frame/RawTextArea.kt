@@ -49,7 +49,7 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		}
 
 		textArea.isEditable = true
-		textArea.lineWrap = true
+		textArea.lineWrap = false
 		textArea.wrapStyleWord = true
 
 		val guiConfiguration = environment.guiConfiguration

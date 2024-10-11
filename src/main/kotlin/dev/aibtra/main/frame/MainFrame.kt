@@ -59,7 +59,9 @@ class MainFrame(private val environment: Environment) {
 		profileManager = ProfileManager(environment.configurationProvider)
 
 		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, initial = true) }, environment)
+		rawTextArea.setWordWrap(profileManager.profile().wordWrap)
 		refTextArea = RefTextArea(environment)
+		refTextArea.setWordWrap(profileManager.profile().wordWrap)
 
 		val diffManagerRefresher = DelayedUiRefresher(100) {
 			diffManager.updateRawText(rawTextArea.getText(), profileManager.profile().diffConfig)
@@ -384,6 +386,7 @@ class MainFrame(private val environment: Environment) {
 		val profileMenu = JMenu("Profile")
 		addAction(profileMenu, toggleFilterMarkdownAction)
 		addAction(profileMenu, toggleShowDiffBeforeAfterAction)
+		addAction(profileMenu, ToggleWordWrapAction(rawTextArea, refTextArea, profileManager, environment.accelerators))
 		profileMenu.addSeparator()
 		addAction(profileMenu, ToggleSubmitOnInvocationAction(profileManager, environment.accelerators))
 		addAction(profileMenu, ToggleSubmitOnProfileChangeAction(profileManager, environment.accelerators))
