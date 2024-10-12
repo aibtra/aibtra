@@ -35,6 +35,10 @@ data class OpenAIConfiguration(
 		USER("user"), SYSTEM("system"), ASSISTANT("assistant")
 	}
 
+	fun profile(id: String): Profile? {
+		return profiles.find { it.name.id == id }
+	}
+
 	fun currentProfile(): Profile {
 		return profiles.find { it.name.id == defaultProfileId } ?: PROOFREAD
 	}
