@@ -108,3 +108,22 @@ jobs:
         title: "tag=${{ env.TAG }} release"
         files: |
           binaries/*
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Create updates.json
+      run: |
+        git fetch origin main develop sandbox
+        mkdir _site
+        echo "{ \"stable\": \"$(git rev-parse origin/main)\", \"latest\": \"$(git rev-parse origin/develop)\", \"experimental\": \"$(git rev-parse origin/sandbox)\" }" > _site/updates.json
+
+    - name: Publish updates.json
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT }}
+        projectName: aibtra-updates
+        directory: ./_site
+        branch: main
+
