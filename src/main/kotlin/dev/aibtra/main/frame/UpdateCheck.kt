@@ -37,7 +37,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 
-class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val dialogDisplayer: DialogDisplayer) {
+class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, val paths: ApplicationPaths, private val dialogDisplayer: DialogDisplayer) {
 	private val coroutineScope = CoroutineScope(Job() + dispatcher)
 	private val mainScope = MainScope()
 
@@ -58,7 +58,8 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 		}
 
 		val now = LocalDateTime.now()
-		if (config.lastCheck?.isAfter(now.minus(config.intervalDays.toLong(), ChronoUnit.DAYS)) == true) {
+		if (config.lastCheck?.isAfter(now.minus(config.intervalDays.toLong(), ChronoUnit.DAYS)) == true &&
+			paths.getProperty("updateCheck.force") != "true") {
 			return
 		}
 
@@ -94,7 +95,18 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 	}
 
 	private fun findLatestSha(bundleType: BuildInfo.BundleType): String? {
-		return URL(API_TAGS_URL).openConnection().getInputStream().use { stream ->
+		try {
+			return URI(UPDATES_URL).toURL().openConnection().getInputStream().use { stream ->
+				val obj = JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8))
+				val root = obj as? JSONObject
+				root?.get(bundleType.name) as? String
+			}
+		} catch (e: Exception) {
+			LOG.error(e)
+			TODO("Not yet implemented")
+		}
+
+		return URI(API_TAGS_URL).toURL().openConnection().getInputStream().use { stream ->
 			(JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8)) as? JSONArray)
 				?.find { tag -> tag is JSONObject && bundleType.name == JsonUtils.objMaybeNull(tag, "name") }
 				?.let { tag -> JsonUtils.objMaybeNull<JSONObject>(tag, "commit") }
@@ -105,6 +117,7 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 	companion object {
 		private const val RELEASES_URL = "https://github.com/aibtra/aibtra/releases"
 		private const val API_TAGS_URL = "https://api.github.com/repos/aibtra/aibtra/tags"
+		private const val UPDATES_URL = "https://updates.aibtra.dev/updates.json"
 		private val LOG = Logger.getLogger(this::class)
 	}
 

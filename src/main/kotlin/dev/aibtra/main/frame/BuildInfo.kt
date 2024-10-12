@@ -12,13 +12,14 @@ import dev.aibtra.main.startup.MainStartup
 import java.lang.IllegalArgumentException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 
 class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType?) {
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
 
-		fun load() : BuildInfo {
+		fun load(paths: ApplicationPaths) : BuildInfo {
 			val javaClass = MainStartup::class.java
 			val jarPath = Path.of(javaClass.protectionDomain.codeSource.location.toURI())
 			val bundleFile = jarPath.parent.resolve("aibtra.bundletype")
@@ -43,8 +44,8 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 					properties.load(it)
 				}
 
-				val sha = properties.getProperty("sha") ?: "<unknown>"
-				val instant = properties.getProperty("time") ?: "unknown"
+				val sha = paths.getProperty("build.sha")  ?: properties.getProperty("sha") ?: "<unknown>"
+				val instant = paths.getProperty("build.time") ?: properties.getProperty("time") ?: "unknown"
 				return BuildInfo(sha, instant, bundleType)
 			}
 		}

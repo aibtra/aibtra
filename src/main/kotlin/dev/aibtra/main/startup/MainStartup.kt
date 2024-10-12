@@ -53,7 +53,7 @@ class MainStartup {
 			FlatDarkLaf.setup() // required for very early (error dialogs) and to properly initialize the default font size
 			GlobalExceptionHandler.install()
 
-			val buildInfo = BuildInfo.load()
+			val buildInfo = BuildInfo.load(paths)
 			createLogger().info(paths.appName + " build " + buildInfo.sha + " from " + buildInfo.instant)
 
 			val settingsPath = paths.settingsPath
@@ -100,7 +100,7 @@ class MainStartup {
 					val frame = MainFrame(environment)
 					frame.show()
 
-					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, frame.dialogDisplayer).invoke()
+					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.paths, frame.dialogDisplayer).invoke()
 					Pair(frame, true)
 				}
 
