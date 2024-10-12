@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-      - next
+      - wip
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macOS-latest]
 
     env:
-      TAG: ${{ github.ref == 'refs/heads/next' && 'experimental' || github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || 'fail' }}
+      TAG: ${{ github.ref == 'refs/heads/wip' && 'experimental' || github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || 'fail' }}
 
     steps:
     - name: Fail if unsupported branch
@@ -82,7 +82,7 @@ jobs:
     needs: build
 
     env:
-      TAG: ${{ github.ref == 'refs/heads/next' && 'experimental' || github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || 'fail' }}
+      TAG: ${{ github.ref == 'refs/heads/wip' && 'experimental' || github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || 'fail' }}
 
     steps:
     - name: Fail if unsupported branch
@@ -108,3 +108,22 @@ jobs:
         title: "tag=${{ env.TAG }} release"
         files: |
           binaries/*
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Create updates.json
+      run: |
+        git fetch origin main develop wip
+        mkdir _site
+        echo "{ \"stable\": \"$(git rev-parse origin/main)\", \"latest\": \"$(git rev-parse origin/develop)\", \"experimental\": \"$(git rev-parse origin/wip)\" }" > _site/updates.json
+
+    - name: Publish updates.json
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT }}
+        projectName: aibtra-updates
+        directory: ./_site
+        branch: main
+
