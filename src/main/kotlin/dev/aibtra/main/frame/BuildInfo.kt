@@ -9,10 +9,8 @@ package dev.aibtra.main.frame
 import dev.aibtra.core.Logger
 import dev.aibtra.gui.Ui
 import dev.aibtra.main.startup.MainStartup
-import java.lang.IllegalArgumentException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
 
 class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType?) {
