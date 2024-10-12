@@ -28,13 +28,14 @@ class MainFrame(private val environment: Environment) {
 	private val rawTextArea: RawTextArea
 	private val refTextArea: RefTextArea
 	private val diffManager: DiffManager
+	private val profileManager: ProfileManager
 	private val requestManager: RequestManager
 	private val submitter: Submitter
 	private val submitAction: MainMenuAction
 	private val applyChangeAction: MainMenuAction
 	private val copyAndCloseAction: MainMenuAction
 	private val pasteAndSubmitAction: MainMenuAction
-	private val profileComboBox: JComboBox<OpenAIConfiguration.Profile>
+	private val profileComboBox: JComboBox<OpenAIConfiguration.Profile.Name>
 	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val toggleFilterMarkdownAction: MainMenuAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
@@ -54,6 +55,8 @@ class MainFrame(private val environment: Environment) {
 				TextNormalizer(environment.configurationProvider.get(Schemes).current().textNormalizerConfig).normalize(it)
 			}, coroutineDispatcher, environment.debugLog
 		)
+
+		profileManager = ProfileManager(environment.configurationProvider)
 
 		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, initial = true) }, environment)
 		refTextArea = RefTextArea(environment)
@@ -101,9 +104,7 @@ class MainFrame(private val environment: Environment) {
 		profileComboBox = createProfileComboBox()
 		schemeComboBox = createSchemeComboBox()
 
-		updateSchemesEnabledState()
-
-		submitter = Submitter(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
+		submitter = createSubmitter()
 
 		val submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
 		this.submitAction = submitAction
@@ -113,6 +114,8 @@ class MainFrame(private val environment: Environment) {
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, environment.configurationProvider, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, environment.configurationProvider, environment.accelerators)
 		toggleDarkModeAction = ToggleDarkModeAction(environment.theme, environment.configurationProvider, environment.accelerators)
+
+		profileManager.fireInitialization() // to adjust all actions
 	}
 
 	fun show() {
@@ -234,20 +237,31 @@ class MainFrame(private val environment: Environment) {
 				}
 			}
 		}
+
+		fun updateEnabledState() {
+			(profileComboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
+				comboBox.isEnabled = profile.supportsSchemes
+			}
+		}
+
+		profileManager.addListener { _, _ ->
+			updateEnabledState()
+		}
+		updateEnabledState()
 		return comboBox
 	}
 
-	private fun createProfileComboBox(): JComboBox<OpenAIConfiguration.Profile> {
+	private fun createProfileComboBox(): JComboBox<OpenAIConfiguration.Profile.Name> {
 		val configurationProvider = environment.configurationProvider
 		val initialConfiguration = configurationProvider.get(OpenAIConfiguration)
-		val comboBox = ComboBoxWithPreferredSize(initialConfiguration.profiles.toTypedArray())
-		comboBox.selectedItem = initialConfiguration.currentProfile()
+		val comboBox = ComboBoxWithPreferredSize(initialConfiguration.profiles.map { it.name }.toTypedArray())
+		comboBox.selectedItem = initialConfiguration.currentProfile().name
 
 		comboBox.renderer = object : DefaultListCellRenderer() {
 			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
 				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
-				if (value is OpenAIConfiguration.Profile) {
-					label.text = value.name.title
+				if (value is OpenAIConfiguration.Profile.Name) {
+					label.text = value.title
 				}
 				else {
 					label.text = "<default instructions>"
@@ -260,38 +274,34 @@ class MainFrame(private val environment: Environment) {
 		comboBox.adjustWidth()
 
 		comboBox.addItemListener(object : ItemListener {
-			private var lastSelected: OpenAIConfiguration.Profile
+			private var lastSelected: OpenAIConfiguration.Profile.Name
 
 			init {
-				lastSelected = initialConfiguration.currentProfile()
+				lastSelected = initialConfiguration.currentProfile().name
 			}
 
 			override fun itemStateChanged(e: ItemEvent?) {
-				(comboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
-					configurationProvider.change(OpenAIConfiguration) {
-						it.copy(defaultProfileId = profile.name.id)
-					}
-
-					if (profile != lastSelected) {
-						if (environment.configurationProvider.get(GuiConfiguration).submitOnProfileChange) {
-							submitter.run()
-						}
-
-						lastSelected = profile
-
-						updateSchemesEnabledState()
-					}
+				(comboBox.selectedItem as? OpenAIConfiguration.Profile.Name)?.let { it ->
+					profileManager.setProfile(it)
 				}
 			}
 		})
 
+		profileManager.addListener { _, name ->
+			comboBox.selectedItem = name
+		}
+
 		return comboBox
 	}
 
-	private fun updateSchemesEnabledState() {
-		(profileComboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
-			schemeComboBox.isEnabled = profile.supportsSchemes
+	private fun createSubmitter(): Submitter {
+		val submitter = Submitter(environment, requestManager, dialogDisplayer) { profileManager.profile() }
+		profileManager.addListener { lastName, name ->
+			if (environment.configurationProvider.get(GuiConfiguration).submitOnProfileChange && lastName != name) {
+				submitter.run()
+			}
 		}
+		return submitter
 	}
 
 	private fun fillContent(container: Container) {
