@@ -118,6 +118,8 @@ class MainFrame(private val environment: Environment) {
 		toggleDarkModeAction = ToggleDarkModeAction(environment.theme, environment.configurationProvider, environment.accelerators)
 
 		profileManager.fireInitialization() // to adjust all actions
+
+		configureSubmitOnInvocation()
 	}
 
 	fun show() {
@@ -409,24 +411,23 @@ class MainFrame(private val environment: Environment) {
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
 			diffManager.updateRefText(Files.readString(Path.of(it)), true)
 		}
-
-		submitOnInvocation()
 	}
 
 	fun toFront() {
 		frame.toFront()
 	}
 
-	private fun submitOnInvocation() {
-		if (!profileManager.profile().submitOnInvocation ||
-			rawTextArea.getText().split("\n", " ", "\t").size < 2) { // Do not submit single words, this should prevent submitting passwords.
-			return
-		}
-
+	private fun configureSubmitOnInvocation() {
 		var listener: ((DiffManager.State) -> Unit)? = null
-		listener = {
-			diffManager.removeStateListener(listener!!)
-			submitter.run()
+		listener = { state ->
+			if (state.diff.raw.isNotEmpty()) {
+				diffManager.removeStateListener(listener!!)
+
+				if (profileManager.profile().submitOnInvocation &&
+					rawTextArea.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
+					submitter.run()
+				}
+			}
 		}
 		diffManager.addStateListener(listener)
 	}
