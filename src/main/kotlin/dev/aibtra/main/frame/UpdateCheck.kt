@@ -30,14 +30,13 @@ import org.json.simple.parser.JSONParser
 import java.awt.Desktop
 import java.io.InputStreamReader
 import java.net.URI
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 
-class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val mainScope: CoroutineScope, private val dialogDisplayer: DialogDisplayer) {
+class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val mainScope: CoroutineScope, private val paths: ApplicationPaths, private val dialogDisplayer: DialogDisplayer) {
 	private val coroutineScope = CoroutineScope(Job() + dispatcher)
 
 	fun invoke() {
@@ -57,7 +56,8 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 		}
 
 		val now = LocalDateTime.now()
-		if (config.lastCheck?.isAfter(now.minus(config.intervalDays.toLong(), ChronoUnit.DAYS)) == true) {
+		if (config.lastCheck?.isAfter(now.minus(config.intervalDays.toLong(), ChronoUnit.DAYS)) == true &&
+			paths.getProperty("updateCheck.force") != "true") {
 			return
 		}
 
@@ -93,17 +93,28 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 	}
 
 	private fun findLatestSha(bundleType: BuildInfo.BundleType): String? {
-		return URL(API_TAGS_URL).openConnection().getInputStream().use { stream ->
-			(JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8)) as? JSONArray)
-				?.find { tag -> tag is JSONObject && bundleType.name == JsonUtils.objMaybeNull(tag, "name") }
-				?.let { tag -> JsonUtils.objMaybeNull<JSONObject>(tag, "commit") }
-				?.let { commit -> JsonUtils.objMaybeNull<String>(commit, "sha") }
+		try {
+			return URI(UPDATES_URL).toURL().openConnection().getInputStream().use { stream ->
+				val obj = JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8))
+				val root = obj as? JSONObject
+				root?.get(bundleType.name) as? String
+			}
+		} catch (e: Exception) {
+			LOG.error(e)
+
+			return URI(API_TAGS_URL).toURL().openConnection().getInputStream().use { stream ->
+				(JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8)) as? JSONArray)
+					?.find { tag -> tag is JSONObject && bundleType.name == JsonUtils.objMaybeNull(tag, "name") }
+					?.let { tag -> JsonUtils.objMaybeNull<JSONObject>(tag, "commit") }
+					?.let { commit -> JsonUtils.objMaybeNull<String>(commit, "sha") }
+			}
 		}
 	}
 
 	companion object {
 		private const val RELEASES_URL = "https://github.com/aibtra/aibtra/releases"
 		private const val API_TAGS_URL = "https://api.github.com/repos/aibtra/aibtra/tags"
+		private const val UPDATES_URL = "https://updates.aibtra.dev/updates.json"
 		private val LOG = Logger.getLogger(this::class)
 	}
 
