@@ -29,10 +29,10 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 					BundleType.valueOf(fileContent)
 				} catch (e: IllegalArgumentException) {
 					LOG.error("Invalid bundle type $fileContent")
-					BundleType.stable
+					BundleType.STABLE
 				}
 			} else {
-				if (Ui.isDebugging()) BundleType.experimental else BundleType.stable
+				if (Ui.isDebugging()) BundleType.EXPERIMENTAL else BundleType.STABLE
 			}
 
 			LOG.info("Bundle type is $bundleType")
@@ -51,6 +51,6 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 	}
 
 	enum class BundleType {
-		stable, latest, experimental
+		STABLE, LATEST, EXPERIMENTAL
 	}
 }
