@@ -410,20 +410,25 @@ class MainFrame(private val environment: Environment) {
 			diffManager.updateRefText(Files.readString(Path.of(it)), true)
 		}
 
-		if (profileManager.profile().submitOnInvocation &&
-			rawTextArea.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
-
-			var listener: ((DiffManager.State) -> Unit)? = null
-			listener = {
-				diffManager.removeStateListener(listener!!)
-				submitter.run()
-			}
-			diffManager.addStateListener(listener)
-		}
+		submitOnInvocation()
 	}
 
 	fun toFront() {
 		frame.toFront()
+	}
+
+	private fun submitOnInvocation() {
+		if (!profileManager.profile().submitOnInvocation ||
+			rawTextArea.getText().split("\n", " ", "\t").size < 2) { // Do not submit single words, this should prevent submitting passwords.
+			return
+		}
+
+		var listener: ((DiffManager.State) -> Unit)? = null
+		listener = {
+			diffManager.removeStateListener(listener!!)
+			submitter.run()
+		}
+		diffManager.addStateListener(listener)
 	}
 
 	private fun addAction(menu: JMenu, action: MainMenuAction) {
