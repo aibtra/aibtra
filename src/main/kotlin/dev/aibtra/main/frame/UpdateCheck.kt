@@ -62,8 +62,10 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 			return
 		}
 
+		val bundleType = buildInfo.bundleType ?: return
+
 		val latestSha = try {
-			findLatestSha()
+			findLatestSha(bundleType)
 		} catch (e: Exception) {
 			LOG.error(e)
 			return
@@ -91,10 +93,10 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 		})
 	}
 
-	private fun findLatestSha(): String? {
+	private fun findLatestSha(bundleType: BuildInfo.BundleType): String? {
 		return URL(API_TAGS_URL).openConnection().getInputStream().use { stream ->
 			(JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8)) as? JSONArray)
-				?.find { tag -> tag is JSONObject && "latest" == JsonUtils.objMaybeNull(tag, "name") }
+				?.find { tag -> tag is JSONObject && bundleType.name == JsonUtils.objMaybeNull(tag, "name") }
 				?.let { tag -> JsonUtils.objMaybeNull<JSONObject>(tag, "commit") }
 				?.let { commit -> JsonUtils.objMaybeNull<String>(commit, "sha") }
 		}

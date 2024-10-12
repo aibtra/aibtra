@@ -16,6 +16,7 @@ jobs:
 
     env:
       TAG: ${{ github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || github.ref == 'refs/heads/sandbox' && 'experimental' || 'fail' }}
+      BUNDLE_TYPE: ${{ github.ref == 'refs/heads/main' && 'STABLE' || github.ref == 'refs/heads/develop' && 'LATEST' || github.ref == 'refs/heads/sandbox' && 'EXPERIMENTAL' || 'fail' }}
 
     steps:
     - name: Fail if unsupported branch
@@ -52,7 +53,7 @@ jobs:
         cp resources/windows/README* build/jpackage/
         cd build/jpackage
         dir
-        echo "${{ env.TAG }}" > aibtra/app/aibtra.bundletype
+        echo "${{ env.BUNDLE_TYPE }}" > aibtra/app/aibtra.bundletype
         7z a -tzip aibtra-${{ env.TAG }}-windows.zip *
 
     - name: Bundle (Linux)
@@ -60,7 +61,7 @@ jobs:
       run: |
         cd build/jpackage
         ls -al
-        echo "${{ env.TAG }}" > aibtra/lib/app/aibtra.bundletype
+        echo "${{ env.BUNDLE_TYPE }}" > aibtra/lib/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-linux.tar.gz aibtra/*
 
     - name: Bundle (macOS ARM)
@@ -69,7 +70,7 @@ jobs:
         cp -R resources/macos/README* build/jpackage/
         cd build/jpackage
         ls -al
-        echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
+        echo "${{ env.BUNDLE_TYPE }}" > aibtra.app/Contents/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-macos-arm.tar.gz *
 
     - name: Bundle (macOS Intel)
@@ -78,7 +79,7 @@ jobs:
         cp -R resources/macos/README* build/jpackage/
         cd build/jpackage
         ls -al
-        echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
+        echo "${{ env.BUNDLE_TYPE }}" > aibtra.app/Contents/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-macos-intel.tar.gz *
 
     - name: Upload artifacts
