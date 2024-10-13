@@ -71,7 +71,8 @@ data class OpenAIConfiguration(
 					Role.USER, "Correct typos and grammar in the markdown following " +
 									"AND stay as close as possible to the original " +
 									"AND do not change the markdown structure " +
-									"AND preserve the detected language:"
+									"AND preserve the detected language " +
+									"AND do not include additional comments in the response, but purely the correction:"
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
 			),
@@ -88,7 +89,8 @@ data class OpenAIConfiguration(
 					Role.USER, "Proofread " +
 									"AND improve wording, but stay close to the original, only apply changes to quite uncommon wording " +
 									"AND do not change the markdown structure or indentation or other special symbols " +
-									"AND preserve the detected language:"
+									"AND preserve the detected language " +
+									"AND do not include additional comments in the response, but purely the correction:"
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
 			),
