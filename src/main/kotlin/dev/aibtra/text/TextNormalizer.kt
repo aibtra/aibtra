@@ -56,8 +56,8 @@ class TextNormalizer(val config: Config) {
 	}
 
 	private fun joinLines(text: String): String {
-		val filtered = FilteredText.filter(text)
-		val clean = filtered.clean.split("\n")
+		val filtered = FilteredText.filter(FilteredText.Part.of(text))
+		val clean = filtered.clean.all.split("\n")
 		var forceNewline = false
 
 		val normalized = StringBuilder()
@@ -101,7 +101,7 @@ class TextNormalizer(val config: Config) {
 			}
 		}
 
-		return filtered.recreate(normalized.toString())
+		return filtered.recreate(normalized.toString(), FilteredText.RecreateMode.FULL)
 	}
 
 	private fun changeDoubleToSingleBlockQuotes(text: String): String {

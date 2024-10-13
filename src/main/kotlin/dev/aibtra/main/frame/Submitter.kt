@@ -9,6 +9,7 @@ import dev.aibtra.gui.Ui
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.openai.OpenAIConfiguration
 import dev.aibtra.openai.OpenAIService
+import dev.aibtra.text.FilteredText
 import javax.swing.JLabel
 
 class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {

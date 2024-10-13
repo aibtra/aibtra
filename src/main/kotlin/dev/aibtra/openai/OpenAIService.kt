@@ -28,6 +28,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 			input["stream"] = true
 		}
 
+		val responseType = profile.responseType
 		val messagesIn = JSONArray()
 		var contentVar : String? = null
 		for (instruction in profile.instructions) {
@@ -36,7 +37,10 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 			messageIn["content"] = KEYWORD_REGEX.replace(instruction.text) { matchResult ->
 				val key = matchResult.groupValues[1]
 				val value = keywordResolver(key) ?: throw IOException("Unknown keyword '$key'")
-				if (key == OpenAIConfiguration.CONTENT_KEYWORD) {
+				if (key == OpenAIConfiguration.CONTENT_KEYWORD && responseType == OpenAIConfiguration.ResponseType.CONTENT) {
+					contentVar = value
+				}
+				else if (key == OpenAIConfiguration.SELECTION_KEYWORD && responseType == OpenAIConfiguration.ResponseType.SELECTION) {
 					contentVar = value
 				}
 				value
@@ -86,7 +90,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									}
 								}
 
-								if (applyFixes(content, builder)) {
+								if (applyFixes(content, builder, responseType)) {
 									callback(Result(builder.toString(), true))
 								}
 							}
@@ -104,7 +108,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val messageOut = objNotNull<JSONObject>(choice, "message")
 									val message = objNotNull<String>(messageOut, "content")
 									val builder = StringBuilder(message)
-									applyFixes(content, builder)
+									applyFixes(content, builder, responseType)
 									callback(Result(builder.toString(), true))
 								}
 							}
@@ -138,7 +142,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 	}
 
-	private fun applyFixes(content: String, result: StringBuilder): Boolean {
+	private fun applyFixes(content: String, result: StringBuilder, responseType: OpenAIConfiguration.ResponseType): Boolean {
 		if (dropMarkdownPrefix(content, result)) {
 			return true
 		}

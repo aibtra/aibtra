@@ -30,7 +30,7 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 
 	private var ignoreUndoableEvents = false
 	private var diffChars: List<DiffChar> = listOf()
-	private var filteredText: FilteredText = FilteredText("", emptyMap(), setOf())
+	private var filteredText: FilteredText = FilteredText.asIs(FilteredText.Part.of(""))
 
 	init {
 		(textArea.document as AbstractDocument).let {
