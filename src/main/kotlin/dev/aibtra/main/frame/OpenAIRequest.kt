@@ -28,7 +28,7 @@ class OpenAIRequest(val profile: OpenAIConfiguration.Profile, private val servic
 		// the responseType dictates whether we receive the whole file or just the selected portion.
 		val responseType = profile.responseType
 		val selectionMode = part.isPart()
-		service.request(profile, selectionMode, true, keywordResolver) { result ->
+		service.request(profile, selectionMode, keywordResolver) { result ->
 			result.content?.let { builder ->
 				val recreateMode = if (responseType == OpenAIConfiguration.ResponseType.SELECTION) {
 					// If the user chooses to process the entire file, we will have passed the complete file to the model.

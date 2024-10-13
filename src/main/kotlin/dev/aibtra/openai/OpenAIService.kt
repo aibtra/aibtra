@@ -20,10 +20,12 @@ import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
-	fun request(profile: OpenAIConfiguration.Profile, selectionMode: Boolean, streaming: Boolean, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
+	fun request(profile: OpenAIConfiguration.Profile, selectionMode: Boolean, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = profile.model
 		input["n"] = 1
+
+		val streaming = profile.streaming
 		if (streaming) {
 			input["stream"] = true
 		}
