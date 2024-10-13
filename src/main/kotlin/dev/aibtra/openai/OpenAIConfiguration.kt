@@ -20,6 +20,7 @@ data class OpenAIConfiguration(
 	data class Profile(
 		val name: Name,
 		val model: String,
+		val streaming: Boolean,
 		val supportsSchemes: Boolean = false,
 		val instructions: List<Instruction>,
 		val responseType: ResponseType,
@@ -92,6 +93,7 @@ data class OpenAIConfiguration(
 			Profile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),
 			MODEL_4O,
 			true,
+			true,
 			listOf(
 				Instruction(
 					Role.USER, "Correct typos and grammar in the markdown following " +
@@ -111,6 +113,7 @@ data class OpenAIConfiguration(
 			Profile.Name("improve", "Improve Text (GPT-4o)"),
 			MODEL_4O,
 			true,
+			true,
 			listOf(
 				Instruction(
 					Role.USER, "Proofread " +
@@ -129,6 +132,7 @@ data class OpenAIConfiguration(
 		private val TO_STANDARD_ENGLISH = Profile(
 			Profile.Name("to-standard-english", "To Standard English (GPT-4o)"),
 			MODEL_4O,
+			true,
 			true,
 			listOf(
 				Instruction(
