@@ -101,9 +101,12 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		return textArea.text
 	}
 
+	fun initializeText(text: String) {
+		setText(textInitializer.initialize(text))
+	}
+
 	fun setText(text: String) {
-		val initialize = textInitializer.initialize(text)
-		textArea.text = initialize
+		textArea.text = text
 		textArea.caretPosition = 0
 
 		undoManager.discardAllEdits()

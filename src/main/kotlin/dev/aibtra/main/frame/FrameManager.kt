@@ -35,12 +35,14 @@ class FrameManager {
 	}
 
 	fun exit() {
-		frame?.closed()
+		val runnable = {
+			for (frame in Frame.getFrames()) {
+				frame.dispose()
+			}
 
-		for (frame in Frame.getFrames()) {
-			frame.dispose()
+			System.exit(0)
 		}
 
-		System.exit(0)
+		frame?.checkClose(runnable) ?: runnable()
 	}
 }

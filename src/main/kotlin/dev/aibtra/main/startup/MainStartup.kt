@@ -87,29 +87,43 @@ class MainStartup {
 		}
 
 		private fun invoke(arguments: Arguments, environment: Environment) {
-			showMainFrame(arguments.options, environment)
+			val params = arguments.params
+			val fileToOpen = if (params.size == 1) (params.first() as? String)?.let { Path.of(it) } else null
+			if (fileToOpen != null) {
+				showMainFrame(arguments.options, environment, fileToOpen)
+			}
+			else {
+				showMainFrame(arguments.options, environment, null)
+			}
 		}
 
-		private fun showMainFrame(options: Options, environment: Environment, forceSetClipboard: Boolean = false) {
-			createLogger().info("show main frame: options=$options")
+		private fun showMainFrame(options: Options, environment: Environment, fileToOpen: Path?, forceSetClipboard: Boolean = false) {
+			createLogger().info("show main frame: file=$fileToOpen;options=$options")
 
 			Ui.runInEdt {
-				val existingFrame = environment.frameManager.getFrame()
-				val (frame, setClipboard) = if (existingFrame != null) {
-					existingFrame.toFront()
-					Pair(existingFrame, forceSetClipboard)
-				}
-				else {
+				environment.frameManager.getFrame()?.let {
+					it.toFront()
+					it.checkClose {
+						if (fileToOpen != null || forceSetClipboard) {
+							setMainFrameContent(fileToOpen, it, environment)
+						}
+					}
+				} ?: run {
 					val frame = MainFrame(environment)
 					frame.show()
 
 					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.paths, frame.dialogDisplayer).invoke()
-					Pair(frame, true)
+					setMainFrameContent(fileToOpen, frame, environment)
 				}
+			}
+		}
 
-				if (setClipboard) {
-					frame.setText(getContentFromClipboard(environment.paths))
-				}
+		private fun setMainFrameContent(fileToOpen: Path?, frame: MainFrame, environment: Environment) {
+			if (fileToOpen != null) {
+				frame.openFile(fileToOpen)
+			}
+			else {
+				frame.setText(getContentFromClipboard(environment.paths))
 			}
 		}
 
@@ -171,7 +185,7 @@ class MainStartup {
 			}
 			val openAction = JMenuItem("Open")
 			openAction.addActionListener {
-				showMainFrame(Options.NONE, environment)
+				showMainFrame(Options.NONE, environment, null)
 				popup.isVisible = false
 			}
 			popup.add(openAction)
@@ -183,7 +197,7 @@ class MainStartup {
 			trayIcon.addMouseListener(object : MouseAdapter() {
 				override fun mouseClicked(e: MouseEvent) {
 					if (e.button == MouseEvent.BUTTON1) {
-						showMainFrame(Options.NONE, environment)
+						showMainFrame(Options.NONE, environment, null)
 					}
 					else if (e.button == MouseEvent.BUTTON3) {
 						val location = MouseInfo.getPointerInfo().location
@@ -200,7 +214,7 @@ class MainStartup {
 
 		private fun configureHotkey(environment: Environment): Boolean {
 			return environment.hotkeyListener.configure {
-				showMainFrame(Options.NONE, environment, true)
+				showMainFrame(Options.NONE, environment, null, true)
 			}
 		}
 
