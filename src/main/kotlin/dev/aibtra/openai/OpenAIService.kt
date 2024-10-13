@@ -20,22 +20,32 @@ import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
-	fun request(model: String, instructions: String, text: String, streaming: Boolean, callback: (result: Result) -> Boolean) {
+	fun request(profile: OpenAIConfiguration.Profile, streaming: Boolean, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
-		input["model"] = model
+		input["model"] = profile.model
 		input["n"] = 1
 		if (streaming) {
 			input["stream"] = true
 		}
 
 		val messagesIn = JSONArray()
-		val messageIn = JSONObject()
-		val content = instructions + "\n\n" + text
-		messageIn["role"] = "user"
-		messageIn["content"] = content
-		messagesIn.add(messageIn)
+		var contentVar : String? = null
+		for (instruction in profile.instructions) {
+			val messageIn = JSONObject()
+			messageIn["role"] = instruction.role.id
+			messageIn["content"] = KEYWORD_REGEX.replace(instruction.text) { matchResult ->
+				val key = matchResult.groupValues[1]
+				val value = keywordResolver(key) ?: throw IOException("Unknown keyword '$key'")
+				if (key == OpenAIConfiguration.CONTENT_KEYWORD) {
+					contentVar = value
+				}
+				value
+			}
+			messagesIn.add(messageIn)
+		}
 		input["messages"] = messagesIn
 
+		val content = contentVar ?: "Profile instructions don't extract any content to send. Are you missing the \${CONTENT} keyword?"
 		val url = URI("https://api.openai.com/v1/chat/completions").toURL()
 		val connection = url.openConnection() as HttpURLConnection
 		try {
@@ -71,7 +81,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									}
 								}
 
-								if (applyFixes(text, builder)) {
+								if (applyFixes(content, builder)) {
 									callback(Result(builder))
 								}
 							}
@@ -89,7 +99,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val messageOut = objNotNull<JSONObject>(choice, "message")
 									val message = objNotNull<String>(messageOut, "content")
 									val builder = StringBuilder(message)
-									applyFixes(text, builder)
+									applyFixes(content, builder)
 									callback(Result(builder))
 								}
 							}
@@ -189,6 +199,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 
 	companion object {
 		val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
+		val KEYWORD_REGEX = "\\$\\{(\\w+)}".toRegex()
 		val MARKDOWN_PREFIX_PATTERN = Regex("^\\s*```(\\w+)?\n")
 		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
 	}
