@@ -13,13 +13,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class DebugLog(
-	config: Config
+	val config: Config
 ) {
 	private val debugDirectory = initializeDebugDirectory(config)
 	private val debugStartTime = System.currentTimeMillis()
 
-	fun run(title: String, task: (log: Log, logActive: Boolean) -> Unit) {
-		if (debugDirectory == null) {
+	fun run(title: String, level: Level, task: (log: Log, logActive: Boolean) -> Unit) {
+		if (debugDirectory == null || level.precedence < config.level.precedence) {
 			task(object : Log {
 				override fun println(line: String) {
 				}
@@ -62,7 +62,8 @@ class DebugLog(
 
 	@Serializable
 	data class Config(
-		val directory: String? = null
+		val directory: String? = null,
+		val level: Level = Level.DEBUG
 	) {
 		companion object : ConfigurationFactory<Config> {
 			override fun name(): String = "debug"
@@ -71,5 +72,10 @@ class DebugLog(
 				return Config()
 			}
 		}
+	}
+
+	@Serializable
+	enum class Level(val precedence: Int) {
+		DEBUG(0)
 	}
 }
