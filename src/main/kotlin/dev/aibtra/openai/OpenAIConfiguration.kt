@@ -8,12 +8,14 @@ import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.core.WorkingMode
 import dev.aibtra.diff.DiffManager
 import kotlinx.serialization.Serializable
+import kotlin.jvm.optionals.getOrNull
 
 @Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
-	val profiles: List<Profile> = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH),
-	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID
+	val profiles: List<Profile> = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CODE_REFINEMENT, GENERIC_COMMAND),
+	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID,
+	val lastCommands: List<String> = listOf()
 ) {
 
 	@Serializable
@@ -69,11 +71,16 @@ data class OpenAIConfiguration(
 
 	companion object : ConfigurationFactory<OpenAIConfiguration> {
 		private const val PROOFREAD_ID = "proofread"
+		private const val CODE_REFINEMENT_ID = "code-refinement"
+		private const val GENERIC_COMMAND_ID = "generic-command"
 		const val CONTENT_KEYWORD = "CONTENT"
 		const val SELECTION_KEYWORD = "SELECTION"
+		const val COMMAND_KEYWORD = "COMMAND"
 		private const val CONTENT_MACRO = "\${${CONTENT_KEYWORD}}"
 		private const val SELECTION_MACRO = "\${${SELECTION_KEYWORD}}"
+		private const val COMMAND_MACRO = "\${${COMMAND_KEYWORD}}"
 		private const val MODEL_4O = "gpt-4o"
+		private const val MODEL_O1_MINI = "o1-mini"
 		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
 			WorkingMode.clipboard to PROOFREAD_ID,
 			WorkingMode.file to PROOFREAD_ID,
@@ -137,6 +144,54 @@ data class OpenAIConfiguration(
 			wordWrap = true
 		)
 
+		private val CODE_REFINEMENT = Profile(
+			Profile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
+			MODEL_O1_MINI,
+			false,
+			false,
+			listOf(
+				Instruction(
+					Role.USER,
+					"I have following file:"
+				),
+				Instruction(
+					Role.USER,
+					CONTENT_MACRO
+				),
+				Instruction(
+					Role.USER,
+					"Improve following part of the file:"
+				),
+				Instruction(
+					Role.USER,
+					SELECTION_MACRO
+				),
+				Instruction(
+					Role.USER,
+					"By applying following changes:\n\n$COMMAND_MACRO"
+				),
+				Instruction(
+					Role.USER,
+					"Send back only a unified diff of all changes applied, do not include any additional comments."
+				)
+			),
+			ResponseType.CONTENT,
+			DiffManager.Config(false, false)
+		)
+
+		private val GENERIC_COMMAND = Profile(
+			Profile.Name(GENERIC_COMMAND_ID, "Generic Command (o1-mini)"),
+			MODEL_O1_MINI,
+			false,
+			false,
+			listOf(
+				Instruction(Role.USER, COMMAND_MACRO),
+				Instruction(Role.USER, CONTENT_MACRO)
+			),
+			ResponseType.CONTENT,
+			DiffManager.Config(false, false)
+		)
+
 		override fun name(): String = "openai"
 
 		override fun default(): OpenAIConfiguration = OpenAIConfiguration()
@@ -150,6 +205,11 @@ data class OpenAIConfiguration(
 					profile
 				}
 			})
+		}
+
+		fun getCommandInstructions(profile: Profile): List<String>? {
+			val instructions = profile.instructions.stream().filter { i -> i.text.contains(COMMAND_MACRO) }.findAny().getOrNull()
+			return instructions?.text?.split(COMMAND_MACRO)
 		}
 	}
 }
