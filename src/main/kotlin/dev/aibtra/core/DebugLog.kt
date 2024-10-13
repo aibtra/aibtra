@@ -13,9 +13,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class DebugLog(
-	initialConfig: Config
+	config: Config
 ) {
-	private val debugDirectory = initializeDebugDirectory(initialConfig)
+	private val debugDirectory = initializeDebugDirectory(config)
 	private val debugStartTime = System.currentTimeMillis()
 
 	fun run(title: String, task: (log: Log, logActive: Boolean) -> Unit) {
