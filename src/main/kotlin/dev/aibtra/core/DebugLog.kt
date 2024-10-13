@@ -32,6 +32,7 @@ class DebugLog(
 			task(object : Log {
 				override fun println(line: String) {
 					writer.println(line)
+					writer.flush()
 				}
 			}, true)
 		}
