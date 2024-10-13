@@ -45,7 +45,16 @@ class Submitter(private val environment: Environment, private val requestManager
 		val profile = profile()
 		val service = OpenAIService(apiToken, environment.debugLog)
 		requestManager.schedule { input: String, callback: RequestManager.OpCallback ->
-			service.request(profile.model, profile.instructions, input, true) { result ->
+			val keywordResolved: (key: String) -> String? = { key ->
+				if (key == OpenAIConfiguration.CONTENT_KEYWORD) {
+					input
+				}
+				else {
+					null
+				}
+			}
+
+			service.request(profile, true, keywordResolved) { result ->
 				result.content?.let {
 					callback.callback(it.toString())
 				} ?: run {
