@@ -30,14 +30,13 @@ import org.json.simple.parser.JSONParser
 import java.awt.Desktop
 import java.io.InputStreamReader
 import java.net.URI
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 
-class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, val paths: ApplicationPaths, private val dialogDisplayer: DialogDisplayer) {
+class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val paths: ApplicationPaths, private val dialogDisplayer: DialogDisplayer) {
 	private val coroutineScope = CoroutineScope(Job() + dispatcher)
 	private val mainScope = MainScope()
 
@@ -103,14 +102,13 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 			}
 		} catch (e: Exception) {
 			LOG.error(e)
-			TODO("Not yet implemented")
-		}
 
-		return URI(API_TAGS_URL).toURL().openConnection().getInputStream().use { stream ->
-			(JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8)) as? JSONArray)
-				?.find { tag -> tag is JSONObject && bundleType.name == JsonUtils.objMaybeNull(tag, "name") }
-				?.let { tag -> JsonUtils.objMaybeNull<JSONObject>(tag, "commit") }
-				?.let { commit -> JsonUtils.objMaybeNull<String>(commit, "sha") }
+			return URI(API_TAGS_URL).toURL().openConnection().getInputStream().use { stream ->
+				(JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8)) as? JSONArray)
+					?.find { tag -> tag is JSONObject && bundleType.name == JsonUtils.objMaybeNull(tag, "name") }
+					?.let { tag -> JsonUtils.objMaybeNull<JSONObject>(tag, "commit") }
+					?.let { commit -> JsonUtils.objMaybeNull<String>(commit, "sha") }
+			}
 		}
 	}
 
