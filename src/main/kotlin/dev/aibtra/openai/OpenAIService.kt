@@ -124,10 +124,11 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 	}
 
 	private fun applyFixes(content: String, result: StringBuilder): Boolean {
-		var changed = false
-		changed = changed or ensureLeadingAndTrailingWhitespaces(content, result)
-		changed = changed or dropMarkdownPrefix(content, result)
-		return changed
+		if (dropMarkdownPrefix(content, result)) {
+			return true
+		}
+
+		return ensureLeadingAndTrailingWhitespaces(content, result)
 	}
 
 	private fun ensureLeadingAndTrailingWhitespaces(content: String, result: StringBuilder): Boolean {
@@ -143,24 +144,22 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 	}
 
 	private fun dropMarkdownPrefix(content: String, result: StringBuilder): Boolean {
-		if (content.startsWith("```")) {
+		if (MARKDOWN_PREFIX_PATTERN.containsMatchIn(content)) {
 			return false
 		}
 
-		// First process more specific, then more general prefix/suffix combinations
-		return removePrefixSuffix(result, MARKDOWN_PREFIX_1, MARKDOWN_SUFFIX_2) ||
-						removePrefixSuffix(result, MARKDOWN_PREFIX_1, MARKDOWN_SUFFIX_1) ||
-						removePrefixSuffix(result, MARKDOWN_PREFIX_2, MARKDOWN_SUFFIX_2) ||
-						removePrefixSuffix(result, MARKDOWN_PREFIX_2, MARKDOWN_SUFFIX_1)
-	}
-
-	private fun removePrefixSuffix(result: StringBuilder, prefix: String, suffix: String): Boolean {
-		if (!result.startsWith(prefix) || !result.endsWith(suffix)) {
+		if (!MARKDOWN_PREFIX_PATTERN.containsMatchIn(result) || !MARKDOWN_SUFFIX_PATTERN.containsMatchIn(result)) {
 			return false
 		}
 
-		result.replace(0, prefix.length, "")
-		result.replace(result.length - suffix.length, result.length, "")
+		MARKDOWN_SUFFIX_PATTERN.find(result)?.let {
+			result.delete(it.range.first, result.length)
+		}
+
+		MARKDOWN_PREFIX_PATTERN.find(result)?.let {
+			result.delete(0, it.range.last + 1)
+		}
+
 		return true
 	}
 
@@ -190,9 +189,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 
 	companion object {
 		val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
-		const val MARKDOWN_PREFIX_1 = "```markdown\n"
-		const val MARKDOWN_PREFIX_2 = "```\n"
-		const val MARKDOWN_SUFFIX_1 = "\n```"
-		const val MARKDOWN_SUFFIX_2 = "\n```\n"
+		val MARKDOWN_PREFIX_PATTERN = Regex("^\\s*```(\\w+)?\n")
+		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
 	}
 }
