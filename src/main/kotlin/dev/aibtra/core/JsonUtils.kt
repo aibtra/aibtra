@@ -27,5 +27,54 @@ class JsonUtils {
 				}
 			}
 		}
+
+		fun formatJson(jsonString: String): String {
+			val formattedJson = StringBuilder()
+			var indent = ""
+			var inQuotes = false
+
+			for (charFromJson in jsonString) {
+				when (charFromJson) {
+					'"' -> {
+						formattedJson.append(charFromJson)
+						// Toggle the inQuotes flag if the quote is not escaped
+						if (formattedJson.length < 2 || formattedJson[formattedJson.length - 2] != '\\') {
+							inQuotes = !inQuotes
+						}
+					}
+					'{', '[' -> {
+						formattedJson.append(charFromJson)
+						if (!inQuotes) {
+							formattedJson.append("\n")
+							indent += "    "
+							formattedJson.append(indent)
+						}
+					}
+					'}', ']' -> {
+						if (!inQuotes) {
+							formattedJson.append("\n")
+							indent = indent.substring(0, indent.length - 4)
+							formattedJson.append(indent)
+						}
+						formattedJson.append(charFromJson)
+					}
+					',' -> {
+						formattedJson.append(charFromJson)
+						if (!inQuotes) {
+							formattedJson.append("\n")
+							formattedJson.append(indent)
+						}
+					}
+					':' -> {
+						formattedJson.append(charFromJson)
+						if (!inQuotes) {
+							formattedJson.append(" ")
+						}
+					}
+					else -> formattedJson.append(charFromJson)
+				}
+			}
+			return formattedJson.toString()
+		}
 	}
 }
