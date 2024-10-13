@@ -76,6 +76,6 @@ class DebugLog(
 
 	@Serializable
 	enum class Level(val precedence: Int) {
-		DEBUG(0)
+		DEBUG(0), INFO(1)
 	}
 }

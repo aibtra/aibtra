@@ -54,8 +54,13 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 			connection.addRequestProperty("Authorization", "Bearer $apiToken")
 			connection.addRequestProperty("Content-Type", "application/json")
 
-			debugLog.run("openai", DebugLog.Level.DEBUG) { log: DebugLog.Log, _: Boolean ->
+			debugLog.run("openai", DebugLog.Level.INFO) { log: DebugLog.Log, _: Boolean ->
 				val jsonInput = input.toJSONString()
+				log.println("SEND: ")
+				log.println(JsonUtils.formatJson(jsonInput))
+
+				log.println("")
+				log.println("RECEIVE: ")
 				try {
 					connection.outputStream.use { output ->
 						output.write(jsonInput.toByteArray(StandardCharsets.UTF_8))
