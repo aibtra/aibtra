@@ -68,12 +68,12 @@ class TextNormalizer(val config: Config) {
 
 			val trimmed = line.trim()
 			val controlLine = trimmed.startsWith(">") ||
-					trimmed.startsWith("```") ||
-					trimmed.startsWith("- ") ||
-					trimmed.startsWith("* ") ||
-					trimmed.startsWith("+ ") ||
-					trimmed.startsWith("#") ||
-					trimmed.matches(Regex("\\d+\\. .*"))
+							trimmed.startsWith("```") ||
+							trimmed.startsWith("- ") ||
+							trimmed.startsWith("* ") ||
+							trimmed.startsWith("+ ") ||
+							trimmed.startsWith("#") ||
+							trimmed.matches(Regex("\\d+\\. .*"))
 
 			forceNewline = if (
 				controlLine) {
@@ -101,9 +101,7 @@ class TextNormalizer(val config: Config) {
 			}
 		}
 
-		val result = filtered.recreate(normalized.toString())
-		require(result.isSuccess)
-		return result.getOrThrow()
+		return filtered.recreate(normalized.toString())
 	}
 
 	private fun changeDoubleToSingleBlockQuotes(text: String): String {
