@@ -87,7 +87,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 								}
 
 								if (applyFixes(content, builder)) {
-									callback(Result(builder.toString()))
+									callback(Result(builder.toString(), true))
 								}
 							}
 							else {
@@ -105,7 +105,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val message = objNotNull<String>(messageOut, "content")
 									val builder = StringBuilder(message)
 									applyFixes(content, builder)
-									callback(Result(builder.toString()))
+									callback(Result(builder.toString(), true))
 								}
 							}
 
@@ -119,16 +119,16 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 						(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
 							(result["error"] as? JSONObject)?.let { error ->
 								(error["message"] as? String)?.let { message ->
-									callback(Result(null, Pair(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)))
+									callback(Result(null, false, Pair(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)))
 								}
 							}
 						}
 					} ?: run {
 						if (ioe is UnknownHostException) {
-							callback(Result(null, Pair(IOException("Unknown host: ${ioe.message}"), false)))
+							callback(Result(null, false, Pair(IOException("Unknown host: ${ioe.message}"), false)))
 						}
 						else {
-							callback(Result(null, Pair(ioe, mightBeAuthentication)))
+							callback(Result(null, false, Pair(ioe, mightBeAuthentication)))
 						}
 					}
 				}
@@ -192,7 +192,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 			if (JsonUtils.objMaybeNull<String>(choice, "finish_reason") == null) {
 				val message = objNotNull<Any>(messageOut, "content")
 				builder.append(message)
-				callback(Result(builder.toString()))
+				callback(Result(builder.toString(), false))
 			}
 			else {
 				false
@@ -200,7 +200,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 	}
 
-	class Result(val content: String?, val failure: Pair<IOException, Boolean>? = null)
+	class Result(val content: String?, val finished: Boolean, val failure: Pair<IOException, Boolean>? = null)
 
 	companion object {
 		val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
