@@ -23,13 +23,13 @@ class FilteredText(
 	private val placeholderToText: Map<String, String>,
 	private val rawFilteredIndexes: Set<Int>
 ) {
-	fun recreate(filtered: String): Result<String> {
+	fun recreate(filtered: String): String {
 		var recreated = filtered
 		for (placeholder in placeholderToText.keys) {
 			recreated = recreated.replace(placeholder, placeholderToText[placeholder]!!)
 		}
 
-		return Result.success(recreated)
+		return recreated
 	}
 
 	fun isFiltered(index: Int): Boolean {
