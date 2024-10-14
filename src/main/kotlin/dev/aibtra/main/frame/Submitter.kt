@@ -44,32 +44,16 @@ class Submitter(private val environment: Environment, private val requestManager
 
 		val profile = profile()
 		val service = OpenAIService(apiToken, environment.debugLog)
-		requestManager.schedule { input: String, callback: RequestManager.OpCallback ->
-			val keywordResolved: (key: String) -> String? = { key ->
-				if (key == OpenAIConfiguration.CONTENT_KEYWORD) {
-					input
-				}
-				else {
-					null
-				}
-			}
-
-			service.request(profile, true, keywordResolved) { result ->
-				result.content?.let {
-					callback.callback(it.toString())
-				} ?: run {
-					val (failure, mightBeAuthentication) = requireNotNull(result.failure)
-					Ui.runInEdt {
-						if (mightBeAuthentication) {
-							configurationProvider.change(OpenAIConfiguration) {
-								it.copy(apiToken = null)
-							}
-						}
-						Dialogs.showIOError(failure, dialogDisplayer)
+		val request = OpenAIRequest(profile, service) { failure, mightBeAuthentication ->
+			Ui.runInEdt {
+				if (mightBeAuthentication) {
+					configurationProvider.change(OpenAIConfiguration) {
+						it.copy(apiToken = null)
 					}
-					false
 				}
+				Dialogs.showIOError(failure, dialogDisplayer)
 			}
 		}
+		requestManager.schedule(request)
 	}
 }
