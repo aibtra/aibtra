@@ -342,7 +342,7 @@ class FilteredTextTest {
 		val clean = FilteredText.filter(text)
 		Assertions.assertEquals(expected, clean.clean)
 
-		val recreated = clean.recreate(expected).getOrThrow()
+		val recreated = clean.recreate(expected)
 		Assertions.assertEquals(text, recreated)
 	}
 }

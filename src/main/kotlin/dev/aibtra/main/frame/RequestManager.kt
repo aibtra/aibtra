@@ -44,7 +44,7 @@ class RequestManager(
 
 						callback {
 							val res = filtered.recreate(ref)
-							diffManager.updateRefText(res.getOrThrow(), false)
+							diffManager.updateRefText(res, false)
 						}
 
 						this == currentRun.get()
@@ -56,12 +56,7 @@ class RequestManager(
 						lastRef?.let {
 							callback {
 								val res = filtered.recreate(it)
-								if (res.isFailure) {
-									diffManager.updateRefText("<FAILURE>", true)
-								}
-								else {
-									diffManager.updateRefText(res.getOrThrow(), true)
-								}
+								diffManager.updateRefText(res, true)
 							}
 						}
 						inProgress = false
