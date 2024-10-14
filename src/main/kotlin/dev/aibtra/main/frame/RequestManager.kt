@@ -11,6 +11,7 @@ import dev.aibtra.gui.SequentialRunner
 import dev.aibtra.gui.Ui
 import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.dialogs.Dialogs
+import dev.aibtra.text.FilteredText
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import java.io.IOException
@@ -27,24 +28,23 @@ class RequestManager(
 	var inProgress = false
 		private set
 
-	fun schedule(operation: Operation) {
-		val filtered = diffManager.state.filtered
+	fun schedule(request: Request) {
 		val run = object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
 				notifyInProgress(true)
 
+				val filteredText = diffManager.state.filtered
 				callback {
 					diffManager.updateRefText("", false) // signal started, so diff becomes reset
 				}
 
 				var lastRef: String? = null
 				try {
-					operation.run(filtered.clean) { ref ->
+					request.run(filteredText) { ref ->
 						lastRef = ref
 
 						callback {
-							val res = filtered.recreate(ref)
-							diffManager.updateRefText(res, false)
+							diffManager.updateRefText(ref, false)
 						}
 
 						this == currentRun.get()
@@ -53,10 +53,9 @@ class RequestManager(
 					Dialogs.showIOError(ioe, dialogDisplayer)
 				} finally {
 					if (this == currentRun.get()) {
-						lastRef?.let {
+						lastRef?.let { ref ->
 							callback {
-								val res = filtered.recreate(it)
-								diffManager.updateRefText(res, true)
+								diffManager.updateRefText(ref, true)
 							}
 						}
 						inProgress = false
@@ -97,11 +96,11 @@ class RequestManager(
 		fun setInProgress(inProgress: Boolean)
 	}
 
-	fun interface OpCallback {
+	fun interface RequestCallback {
 		fun callback(ref: String): Boolean
 	}
 
-	fun interface Operation {
-		fun run(filtered: String, callback: OpCallback)
+	fun interface Request {
+		fun run(filtered: FilteredText, callback: RequestCallback)
 	}
 }
