@@ -56,7 +56,7 @@ data class OpenAIConfiguration(
 	}
 
 	enum class ResponseType {
-		CONTENT, SELECTION
+		CONTENT, SELECTION, DIFF, JSON
 	}
 
 	fun profile(id: String): Profile? {
@@ -80,6 +80,7 @@ data class OpenAIConfiguration(
 		private const val SELECTION_MACRO = "\${${SELECTION_KEYWORD}}"
 		private const val COMMAND_MACRO = "\${${COMMAND_KEYWORD}}"
 		private const val MODEL_4O = "gpt-4o"
+		private const val MODEL_O1 = "o1-preview"
 		private const val MODEL_O1_MINI = "o1-mini"
 		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
 			WorkingMode.clipboard to PROOFREAD_ID,
@@ -145,7 +146,7 @@ data class OpenAIConfiguration(
 		)
 
 		private val CODE_REFINEMENT = Profile(
-			Profile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
+			Profile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-preview)"),
 			MODEL_O1_MINI,
 			false,
 			false,
@@ -160,7 +161,7 @@ data class OpenAIConfiguration(
 				),
 				Instruction(
 					Role.USER,
-					"Improve following part of the file:"
+					"Focus only on this part of the file and apply changes only to this part:"
 				),
 				Instruction(
 					Role.USER,
@@ -168,14 +169,20 @@ data class OpenAIConfiguration(
 				),
 				Instruction(
 					Role.USER,
-					"By applying following changes:\n\n$COMMAND_MACRO"
+					"Apply these changes:\n\n$COMMAND_MACRO"
 				),
 				Instruction(
 					Role.USER,
-					"Send back only a unified diff of all changes applied, do not include any additional comments."
+					"""
+						|Send back only the changed part of the file ("new") and which exact part to replace ("old", including the line number where the old block starts). Use following JSON format for your result:
+						|{
+						|  old: "..."
+						|  oldLineStart: ...
+						|  new: "..."
+						|}""".trimMargin()
 				)
 			),
-			ResponseType.CONTENT,
+			ResponseType.JSON,
 			DiffManager.Config(false, false)
 		)
 
