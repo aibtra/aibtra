@@ -9,6 +9,7 @@ import dev.aibtra.core.JsonUtils
 import dev.aibtra.core.JsonUtils.Companion.objNotNull
 import dev.aibtra.core.Logger
 import dev.aibtra.diff.FuzzyMatcher
+import dev.aibtra.diff.UnifiedDiff
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
@@ -134,7 +135,10 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									applyFixes(content, builder, responseType)
 
 									val builderStr = builder.toString()
-									val res = if (responseType == OpenAIConfiguration.ResponseType.SELECTION_JSON) {
+									val res = if (responseType == OpenAIConfiguration.ResponseType.SELECTION_DIFF) {
+										applyUnifiedDiff(builderStr, content)
+									}
+									else if (responseType == OpenAIConfiguration.ResponseType.SELECTION_JSON) {
 										applyJson(builderStr, content)
 									}
 									else {
@@ -172,6 +176,10 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		} finally {
 			connection.disconnect()
 		}
+	}
+
+	private fun applyUnifiedDiff(builderStr: String, content: String): String {
+		return UnifiedDiff.parse(builderStr).applyHunks(content)
 	}
 
 	private fun applyJson(builderStr: String, content: String): String {
@@ -320,7 +328,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
 
 		fun isPatchResponseType(type: OpenAIConfiguration.ResponseType) : Boolean {
-			return type == OpenAIConfiguration.ResponseType.SELECTION_JSON
+			return type == OpenAIConfiguration.ResponseType.SELECTION_DIFF || type == OpenAIConfiguration.ResponseType.SELECTION_JSON
 		}
 	}
 }

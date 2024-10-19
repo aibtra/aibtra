@@ -79,7 +79,7 @@ data class OpenAIConfiguration(
 
 	@Serializable
 	enum class ResponseType {
-		CONTENT, SELECTION, SELECTION_JSON
+		CONTENT, SELECTION, SELECTION_DIFF, SELECTION_JSON
 	}
 
 	fun profile(id: String): Profile? {
