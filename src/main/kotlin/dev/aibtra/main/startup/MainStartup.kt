@@ -301,16 +301,17 @@ class MainStartup {
 		@Suppress("UNCHECKED_CAST")
 		private fun <D> getFile(factory: ConfigurationFactory<D>): ConfigurationFile<D> {
 			val javaClass: Class<ConfigurationFactory<Any>> = factory.javaClass as Class<ConfigurationFactory<Any>>
-			return classToConfiguration.computeIfAbsent(javaClass) {
+			val configurationFile = classToConfiguration.computeIfAbsent(javaClass) {
 				val name = factory.name() + ".json"
 				val path = settingsRoot.resolve(name)
-				ConfigurationFile.load(path, factory.serializer(), factory.default()) {
+				ConfigurationFile.load(path, factory.createSerializer(), factory.default()) {
 					val backup = Files.createTempFile(path.parent, name, "")
 					Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING)
 					Dialogs.showError("Configuration", "A serialization error occurred while processing '$name'. The associated configuration will be restored to its defaults.\n\nA backup of the original file has been created at $backup", dialogDisplayer)
 					true
 				} as ConfigurationFile<Any>
 			} as ConfigurationFile<D>
+			return configurationFile
 		}
 	}
 

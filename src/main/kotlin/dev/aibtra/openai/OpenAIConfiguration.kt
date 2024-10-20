@@ -2,18 +2,27 @@
  * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
  */
 
+@file:UseSerializers(OpenAIConfiguration.MainSerializer::class)
+
 package dev.aibtra.openai
 
 import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.core.WorkingMode
 import dev.aibtra.diff.DiffManager
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import java.security.MessageDigest
 
 @Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
 	val profiles: List<Profile> = DEFAULT_PROFILES,
-	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID
+	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID,
+	val profileIdToHash: Map<String, String> = createProfileIdToHash(DEFAULT_PROFILES)
 ) {
 
 	@Serializable
@@ -40,14 +49,19 @@ data class OpenAIConfiguration(
 			return false
 		}
 
+		fun toHashString() : String {
+			// A reminder to not overwrite toString()
+			return toString()
+		}
+
 		@Serializable
 		data class Name(val id: String, val title: String)
 	}
 
-	enum class InstructionMode(private val matchSelection : Boolean, private val matchFull: Boolean) {
+	enum class InstructionMode(private val matchSelection: Boolean, private val matchFull: Boolean) {
 		SELECTION_ONLY(true, false), FULL_ONLY(false, true), ANY(true, true);
 
-		fun matches(selectionMode: Boolean) : Boolean {
+		fun matches(selectionMode: Boolean): Boolean {
 			return selectionMode && matchSelection || !selectionMode && matchFull
 		}
 	}
@@ -152,6 +166,10 @@ data class OpenAIConfiguration(
 
 		override fun default(): OpenAIConfiguration = OpenAIConfiguration()
 
+		override fun createSerializer(): KSerializer<OpenAIConfiguration> {
+			return MainSerializer
+		}
+
 		fun replaceProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile, change: (Profile) -> Profile): OpenAIConfiguration {
 			return originalConfig.copy(profiles = originalConfig.profiles.map { profile ->
 				if (profile === targetProfile) {
@@ -162,5 +180,79 @@ data class OpenAIConfiguration(
 				}
 			})
 		}
+
+		fun createProfileIdToHash(profiles: List<Profile>): Map<String, String> {
+			return profiles.associate { it.name.id to createProfileHash(it) }
+		}
+
+		private fun createProfileHash(profile: Profile): String {
+			require(profile::class.isData)
+
+			val bytes = profile.toHashString().toByteArray()
+			val digest = MessageDigest.getInstance("SHA-256")
+			val hashBytes = digest.digest(bytes)
+			return hashBytes.joinToString("") { "%02x".format(it) }
+		}
+	}
+
+	object MainSerializer : KSerializer<OpenAIConfiguration> {
+		override val descriptor: SerialDescriptor = serializer().descriptor
+
+		override fun deserialize(decoder: Decoder): OpenAIConfiguration {
+			var configuration = serializer().deserialize(decoder)
+			val idToHashDefault = HashMap(createProfileIdToHash(DEFAULT_PROFILES))
+			for (profile in configuration.profiles) {
+				val id = profile.name.id
+				val expectedHash = configuration.profileIdToHash[id]
+				val defaultHash = idToHashDefault.remove(id)
+				if (expectedHash != createProfileHash(profile)) {
+					continue
+				}
+
+				if (defaultHash != expectedHash) {
+					val defaultProfile = DEFAULT_PROFILES.find { it.name.id == id }
+					configuration = defaultProfile?.let {
+						val replacedConfiguration = replaceProfile(configuration, profile) { _ -> it }
+						updateHash(replacedConfiguration, it)
+					} ?: run {
+						configuration = removeProfile(configuration, profile)
+						removeHash(configuration, id)
+					}
+				}
+			}
+
+			for (id in idToHashDefault.keys.sorted()) {
+				val defaultProfile = requireNotNull(DEFAULT_PROFILES.find { it.name.id == id })
+				val replacedConfiguration = addProfile(configuration, defaultProfile)
+				configuration = updateHash(replacedConfiguration, defaultProfile)
+			}
+
+			return configuration
+		}
+
+		override fun serialize(encoder: Encoder, value: OpenAIConfiguration) {
+			serializer().serialize(encoder, value)
+		}
+
+		private fun addProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile): OpenAIConfiguration {
+			return originalConfig.copy(profiles = originalConfig.profiles + targetProfile)
+		}
+
+		private fun removeProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile): OpenAIConfiguration {
+			return originalConfig.copy(profiles = originalConfig.profiles.filter { it !== targetProfile })
+		}
+
+		private fun updateHash(originalConfig: OpenAIConfiguration, profile: Profile): OpenAIConfiguration {
+			val id = profile.name.id
+			val hash = createProfileHash(profile)
+			val replacedProfileIdToHash: Map<String, String> = originalConfig.profileIdToHash + (id to hash)
+			return originalConfig.copy(profileIdToHash = replacedProfileIdToHash)
+		}
+
+		private fun removeHash(originalConfig: OpenAIConfiguration, profileId: String): OpenAIConfiguration {
+			val replacedProfileIdToHash: Map<String, String> = originalConfig.profileIdToHash - profileId
+			return originalConfig.copy(profileIdToHash = replacedProfileIdToHash)
+		}
 	}
 }
+

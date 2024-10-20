@@ -28,6 +28,7 @@ repositories {
 }
 
 dependencies {
+    implementation(kotlin("reflect"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
