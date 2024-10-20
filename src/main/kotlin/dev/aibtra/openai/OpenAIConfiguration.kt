@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
-	val profiles: List<Profile> = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH),
+	val profiles: List<Profile> = DEFAULT_PROFILES,
 	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID
 ) {
 
@@ -145,6 +145,8 @@ data class OpenAIConfiguration(
 			DiffManager.Config(true, false),
 			wordWrap = true
 		)
+
+		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH)
 
 		override fun name(): String = "openai"
 
