@@ -12,4 +12,6 @@ interface ConfigurationFactory<D> {
 	fun serializer(): KSerializer<D>
 
 	fun default(): D
+
+	fun createSerializer(): KSerializer<D> = serializer()
 }
