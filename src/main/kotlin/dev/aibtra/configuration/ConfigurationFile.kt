@@ -48,6 +48,10 @@ internal class ConfigurationFile<D>(
 			return try {
 				val contentString = Files.readString(path)
 				val content = json.decodeFromString(serializer, contentString)
+				val reencoded = json.encodeToString(serializer, content)
+				if (reencoded != contentString) {
+					Files.writeString(path, reencoded)
+				}
 				ConfigurationFile(path, true, serializer, content)
 			} catch (e: Exception) {
 				when (e) {
