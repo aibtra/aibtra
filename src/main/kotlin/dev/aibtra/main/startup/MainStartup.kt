@@ -274,10 +274,12 @@ class MainStartup {
 		private val classToConfiguration = HashMap<Class<ConfigurationFactory<Any>>, ConfigurationFile<Any>>()
 		private val classToListeners = HashMap<Any, ArrayList<Runnable>>()
 
+		@Synchronized
 		override fun <D> get(factory: ConfigurationFactory<D>): D {
 			return getFile(factory).config
 		}
 
+		@Synchronized
 		override fun <T> change(factory: ConfigurationFactory<T>, change: (T) -> T) {
 			val file = getFile(factory)
 			file.config = change(file.config)
@@ -291,6 +293,7 @@ class MainStartup {
 			}
 		}
 
+		@Synchronized
 		override fun <T : Any> listenTo(clazz: KClass<T>, runnable: Runnable) {
 			classToListeners.computeIfAbsent(clazz) { ArrayList() }.add(runnable)
 		}
