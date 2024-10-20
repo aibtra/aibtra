@@ -7,6 +7,7 @@ package dev.aibtra.main.startup
 import com.formdev.flatlaf.FlatDarkLaf
 import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.configuration.ConfigurationFile
+import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.GlobalExceptionHandler
 import dev.aibtra.core.Logger
 import dev.aibtra.core.SingleInstanceAppLock
@@ -56,7 +57,7 @@ class MainStartup {
 			val settingsPath = paths.settingsPath
 			SingleInstanceAppLock(settingsPath, {
 				val coroutineDispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher()
-				val configurationProvider = ConfigurationProvider(settingsPath, DialogDisplayer.createGlobal())
+				val configurationProvider = ConfigurationProviderImpl(settingsPath, DialogDisplayer.createGlobal())
 				val systemTrayEnabled = checkSystemTrayEnabled(configurationProvider)
 				val application = MainApplication(paths, configurationProvider, buildInfo, coroutineDispatcher, systemTrayEnabled)
 				application.theme.update()
@@ -161,7 +162,7 @@ class MainStartup {
 			}
 		}
 
-		private fun checkSystemTrayEnabled(configurationProvider: ConfigurationProvider): Boolean {
+		private fun checkSystemTrayEnabled(configurationProvider: ConfigurationProviderImpl): Boolean {
 			if (!GuiConfiguration.isSystemTraySupported()) {
 				createLogger().error("System tray not supported")
 				return false
@@ -269,7 +270,7 @@ class MainStartup {
 		}
 	}
 
-	class ConfigurationProvider(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : dev.aibtra.configuration.ConfigurationProvider {
+	private class ConfigurationProviderImpl(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : ConfigurationProvider {
 		private val classToConfiguration = HashMap<Class<ConfigurationFactory<Any>>, ConfigurationFile<Any>>()
 		private val classToListeners = HashMap<Any, ArrayList<Runnable>>()
 
