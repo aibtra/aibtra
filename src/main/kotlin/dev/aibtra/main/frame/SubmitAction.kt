@@ -4,21 +4,24 @@
 
 package dev.aibtra.main.frame
 
+import dev.aibtra.diff.DiffManager
 import dev.aibtra.gui.action.ActionRunnable
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SubmitAction(
 	environment: Environment,
+	diffManager: DiffManager,
 	requestManager: RequestManager,
 	submitter: Submitter
 ) :
 	MainMenuAction("submit", "Submit", Icons.SUBMIT, "Submit", null, environment.accelerators, ActionRunnable { action -> (action as SubmitAction).worker.run() }) {
 
-	private val worker: Worker = Worker(this, submitter, requestManager)
+	private val worker: Worker = Worker(this, submitter, diffManager, requestManager)
 
 	class Worker(
 		private val action: SubmitAction,
 		private val submitter: Submitter,
+		private val diffManager: DiffManager,
 		private val requestManager: RequestManager
 	) {
 		private val stopMode = AtomicBoolean(false)
@@ -36,6 +39,10 @@ class SubmitAction(
 			requestManager.addProgressListener { inProgress ->
 				stopMode.set(inProgress)
 				action.toolBarIcon = if (inProgress) Icons.STOP else Icons.SUBMIT
+			}
+
+			diffManager.addStateListener { state, last ->
+				action.isEnabled = state.rawText.length > 0
 			}
 		}
 	}

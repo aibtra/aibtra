@@ -102,7 +102,7 @@ class MainFrame(private val environment: Environment) {
 		profileComboBox = createProfileComboBox()
 		submitter = Submitter(environment, requestManager, dialogDisplayer) { profileComboBox.selectedItem as OpenAIConfiguration.Profile }
 
-		val submitAction = SubmitAction(environment, requestManager, submitter)
+		val submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
 		this.submitAction = submitAction
 		applyChangeAction = ApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
