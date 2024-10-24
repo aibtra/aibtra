@@ -10,6 +10,14 @@ import org.junit.jupiter.api.Test
 class FilteredTextTest {
 
 	@Test
+	fun testEmpty() {
+		assert(
+			"",
+			"",
+		)
+	}
+
+	@Test
 	fun testAsIs() {
 		assert(
 			"Nothing to filter.",
@@ -18,7 +26,78 @@ class FilteredTextTest {
 	}
 
 	@Test
-	fun testInlineCode() {
+	fun testAsIsPart1() {
+		assert(
+			FilteredText.Part("Nothing to filter.", 4, 7),
+			"Nothing to filter.",
+			"ing",
+		)
+	}
+
+	@Test
+	fun testAsIsPart2() {
+		assert(
+			FilteredText.Part("Nothing to filter.", 3, 7),
+			"Nothing to filter.",
+			"hing",
+		)
+	}
+
+	@Test
+	fun testAsIsPart3() {
+		assert(
+			FilteredText.Part("Nothing to filter.", 5, 7),
+			"Nothing to filter.",
+			"ng",
+		)
+	}
+
+	@Test
+	fun testInlineCodeSimple() {
+		assert(
+			"A `bcd` e",
+			"A `<56886785befe0b2aecf3f4098a90e2501110e916>` e",
+		)
+	}
+
+	@Test
+	fun testInlineCodeSimplePartContaining() {
+		assert(
+			FilteredText.Part("A `bcd` e", 2, 7),
+			"A `<56886785befe0b2aecf3f4098a90e2501110e916>` e",
+			"`<56886785befe0b2aecf3f4098a90e2501110e916>`",
+		)
+	}
+
+	@Test
+	fun testInlineCodeSimplePartIntersectingLeft() {
+		assert(
+			FilteredText.Part("A `bcd` e", 3, 7),
+			"A `<56886785befe0b2aecf3f4098a90e2501110e916>` e",
+			"`<56886785befe0b2aecf3f4098a90e2501110e916>`",
+		)
+	}
+
+	@Test
+	fun testInlineCodeSimplePartIntersectingRight() {
+		assert(
+			FilteredText.Part("A `bcd` e", 2, 6),
+			"A `<56886785befe0b2aecf3f4098a90e2501110e916>` e",
+			"`<56886785befe0b2aecf3f4098a90e2501110e916>`",
+		)
+	}
+
+	@Test
+	fun testInlineCodeSimplePartIntersectingBoth() {
+		assert(
+			FilteredText.Part("A `bcd` e", 3, 6),
+			"A `<56886785befe0b2aecf3f4098a90e2501110e916>` e",
+			"`<56886785befe0b2aecf3f4098a90e2501110e916>`",
+		)
+	}
+
+	@Test
+	fun testInlineCodeComplex() {
 		assert(
 			"Some `code` here and some `code` there and almost `everywhere`",
 			"Some `<4f5a32b86618fd9d6a870ffe890cf77a88669783>` here and some `<4f5a32b86618fd9d6a870ffe890cf77a88669783>` there and almost `<99153e20141def65836b1f52cdb7fafd3e989b4c>`",
@@ -337,12 +416,13 @@ class FilteredTextTest {
 	}
 
 	private fun assert(rawText: String, rawExpected: String) {
-		val text = rawText.trimMargin()
-		val expected = rawExpected.trimMargin()
-		val clean = FilteredText.filter(text)
-		Assertions.assertEquals(expected, clean.clean)
+		assert(FilteredText.Part.of(rawText.trimMargin()), rawExpected, rawExpected)
+	}
 
-		val recreated = clean.recreate(expected)
-		Assertions.assertEquals(text, recreated)
+	private fun assert(raw: FilteredText.Part, fullExpected: String, partExpected: String): FilteredText {
+		val filtered = FilteredText.filter(raw)
+		Assertions.assertEquals(fullExpected.trimMargin(), filtered.clean.all)
+		Assertions.assertEquals(partExpected.trimMargin(), filtered.clean.extract)
+		return filtered
 	}
 }

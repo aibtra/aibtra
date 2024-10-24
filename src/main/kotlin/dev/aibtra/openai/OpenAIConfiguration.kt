@@ -22,23 +22,47 @@ data class OpenAIConfiguration(
 		val model: String,
 		val supportsSchemes: Boolean = false,
 		val instructions: List<Instruction>,
+		val responseType: ResponseType,
 		val diffConfig: DiffManager.Config,
 		val submitOnInvocation: Boolean = false,
 		val submitOnProfileChange: Boolean = false,
 		val wordWrap: Boolean = false
 	) {
 
+		fun supportsSelection(): Boolean {
+			for (instruction in instructions) {
+				if (instruction.text.contains(SELECTION_MACRO)) {
+					return true
+				}
+			}
+
+			return false
+		}
+
 		@Serializable
 		data class Name(val id: String, val title: String)
 	}
 
+	enum class InstructionMode(private val matchSelection : Boolean, private val matchFull: Boolean) {
+		SELECTION_ONLY(true, false), FULL_ONLY(false, true), ANY(true, true);
+
+		fun matches(selectionMode: Boolean) : Boolean {
+			return selectionMode && matchSelection || !selectionMode && matchFull
+		}
+	}
+
 	@Serializable
-	data class Instruction(val role: Role, val text: String)
+	data class Instruction(val role: Role, val text: String, val mode: InstructionMode = InstructionMode.ANY)
 
 	@Suppress("unused")
 	@Serializable
 	enum class Role(val id: String) {
 		USER("user"), SYSTEM("system"), ASSISTANT("assistant")
+	}
+
+	@Serializable
+	enum class ResponseType {
+		CONTENT, SELECTION
 	}
 
 	fun profile(id: String): Profile? {
@@ -54,7 +78,9 @@ data class OpenAIConfiguration(
 	companion object : ConfigurationFactory<OpenAIConfiguration> {
 		private const val PROOFREAD_ID = "proofread"
 		const val CONTENT_KEYWORD = "CONTENT"
+		const val SELECTION_KEYWORD = "SELECTION"
 		private const val CONTENT_MACRO = "\${${CONTENT_KEYWORD}}"
+		private const val SELECTION_MACRO = "\${${SELECTION_KEYWORD}}"
 		private const val MODEL_4O = "gpt-4o"
 		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
 			WorkingMode.clipboard to PROOFREAD_ID,
@@ -74,8 +100,9 @@ data class OpenAIConfiguration(
 									"AND preserve the detected language " +
 									"AND do not include additional comments in the response, but purely the correction:"
 				),
-				Instruction(Role.USER, CONTENT_MACRO)
+				Instruction(Role.USER, SELECTION_MACRO)
 			),
+			ResponseType.SELECTION,
 			DiffManager.Config(true, false),
 			wordWrap = true
 		)
@@ -92,8 +119,9 @@ data class OpenAIConfiguration(
 									"AND preserve the detected language " +
 									"AND do not include additional comments in the response, but purely the correction:"
 				),
-				Instruction(Role.USER, CONTENT_MACRO)
+				Instruction(Role.USER, SELECTION_MACRO)
 			),
+			ResponseType.SELECTION,
 			DiffManager.Config(true, false),
 			wordWrap = true
 		)
@@ -107,8 +135,9 @@ data class OpenAIConfiguration(
 					Role.USER, "Rewrite to Standard English " +
 									"BUT stay as close as possible to the original:"
 				),
-				Instruction(Role.USER, CONTENT_MACRO)
+				Instruction(Role.USER, SELECTION_MACRO)
 			),
+			ResponseType.SELECTION,
 			DiffManager.Config(true, false),
 			wordWrap = true
 		)

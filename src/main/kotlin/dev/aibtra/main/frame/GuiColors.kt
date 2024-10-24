@@ -20,14 +20,15 @@ import java.awt.Color
 
 @Serializable
 data class GuiColors(
-	@SerialName("light.3") val light: Colors = Colors.DEFAULTS_LIGHT,
-	@SerialName("dark.3") val dark: Colors = Colors.DEFAULTS_DARK,
+	@SerialName("light.4") val light: Colors = Colors.DEFAULTS_LIGHT,
+	@SerialName("dark.4") val dark: Colors = Colors.DEFAULTS_DARK,
 ) {
 
 	@Serializable
 	data class Colors(
 		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundRemoved: Color, val rawBackgroundRemovedShadow: Color,
 		val refBackgroundModified: Color, val refBackgroundAdded: Color, val refBackgroundRemoved: Color, val refBackgroundRemovedShadow: Color,
+		val selectionColor: Color,
 		val textColor: Color,
 	) {
 		companion object {
@@ -35,15 +36,17 @@ data class GuiColors(
 			private val LIGHT_GREEN_SHADOW = Color(0x90, 0xEE, 0x90, SHADOW_ALPHA)
 			private val LIGHT_RED = Color(0xFF, 0x80, 0x80)
 			private val LIGHT_RED_SHADOW = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
+			private val LIGHT_SELECTION = Color(0xCC, 0xCC, 0xCC)
 			private val LIGHT_TEXT = Color(0x10, 0x10, 0x10)
 			private val DARK_GREEN = Color(0x25, 0xA6, 0x25)
 			private val DARK_GREEN_SHADOW = Color(0x25, 0xA6, 0x25, SHADOW_ALPHA)
 			private val DARK_RED = Color(0xC6, 0x28, 0x28)
 			private val DARK_RED_SHADOW = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
+			private val DARK_SELECTION = Color(0x70, 0x70, 0x70)
 			private val DARK_TEXT = Color(0xCC, 0xCC, 0xCC)
 
-			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_SHADOW, LIGHT_TEXT)
-			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED_SHADOW, DARK_TEXT)
+			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_SHADOW, LIGHT_SELECTION, LIGHT_TEXT)
+			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED_SHADOW, DARK_SELECTION, DARK_TEXT)
 		}
 	}
 

@@ -25,7 +25,7 @@ class PasteAndSubmitAction(
 			try {
 				val text = clipboard.getData(DataFlavor.stringFlavor) as String
 				rawTextArea.initializeText(text)
-				diffManager.updateRawText(text, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.initialize, callback = {
+				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.initialize, callback = {
 					submitAction.perform()
 				})
 			} catch (e: UnsupportedFlavorException) {

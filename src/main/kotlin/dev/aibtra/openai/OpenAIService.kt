@@ -20,7 +20,7 @@ import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
-	fun request(profile: OpenAIConfiguration.Profile, streaming: Boolean, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
+	fun request(profile: OpenAIConfiguration.Profile, selectionMode: Boolean, streaming: Boolean, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = profile.model
 		input["n"] = 1
@@ -28,15 +28,32 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 			input["stream"] = true
 		}
 
+		val contentKeyword = when {
+			profile.responseType == OpenAIConfiguration.ResponseType.SELECTION -> OpenAIConfiguration.SELECTION_KEYWORD
+			profile.responseType == OpenAIConfiguration.ResponseType.CONTENT -> OpenAIConfiguration.SELECTION_KEYWORD
+			else -> throw NoWhenBranchMatchedException()
+		}
+
+		val responseType = if (selectionMode) {
+			profile.responseType
+		}
+		else {
+			OpenAIConfiguration.ResponseType.CONTENT
+		}
+		
 		val messagesIn = JSONArray()
 		var contentVar : String? = null
 		for (instruction in profile.instructions) {
+			if (instruction.mode.matches(selectionMode)) {
+				continue
+			}
+
 			val messageIn = JSONObject()
 			messageIn["role"] = instruction.role.id
 			messageIn["content"] = KEYWORD_REGEX.replace(instruction.text) { matchResult ->
 				val key = matchResult.groupValues[1]
 				val value = keywordResolver(key) ?: throw IOException("Unknown keyword '$key'")
-				if (key == OpenAIConfiguration.CONTENT_KEYWORD) {
+				if (key == contentKeyword && responseType == OpenAIConfiguration.ResponseType.CONTENT) {
 					contentVar = value
 				}
 				value
@@ -86,7 +103,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									}
 								}
 
-								if (applyFixes(content, builder)) {
+								if (applyFixes(content, builder, responseType)) {
 									callback(Result(builder.toString(), true))
 								}
 							}
@@ -104,7 +121,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val messageOut = objNotNull<JSONObject>(choice, "message")
 									val message = objNotNull<String>(messageOut, "content")
 									val builder = StringBuilder(message)
-									applyFixes(content, builder)
+									applyFixes(content, builder, responseType)
 									callback(Result(builder.toString(), true))
 								}
 							}
@@ -138,7 +155,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 	}
 
-	private fun applyFixes(content: String, result: StringBuilder): Boolean {
+	private fun applyFixes(content: String, result: StringBuilder, responseType: OpenAIConfiguration.ResponseType): Boolean {
 		if (dropMarkdownPrefix(content, result)) {
 			return true
 		}

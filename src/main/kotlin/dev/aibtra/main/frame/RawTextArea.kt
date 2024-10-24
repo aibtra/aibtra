@@ -27,10 +27,12 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 	private val styleGapLeft: HighlightStyle
 	private val styleGapRight: HighlightStyle
 	private val styleFiltered: HighlightStyle
+	private val styleSelected: HighlightStyle
 
 	private var ignoreUndoableEvents = false
 	private var diffChars: List<DiffChar> = listOf()
-	private var filteredText: FilteredText = FilteredText("", emptyMap(), setOf())
+	private var filteredText: FilteredText = FilteredText.asIs(FilteredText.Part.of(""))
+	private var selection: IntRange? = null
 
 	init {
 		(textArea.document as AbstractDocument).let {
@@ -61,6 +63,7 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		styleGapLeft = HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
 		styleGapRight = HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
 		styleFiltered = HighlightStyle({ Color.gray }, { null }, true, false, GapStyle.NONE)
+		styleSelected = HighlightStyle({ it.selectionColor }, { null }, false, false, GapStyle.NONE)
 
 		undoManager = UndoManager()
 
@@ -126,6 +129,12 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		updateCharacterAttributes()
 	}
 
+	fun setSelection(selection: IntRange?) {
+		this.selection = selection
+
+		updateCharacterAttributes()
+	}
+
 	private fun updateCharacterAttributes() {
 		ignoreUndoableEvents = true
 		try {
@@ -136,6 +145,10 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 	}
 
 	private fun getHighlighting(index: Int, char: DiffChar): HighlightStyle? {
+		if (selection?.contains(index) == true) {
+			return styleSelected
+		}
+
 		if (filteredText.isFiltered(index)) {
 			return styleFiltered
 		}
