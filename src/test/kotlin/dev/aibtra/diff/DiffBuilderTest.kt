@@ -207,14 +207,10 @@ class DiffBuilderTest {
 	}
 
 	companion object {
-		fun formatBlocks(raw: String, ref: String, blocksCore: List<DiffBlock>): Pair<String, String> {
-			return formatBlocks(Diff.OrgDiff(raw, raw.length, ref, ref.length, ref, ref.length, blocksCore))
-		}
-
-		fun formatBlocks(diff: Diff.OrgDiff): Pair<String, String> {
-			val rawBlocksCoreActual = StringBuilder(" ".repeat(diff.raw.length))
-			val refBlocksCoreActual = StringBuilder(" ".repeat(diff.ref.length))
-			for (block in diff.blocks) {
+		fun formatBlocks(raw: String, ref: String, blocks: List<DiffBlock>): Pair<String, String> {
+			val rawBlocksCoreActual = StringBuilder(" ".repeat(raw.length))
+			val refBlocksCoreActual = StringBuilder(" ".repeat(ref.length))
+			for (block in blocks) {
 				if (block.rawFrom < block.rawTo) {
 					for (i in block.rawFrom until block.rawTo) {
 						rawBlocksCoreActual[i] = '*'
