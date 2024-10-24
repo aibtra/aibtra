@@ -12,7 +12,7 @@ import dev.aibtra.openai.OpenAIService
 import dev.aibtra.text.FilteredText
 import javax.swing.JLabel
 
-class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {
+class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {
 	fun run() {
 		val configurationProvider = environment.configurationProvider
 		val configuration = configurationProvider.get(OpenAIConfiguration)
@@ -45,7 +45,7 @@ class Submitter(private val environment: Environment, private val requestManager
 
 		val profile = profile()
 		val service = OpenAIService(apiToken, environment.debugLog)
-		val request = OpenAIRequest(profile, service) { failure, mightBeAuthentication ->
+		val request = OpenAIRequest(profile, service, { commandControl.retrieveCommand() }) { failure, mightBeAuthentication ->
 			Ui.runInEdt {
 				if (mightBeAuthentication) {
 					configurationProvider.change(OpenAIConfiguration) {

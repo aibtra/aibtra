@@ -5,7 +5,7 @@ import dev.aibtra.openai.OpenAIService
 import dev.aibtra.text.FilteredText
 import java.io.IOException
 
-class OpenAIRequest(val profile: OpenAIConfiguration.Profile, private val service: OpenAIService, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
+class OpenAIRequest(val profile: OpenAIConfiguration.Profile, private val service: OpenAIService, val retrieveCommand : () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
 	override fun run(filtered: FilteredText, callback: RequestManager.RequestCallback) {
 		val part = filtered.clean
 		val keywordResolver: (key: String) -> String? = { key ->
@@ -16,6 +16,10 @@ class OpenAIRequest(val profile: OpenAIConfiguration.Profile, private val servic
 
 				OpenAIConfiguration.SELECTION_KEYWORD -> {
 					part.extract
+				}
+
+				OpenAIConfiguration.COMMAND_KEYWORD -> {
+					retrieveCommand()
 				}
 
 				else -> {

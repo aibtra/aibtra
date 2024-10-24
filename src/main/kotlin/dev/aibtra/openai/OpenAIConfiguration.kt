@@ -16,12 +16,14 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.security.MessageDigest
+import kotlin.jvm.optionals.getOrNull
 
 @Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
 	val profiles: List<Profile> = DEFAULT_PROFILES,
 	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID,
+	val lastCommands: List<String> = listOf(),
 	val profileIdToHash: Map<String, String> = createProfileIdToHash(DEFAULT_PROFILES)
 ) {
 
@@ -49,7 +51,7 @@ data class OpenAIConfiguration(
 			return false
 		}
 
-		fun toHashString() : String {
+		fun toHashString(): String {
 			// A reminder to not overwrite toString()
 			return toString()
 		}
@@ -77,7 +79,7 @@ data class OpenAIConfiguration(
 
 	@Serializable
 	enum class ResponseType {
-		CONTENT, SELECTION
+		CONTENT, SELECTION, SELECTION_JSON
 	}
 
 	fun profile(id: String): Profile? {
@@ -92,11 +94,17 @@ data class OpenAIConfiguration(
 
 	companion object : ConfigurationFactory<OpenAIConfiguration> {
 		private const val PROOFREAD_ID = "proofread"
+		private const val CODE_REFINEMENT_ID = "code-refinement"
+		private const val GENERIC_COMMAND_ID = "generic-command"
 		const val CONTENT_KEYWORD = "CONTENT"
 		const val SELECTION_KEYWORD = "SELECTION"
+		const val COMMAND_KEYWORD = "COMMAND"
 		private const val CONTENT_MACRO = "\${${CONTENT_KEYWORD}}"
 		private const val SELECTION_MACRO = "\${${SELECTION_KEYWORD}}"
+		private const val COMMAND_MACRO = "\${${COMMAND_KEYWORD}}"
 		private const val MODEL_4O = "gpt-4o"
+		private const val MODEL_O1 = "o1-preview"
+		private const val MODEL_O1_MINI = "o1-mini"
 		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
 			WorkingMode.clipboard to PROOFREAD_ID,
 			WorkingMode.file to PROOFREAD_ID,
@@ -160,7 +168,69 @@ data class OpenAIConfiguration(
 			wordWrap = true
 		)
 
-		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH)
+		private val CODE_REFINEMENT = Profile(
+			Profile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
+			MODEL_O1_MINI,
+			false,
+			false,
+			listOf(
+				Instruction(
+					Role.USER,
+					"I have following file:"
+				),
+				Instruction(
+					Role.USER,
+					CONTENT_MACRO
+				),
+				Instruction(
+					Role.USER,
+					"Focus only on this part of the file and apply changes only to this part:",
+					InstructionMode.SELECTION_ONLY
+				),
+				Instruction(
+					Role.USER,
+					SELECTION_MACRO,
+					InstructionMode.SELECTION_ONLY
+				),
+				Instruction(
+					Role.USER,
+					"Apply these changes:\n\n$COMMAND_MACRO"
+				),
+				Instruction(
+					Role.USER,
+					"Send back only the entire modified file. Do not include any additional comments.",
+					InstructionMode.FULL_ONLY
+				),
+				Instruction(
+					Role.USER,
+					"""
+						|Send back only the changed part of the file ("new") and which exact part to replace ("old", including the line number where the old block starts). Use following JSON format for your result:
+						|{
+						|  old: "..."
+						|  oldLineStart: ...
+						|  new: "..."
+						|}""".trimMargin(),
+					InstructionMode.SELECTION_ONLY
+				)
+			),
+			ResponseType.SELECTION_JSON,
+			DiffManager.Config(false, false)
+		)
+
+		private val GENERIC_COMMAND = Profile(
+			Profile.Name(GENERIC_COMMAND_ID, "Generic Command (o1-mini)"),
+			MODEL_O1_MINI,
+			false,
+			false,
+			listOf(
+				Instruction(Role.USER, COMMAND_MACRO),
+				Instruction(Role.USER, CONTENT_MACRO)
+			),
+			ResponseType.CONTENT,
+			DiffManager.Config(false, false)
+		)
+
+		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CODE_REFINEMENT, GENERIC_COMMAND)
 
 		override fun name(): String = "openai"
 
@@ -168,6 +238,11 @@ data class OpenAIConfiguration(
 
 		override fun createSerializer(): KSerializer<OpenAIConfiguration> {
 			return MainSerializer
+		}
+
+		fun getCommandInstructions(profile: Profile): List<String>? {
+			val instructions = profile.instructions.stream().filter { i -> i.text.contains(COMMAND_MACRO) }.findAny().getOrNull()
+			return instructions?.text?.split(COMMAND_MACRO)
 		}
 
 		fun replaceProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile, change: (Profile) -> Profile): OpenAIConfiguration {

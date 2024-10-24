@@ -7,9 +7,12 @@ package dev.aibtra.openai
 import dev.aibtra.core.DebugLog
 import dev.aibtra.core.JsonUtils
 import dev.aibtra.core.JsonUtils.Companion.objNotNull
+import dev.aibtra.core.Logger
+import dev.aibtra.diff.FuzzyMatcher
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
+import org.json.simple.parser.ParseException
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -33,6 +36,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		val contentKeyword = when {
 			profile.responseType == OpenAIConfiguration.ResponseType.SELECTION -> OpenAIConfiguration.SELECTION_KEYWORD
 			profile.responseType == OpenAIConfiguration.ResponseType.CONTENT -> OpenAIConfiguration.SELECTION_KEYWORD
+			isPatchResponseType(profile.responseType) -> OpenAIConfiguration.SELECTION_KEYWORD
 			else -> throw NoWhenBranchMatchedException()
 		}
 
@@ -42,11 +46,15 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		else {
 			OpenAIConfiguration.ResponseType.CONTENT
 		}
+
+		if (streaming && isPatchResponseType(responseType)) {
+			throw IOException("Can't combine response type '$responseType' with 'streaming'.")
+		}
 		
 		val messagesIn = JSONArray()
 		var contentVar : String? = null
 		for (instruction in profile.instructions) {
-			if (instruction.mode.matches(selectionMode)) {
+			if (!instruction.mode.matches(selectionMode)) {
 				continue
 			}
 
@@ -124,7 +132,16 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val message = objNotNull<String>(messageOut, "content")
 									val builder = StringBuilder(message)
 									applyFixes(content, builder, responseType)
-									callback(Result(builder.toString(), true))
+
+									val builderStr = builder.toString()
+									val res = if (responseType == OpenAIConfiguration.ResponseType.SELECTION_JSON) {
+										applyJson(builderStr, content)
+									}
+									else {
+										builderStr
+									}
+
+									callback(Result(res, true))
 								}
 							}
 
@@ -157,9 +174,82 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 	}
 
+	private fun applyJson(builderStr: String, content: String): String {
+		val obj = try {
+			JSONParser().parse(StringReader(builderStr))
+		} catch (e: ParseException) {
+			throw IOException("Invalid JSON response: $e")
+		}
+
+		val root = obj as? JSONObject ?: throw IOException("Invalid JSON response: root object missing")
+		val old = root["old"] as? String
+		val oldLineStart = root["oldLineStart"] as? Long
+		val new = root["new"] as? String
+		if (old == null || oldLineStart == null || new == null) {
+			throw IOException("Invalid JSON response: unexpected format")
+		}
+
+		val exactIndex = content.indexOf(old)
+		if (exactIndex >= 0) {
+			val nextIndex = content.indexOf(old, exactIndex + 1)
+			if (nextIndex >= 0) {
+				require(nextIndex > exactIndex)
+				// This scenario is addressed for now. Let's first see how common it is and then decide if we should use line numbers as a guide.
+				throw IOException("Old content found multiple times.\n\noldLineStart would be $oldLineStart")
+			}
+
+			return content.replace(old, new)
+		}
+
+		LOG.warn("Old content not reported back precisely, now conducting a fuzzy search.")
+
+		// Sometimes o1-preview won't report the replaced block exactly
+		//
+		// For example line:
+		// FILE_PREFIX="${1#--prefix=}"
+		// becomes:
+		// FILE_PREFIX="\${1#--prefix=}"
+		//
+		// I've seen this for o1-mini, too, like where it would fix a typo in a comment:
+		//     echo "Don't use '*' in the prefix because it will be exanded before the script is called!" >&2
+		// becomes:
+		//     echo "Don't use '*' in the prefix because it will be expanded before the script is called!" >&2
+		val index = FuzzyMatcher.findBestMatch(content, old, 0, 16, old.length / 64).bestStart
+		if (index < 0) {
+			LOG.info("OLD (as reported by OpenAI):")
+			LOG.info(old)
+			LOG.info("CONTENT:")
+			LOG.info(content)
+			throw IOException("Invalid JSON response: old block can't be identified")
+		}
+
+		val lineNumber = getLineNumber(content, index)
+		if (lineNumber != oldLineStart.toInt()) {
+			// Sometimes the reported line number is quite off
+			LOG.warn("Line number mismatch: expected: $oldLineStart, actual: $lineNumber")
+		}
+
+		return content.replace(old, new)
+	}
+
+	private fun getLineNumber(s: String, index: Int): Int {
+		require(index in 0 until s.length) { "Index out of bounds" }
+		var lineNumber = 1
+		for (i in 0 until index) {
+			if (s[i] == '\n') {
+				lineNumber++
+			}
+		}
+		return lineNumber
+	}
+
 	private fun applyFixes(content: String, result: StringBuilder, responseType: OpenAIConfiguration.ResponseType): Boolean {
 		if (dropMarkdownPrefix(content, result)) {
 			return true
+		}
+
+		if (isPatchResponseType(responseType)) {
+			return false
 		}
 
 		return ensureLeadingAndTrailingWhitespaces(content, result)
@@ -222,9 +312,15 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 	class Result(val content: String?, val finished: Boolean, val failure: Pair<IOException, Boolean>? = null)
 
 	companion object {
+		private val LOG = Logger.getLogger(this::class)
+
 		val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
 		val KEYWORD_REGEX = "\\$\\{(\\w+)}".toRegex()
 		val MARKDOWN_PREFIX_PATTERN = Regex("^\\s*```(\\w+)?\n")
 		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
+
+		fun isPatchResponseType(type: OpenAIConfiguration.ResponseType) : Boolean {
+			return type == OpenAIConfiguration.ResponseType.SELECTION_JSON
+		}
 	}
 }

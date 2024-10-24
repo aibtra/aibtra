@@ -27,6 +27,7 @@ import kotlin.reflect.KFunction2
 class MainFrame(initialWorkingMode: WorkingMode, private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer
 	private val frame: JFrame
+	private val commandControl: CommandControl
 	private val rawTextArea: RawTextArea
 	private val refTextArea: RefTextArea
 	private val diffManager: DiffManager
@@ -141,6 +142,8 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		profileComboBox = createProfileComboBox()
 		schemeComboBox = createSchemeComboBox()
 
+		commandControl = createCommandControl()
+
 		submitter = createSubmitter()
 
 		val submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
@@ -204,7 +207,13 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		val rawControl = createRawControl()
 		val refControl = createRefControl()
 		val splitPane = createSplitPane(rawControl, refControl)
-		centerPane.add(splitPane, BorderLayout.CENTER)
+
+		val mainControl = JPanel()
+		mainControl.layout = BorderLayout()
+		mainControl.add(commandControl.getComponent(), BorderLayout.NORTH)
+		mainControl.add(splitPane, BorderLayout.CENTER)
+
+		centerPane.add(mainControl, BorderLayout.CENTER)
 
 		frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
 		frame.isVisible = true
@@ -289,6 +298,8 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 				it.copy(x = location.x, y = location.y, width = size.width, height = size.height, maximized = false)
 			}
 		}
+
+		commandControl.retrieveCommand()
 	}
 
 	private fun configureScrolling(textArea: AbstractTextArea<*>, update: KFunction2<DiffManager, DiffManager.ScrollPos, Unit>) {
@@ -401,8 +412,21 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		return comboBox
 	}
 
+	private fun createCommandControl(): CommandControl {
+		fun updateProfile(commandControl: CommandControl) {
+			commandControl.setProfile(profileManager.profile())
+		}
+
+		val commandControl = CommandControl(environment.configurationProvider)
+		profileManager.addListener { _, _ ->
+			updateProfile(commandControl)
+		}
+		updateProfile(commandControl)
+		return commandControl
+	}
+
 	private fun createSubmitter(): Submitter {
-		val submitter = Submitter(environment, requestManager, dialogDisplayer) { profileManager.profile() }
+		val submitter = Submitter(environment, requestManager, commandControl, dialogDisplayer) { profileManager.profile() }
 		profileManager.addListener { lastName, name ->
 			val profile = profileManager.profile()
 			diffManager.setConfig(profile.diffConfig)
