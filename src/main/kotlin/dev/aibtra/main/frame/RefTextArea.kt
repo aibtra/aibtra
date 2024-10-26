@@ -29,7 +29,7 @@ class RefTextArea(environment: Environment) :
 
 	init {
 		// We are using a JTextArea and Highlighters instead of a JEditorPane/JTextPane, because these have some bugs related to layouting, especially wrapping of lines which are critical for us.
-		textArea.lineWrap = true
+		textArea.lineWrap = false
 		textArea.wrapStyleWord = true
 		textArea.document.putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n")
 

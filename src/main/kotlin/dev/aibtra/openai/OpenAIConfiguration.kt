@@ -23,7 +23,8 @@ data class OpenAIConfiguration(
 		val instructions: List<Instruction>,
 		val diffConfig: DiffManager.Config,
 		val submitOnInvocation: Boolean = false,
-		val submitOnProfileChange: Boolean = false
+		val submitOnProfileChange: Boolean = false,
+		val wordWrap: Boolean = false
 	) {
 
 		@Serializable
@@ -66,7 +67,8 @@ data class OpenAIConfiguration(
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
 			),
-			DiffManager.Config(true, false)
+			DiffManager.Config(true, false),
+			wordWrap = true
 		)
 
 		private val IMPROVE = Profile(
@@ -82,7 +84,8 @@ data class OpenAIConfiguration(
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
 			),
-			DiffManager.Config(true, false)
+			DiffManager.Config(true, false),
+			wordWrap = true
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
@@ -96,7 +99,8 @@ data class OpenAIConfiguration(
 				),
 				Instruction(Role.USER, CONTENT_MACRO)
 			),
-			DiffManager.Config(true, false)
+			DiffManager.Config(true, false),
+			wordWrap = true
 		)
 
 		override fun name(): String = "openai"

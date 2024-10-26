@@ -72,6 +72,10 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		}
 	}
 
+	fun setWordWrap(wordWrap: Boolean) {
+		textArea.lineWrap = wordWrap
+	}
+
 	private fun createScrollPos(): DiffManager.ScrollPos {
 		val rect = scrollPane.viewport.viewRect
 		val topModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), rect.y.toDouble()))
