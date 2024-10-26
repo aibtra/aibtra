@@ -246,6 +246,7 @@ class MainFrame(private val environment: Environment) {
 
 		profileManager.addListener { _, _ ->
 			updateEnabledState()
+			updateWordWrap()
 		}
 		updateEnabledState()
 		return comboBox
@@ -384,6 +385,7 @@ class MainFrame(private val environment: Environment) {
 		val profileMenu = JMenu("Profile")
 		addAction(profileMenu, toggleFilterMarkdownAction)
 		addAction(profileMenu, toggleShowDiffBeforeAfterAction)
+		addAction(profileMenu, ToggleWordWrapAction(rawTextArea, refTextArea, profileManager, environment.accelerators))
 		profileMenu.addSeparator()
 		addAction(profileMenu, ToggleSubmitOnInvocationAction(profileManager, environment.accelerators))
 		addAction(profileMenu, ToggleSubmitOnProfileChangeAction(profileManager, environment.accelerators))
@@ -421,6 +423,11 @@ class MainFrame(private val environment: Environment) {
 
 	fun toFront() {
 		frame.toFront()
+	}
+
+	private fun updateWordWrap() {
+		rawTextArea.setWordWrap(profileManager.profile().wordWrap)
+		refTextArea.setWordWrap(profileManager.profile().wordWrap)
 	}
 
 	private fun addAction(menu: JMenu, action: MainMenuAction) {
