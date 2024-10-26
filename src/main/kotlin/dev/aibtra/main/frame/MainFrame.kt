@@ -41,6 +41,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 	private val profileComboBox: JComboBox<OpenAIConfiguration.Profile.Name>
 	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val toggleFilterMarkdownAction: MainMenuAction
+	private val toggleSelectionMode: ToggleSelectionModeAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
 
@@ -61,23 +62,26 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 
 		profileManager = ProfileManager(initialWorkingMode, environment.configurationProvider)
 
-		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.INITIALIZE) }, environment)
+		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, null, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.INITIALIZE) }, environment)
 		refTextArea = RefTextArea(environment)
 
 		workFile = WorkFile(dialogDisplayer)
 
 		val textRefresher = DelayedUiRefresher(100) {
-			diffManager.updateRawText(rawTextArea.getText(), profileManager.profile().diffConfig)
+			diffManager.updateRawText(rawTextArea.getText(), rawTextArea.getSelectionRange(), profileManager.profile().diffConfig)
 			workFile.setContent(rawTextArea.getText())
 		}
 		rawTextArea.addContentListener {
+			textRefresher.refresh()
+		}
+		rawTextArea.addSelectionListener { _ ->
 			textRefresher.refresh()
 		}
 
 		configureScrolling(rawTextArea, DiffManager::updateRawScrollPos)
 		configureScrolling(refTextArea, DiffManager::updateRefScrollPos)
 
-		diffManager.addStateListener { state, _ ->
+		diffManager.addStateListener { state, lastState ->
 			Ui.assertEdt()
 
 			val rawText = rawTextArea.getText()
@@ -85,7 +89,27 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 				rawTextArea.setDiffCharsAndFilteredText(state.rawChars, state.filtered)
 			}
 
+			state.rawText.let {
+				if (it.isPart()) {
+					rawTextArea.setSelection(IntRange(it.from, it.to - 1))
+				}
+				else {
+					rawTextArea.setSelection(null)
+				}
+			}
+
 			refTextArea.setText(state.refFormatted, state.refChars)
+
+			Ui.runInEdt {
+				if (state.diff.refFinished && !lastState.diff.refFinished) {
+					if (!state.selection) {
+						rawTextArea.scrollTo(DiffManager.ScrollPos(1, 10))
+					}
+					else {
+						refTextArea.scrollTo(diffManager.syncRefScrollPos())
+					}
+				}
+			}
 		}
 
 		diffManager.addScrollListener { raw, ref ->
@@ -99,7 +123,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 			if (state != null && state.initial) {
 				val text = state.content
 				rawTextArea.setText(text)
-				diffManager.updateRawText(text, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
+				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
 			}
 
 			updateFrameTitle(state?.modified ?: false)
@@ -127,6 +151,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		applyChangeAction = ApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
 		pasteAndSubmitAction = PasteAndSubmitAction(environment, requestManager, profileManager, diffManager, rawTextArea, submitAction)
+		toggleSelectionMode = ToggleSelectionModeAction(diffManager, profileManager, rawTextArea, environment.accelerators)
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, profileManager, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, profileManager, environment.accelerators)
 		toggleDarkModeAction = ToggleDarkModeAction(environment.theme, environment.configurationProvider, environment.accelerators)
@@ -159,6 +184,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		mainToolBar.add(profileComboBox)
 		mainToolBar.add(Box.createRigidArea(Dimension(5, 0)))
 		mainToolBar.add(schemeComboBox)
+		mainToolBar.add(toggleSelectionMode)
 		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(applyChangeAction)
 		mainToolBar.add(pasteAndSubmitAction)
@@ -404,6 +430,8 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		editMenu.addSeparator()
 		addAction(editMenu, copyAndCloseAction)
 		addAction(editMenu, pasteAndSubmitAction)
+		editMenu.addSeparator()
+		addAction(editMenu, toggleSelectionMode)
 		editMenu.addSeparator()
 		addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
 		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))

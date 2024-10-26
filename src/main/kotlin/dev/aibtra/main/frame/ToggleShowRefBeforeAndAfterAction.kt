@@ -4,10 +4,7 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffManager
-import dev.aibtra.openai.OpenAIConfiguration
-import dev.aibtra.text.Schemes
 
 class ToggleShowRefBeforeAndAfterAction(
 	diffManager: DiffManager,
