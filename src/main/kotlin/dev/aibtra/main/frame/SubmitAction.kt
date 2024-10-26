@@ -41,7 +41,7 @@ class SubmitAction(
 				action.toolBarIcon = if (inProgress) Icons.STOP else Icons.SUBMIT
 			}
 
-			diffManager.addStateListener { state ->
+			diffManager.addStateListener { state, _ ->
 				action.isEnabled = state.diff.raw.isNotEmpty()
 			}
 		}
