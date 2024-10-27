@@ -43,6 +43,7 @@ class DiffManager(
 			// for all subsequent calls we are reusing this backup.
 			val rawOrg: String? = when (normalization) {
 				Normalization.INITIALIZE -> raw
+				Normalization.STOP -> null
 				Normalization.AS_IS -> it.input.rawOrg
 			}
 
@@ -376,6 +377,6 @@ class DiffManager(
 	}
 
 	enum class Normalization {
-		INITIALIZE, AS_IS
+		INITIALIZE, STOP, AS_IS
 	}
 }
