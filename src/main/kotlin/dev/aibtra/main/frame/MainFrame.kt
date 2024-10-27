@@ -31,6 +31,7 @@ class MainFrame(private val environment: Environment) {
 	private val profileManager: ProfileManager
 	private val requestManager: RequestManager
 	private val submitter: Submitter
+	private val workFile: WorkFile
 	private val submitAction: MainMenuAction
 	private val applyChangeAction: MainMenuAction
 	private val copyAndCloseAction: MainMenuAction
@@ -61,11 +62,14 @@ class MainFrame(private val environment: Environment) {
 		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, profileManager.profile().diffConfig, normalization = DiffManager.Normalization.INITIALIZE) }, environment)
 		refTextArea = RefTextArea(environment)
 
-		val diffManagerRefresher = DelayedUiRefresher(100) {
+		workFile = WorkFile(dialogDisplayer)
+
+		val textRefresher = DelayedUiRefresher(100) {
 			diffManager.updateRawText(rawTextArea.getText(), profileManager.profile().diffConfig)
+			workFile.setContent(rawTextArea.getText())
 		}
 		rawTextArea.addContentListener {
-			diffManagerRefresher.refresh()
+			textRefresher.refresh()
 		}
 
 		configureScrolling(rawTextArea, DiffManager::updateRawScrollPos)
@@ -87,6 +91,16 @@ class MainFrame(private val environment: Environment) {
 
 			rawTextArea.scrollTo(raw)
 			refTextArea.scrollTo(ref)
+		}
+
+		workFile.addStateListener { state ->
+			if (state != null && state.initial) {
+				val text = state.content
+				rawTextArea.setText(text)
+				diffManager.updateRawText(text, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
+			}
+
+			updateFrameTitle(state?.modified ?: false)
 		}
 
 		requestManager = RequestManager(diffManager, coroutineDispatcher, dialogDisplayer)
@@ -164,17 +178,27 @@ class MainFrame(private val environment: Environment) {
 		pane.add(centerPane, BorderLayout.CENTER)
 		fillContent(centerPane)
 
-		frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
+		frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
 		frame.isVisible = true
 
 		environment.frameManager.register(this, frame, !environment.systemTrayEnabled)
 
 		frame.addWindowListener(object : WindowAdapter() {
+			override fun windowClosing(e: WindowEvent?) {
+				checkClose {
+					frame.dispose()
+				}
+			}
+
 			override fun windowClosed(e: WindowEvent?) {
 				mainToolBar.dispose()
 				bottomToolBar.dispose()
 			}
 		})
+	}
+
+	fun checkClose(runnable: Runnable) {
+		workFile.checkSave(runnable)
 	}
 
 	fun closed() {
@@ -235,9 +259,13 @@ class MainFrame(private val environment: Environment) {
 					it.copy(currentName = profile.name)
 				}
 				diffManager.updateInitial()?.let {
-					rawTextArea.setText(it)
+					rawTextArea.initializeText(it)
 				}
 			}
+		}
+
+		workFile.addStateListener { state ->
+			schemeComboBox.isEnabled = state == null
 		}
 
 		fun updateEnabledState() {
@@ -357,6 +385,9 @@ class MainFrame(private val environment: Environment) {
 
 	private fun fillMenuBar(menuBar: JMenuBar) {
 		val fileMenu = JMenu("File")
+		addAction(fileMenu, OpenAction(workFile, frame, environment))
+		addAction(fileMenu, SaveAction(workFile, environment))
+		fileMenu.addSeparator()
 		addAction(fileMenu, ExitAction(environment))
 		menuBar.add(fileMenu)
 
@@ -405,7 +436,7 @@ class MainFrame(private val environment: Environment) {
 	}
 
 	fun setText(text: String) {
-		rawTextArea.setText(text)
+		rawTextArea.initializeText(text)
 
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
 			diffManager.updateRefText(Files.readString(Path.of(it)), true)
@@ -445,6 +476,16 @@ class MainFrame(private val environment: Environment) {
 				JMenuItem(action)
 			}
 		)
+	}
+
+	private fun updateFrameTitle(modified: Boolean) {
+		frame.title = (workFile.state?.let {
+			it.path.fileName.toString() + (if (modified) "*" else "") + " - "
+		} ?: "") + FRAME_TITLE
+	}
+
+	fun openFile(fileToOpen: Path) {
+		workFile.load(fileToOpen)
 	}
 
 	@Serializable
