@@ -7,11 +7,14 @@ package dev.aibtra.gui.action
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.Action
+import javax.swing.ButtonGroup
 
 open class DefaultAction(
 	val title: String,
 	private val actionListener: ActionRunnable
 ) : AbstractAction(title) {
+	private var radioButtonGroup : ButtonGroup? = null
+
 	final override fun actionPerformed(e: ActionEvent) {
 		perform()
 	}
@@ -30,6 +33,14 @@ open class DefaultAction(
 
 	fun setSelected(selected: Boolean) {
 		putValue(Action.SELECTED_KEY, selected)
+	}
+
+	fun getRadioButtonGroup() : ButtonGroup? {
+		return radioButtonGroup
+	}
+
+	fun setRadioButtonGroup(radioButtonGroup: ButtonGroup) {
+		this.radioButtonGroup = radioButtonGroup
 	}
 
 	fun perform() {
