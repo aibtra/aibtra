@@ -487,6 +487,8 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		profileMenu.addSeparator()
 		addAction(profileMenu, ToggleSubmitOnInvocationAction(profileManager, environment.accelerators))
 		addAction(profileMenu, ToggleSubmitOnProfileChangeAction(profileManager, environment.accelerators))
+		profileMenu.addSeparator()
+		addAction(profileMenu, SelectProfileAction(profileComboBox, environment))
 		menuBar.add(profileMenu)
 
 		val schemeMenu = JMenu("Scheme")
