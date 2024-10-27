@@ -21,7 +21,7 @@ class WorkFile(val mainScope: CoroutineScope, val dialogDisplayer: DialogDisplay
 	var state: State? = null
 		private set
 
-	fun load(path: Path) {
+	fun load(path: Path, line: Int?) {
 		Ui.assertEdt()
 
 		mainScope.launch(Dispatchers.IO) {
@@ -46,7 +46,7 @@ class WorkFile(val mainScope: CoroutineScope, val dialogDisplayer: DialogDisplay
 					return@runInEdt
 				}
 
-				updateState(State(content, path, eol, lastModifiedTime, content, true))
+				updateState(State(content, path, eol, lastModifiedTime, content, true, line))
 			}
 		}
 	}
@@ -59,7 +59,7 @@ class WorkFile(val mainScope: CoroutineScope, val dialogDisplayer: DialogDisplay
 				return@let
 			}
 
-			updateState(state.copy(content = content, initial = false))
+			updateState(state.copy(content = content, initial = false, initialLine = null))
 		}
 	}
 
@@ -146,7 +146,7 @@ class WorkFile(val mainScope: CoroutineScope, val dialogDisplayer: DialogDisplay
 		UNIX("\n"), WINDOWS("\r\n"), MACOS("\r")
 	}
 
-	data class State(val content: String, val path: Path, val eol: Eol, val lastModified: Long, val orgContent: String, val initial: Boolean) {
+	data class State(val content: String, val path: Path, val eol: Eol, val lastModified: Long, val orgContent: String, val initial: Boolean, val initialLine: Int?) {
 		val modified: Boolean = content != orgContent
 	}
 
