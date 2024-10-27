@@ -28,6 +28,11 @@ class ProfileManager(initialWorkingMode: WorkingMode, val configurationProvider:
 		return configuration.profile(name.id) ?: configuration.currentProfile(workingMode)
 	}
 
+	fun profiles(): List<OpenAIConfiguration.Profile> {
+		val configuration = configurationProvider.get(OpenAIConfiguration)
+		return configuration.profiles
+	}
+
 	fun getProfile(name: OpenAIConfiguration.Profile.Name): OpenAIConfiguration.Profile? {
 		val configuration = configurationProvider.get(OpenAIConfiguration)
 		return configuration.profile(name.id)

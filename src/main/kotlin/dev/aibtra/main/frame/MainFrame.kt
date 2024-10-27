@@ -379,10 +379,9 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 	}
 
 	private fun createProfileComboBox(): JComboBox<OpenAIConfiguration.Profile.Name> {
-		val configurationProvider = environment.configurationProvider
-		val initialConfiguration = configurationProvider.get(OpenAIConfiguration)
-		val comboBox = ComboBoxWithPreferredSize(initialConfiguration.profiles.map { it.name }.toTypedArray())
-		comboBox.selectedItem = initialConfiguration.currentProfile(profileManager.workingMode).name
+		val comboBox = ComboBoxWithPreferredSize(profileManager.profiles().map { it.name }.toTypedArray())
+		val initialProfile = profileManager.profile()
+		comboBox.selectedItem = initialProfile.name
 
 		comboBox.renderer = object : DefaultListCellRenderer() {
 			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
@@ -404,7 +403,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 			private var lastSelected: OpenAIConfiguration.Profile.Name
 
 			init {
-				lastSelected = initialConfiguration.currentProfile(profileManager.workingMode).name
+				lastSelected = initialProfile.name
 			}
 
 			override fun itemStateChanged(e: ItemEvent?) {
