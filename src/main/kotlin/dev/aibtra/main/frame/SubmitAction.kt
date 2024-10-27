@@ -14,7 +14,7 @@ class SubmitAction(
 	requestManager: RequestManager,
 	submitter: Submitter
 ) :
-	MainMenuAction("submit", "Submit", Icons.SUBMIT, "Submit", null, environment.accelerators, ActionRunnable { action -> (action as SubmitAction).worker.run() }) {
+	MainMenuAction("submit", "Submit", Icons.SUBMIT, "Submit", "ctrl ENTER", environment.accelerators, ActionRunnable { action -> (action as SubmitAction).worker.run() }) {
 
 	private val worker: Worker = Worker(this, submitter, diffManager, requestManager)
 
