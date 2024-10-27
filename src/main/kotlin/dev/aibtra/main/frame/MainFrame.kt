@@ -155,8 +155,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 
 		submitter = createSubmitter()
 
-		val submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
-		this.submitAction = submitAction
+		submitAction = SubmitAction(environment, diffManager, requestManager, submitter)
 		applyChangeAction = ApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
 		toggleSelectionMode = ToggleSelectionModeAction(diffManager, profileManager, rawTextArea, environment.accelerators)
@@ -409,7 +408,7 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 			}
 
 			override fun itemStateChanged(e: ItemEvent?) {
-				(comboBox.selectedItem as? OpenAIConfiguration.Profile.Name)?.let { it ->
+				(comboBox.selectedItem as? OpenAIConfiguration.Profile.Name)?.let {
 					profileManager.setProfile(it)
 				}
 			}
