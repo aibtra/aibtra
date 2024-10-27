@@ -481,6 +481,13 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		addAction(onPasteMenu, TextNormalizerAction.createRewrapBlockQuotes(environment.configurationProvider, environment.accelerators))
 
 		val profileMenu = JMenu("Profile")
+		val profileCurrentMenu = JMenu("Current")
+		val profileRadioButtonGroup = ButtonGroup()
+		for (profile in profileManager.profiles()) {
+			addAction(profileCurrentMenu, SetProfileAction(profile.name, profileManager, profileRadioButtonGroup))
+		}
+		profileMenu.add(profileCurrentMenu)
+		profileMenu.addSeparator()
 		addAction(profileMenu, toggleFilterMarkdownAction)
 		addAction(profileMenu, toggleShowDiffBeforeAfterAction)
 		addAction(profileMenu, ToggleWordWrapAction(rawTextArea, refTextArea, profileManager, environment.accelerators))
@@ -541,8 +548,14 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 	}
 
 	private fun addAction(menu: JMenu, action: MainMenuAction) {
+		val radioButtonGroup = action.getRadioButtonGroup()
 		menu.add(
-			if (action.isSelectable()) {
+			if (radioButtonGroup != null) {
+				val item = JRadioButtonMenuItem(action)
+				radioButtonGroup.add(item)
+				item
+			}
+			else if (action.isSelectable()) {
 				JCheckBoxMenuItem(action)
 			}
 			else {
