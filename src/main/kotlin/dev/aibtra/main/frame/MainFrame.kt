@@ -126,6 +126,12 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 				val text = state.content
 				rawTextArea.setText(text)
 				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
+
+				state.initialLine?.let {
+					Ui.runInEdt {
+						rawTextArea.scrollToLine(it)
+					}
+				}
 			}
 
 			updateFrameTitle(state?.modified ?: false)
@@ -553,9 +559,9 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		} ?: "") + FRAME_TITLE
 	}
 
-	fun openFile(fileToOpen: Path, profileId: String?) {
+	fun openFile(fileToOpen: Path, profileId: String?, line: Int?) {
 		updateWorkingMode(WorkingMode.FILE, profileId)
-		workFile.load(fileToOpen)
+		workFile.load(fileToOpen, line)
 	}
 
 	private fun updateWorkingMode(workingMode: WorkingMode, profileId: String?) {
