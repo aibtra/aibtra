@@ -38,7 +38,6 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 	private val submitAction: MainMenuAction
 	private val applyChangeAction: MainMenuAction
 	private val copyAndCloseAction: MainMenuAction
-	private val pasteAndSubmitAction: MainMenuAction
 	private val profileComboBox: JComboBox<OpenAIConfiguration.Profile.Name>
 	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val toggleFilterMarkdownAction: MainMenuAction
@@ -160,7 +159,6 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		this.submitAction = submitAction
 		applyChangeAction = ApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
 		copyAndCloseAction = CopyAndCloseAction(environment, requestManager, diffManager, rawTextArea, environment.configurationProvider, frame)
-		pasteAndSubmitAction = PasteAndSubmitAction(environment, requestManager, profileManager, diffManager, rawTextArea, submitAction)
 		toggleSelectionMode = ToggleSelectionModeAction(diffManager, profileManager, rawTextArea, environment.accelerators)
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, profileManager, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = ToggleShowRefBeforeAndAfterAction(diffManager, profileManager, environment.accelerators)
@@ -197,7 +195,6 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		mainToolBar.add(toggleSelectionMode)
 		mainToolBar.add(Box.createHorizontalGlue())
 		mainToolBar.add(applyChangeAction)
-		mainToolBar.add(pasteAndSubmitAction)
 		mainToolBar.add(toggleShowDiffBeforeAfterAction)
 		mainToolBar.add(toggleDarkModeAction)
 
@@ -462,7 +459,6 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 		addAction(editMenu, applyChangeAction)
 		editMenu.addSeparator()
 		addAction(editMenu, copyAndCloseAction)
-		addAction(editMenu, pasteAndSubmitAction)
 		editMenu.addSeparator()
 		addAction(editMenu, toggleSelectionMode)
 		editMenu.addSeparator()
