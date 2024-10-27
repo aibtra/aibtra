@@ -448,6 +448,8 @@ class MainFrame(initialWorkingMode: WorkingMode, private val environment: Enviro
 
 	private fun fillMenuBar(menuBar: JMenuBar) {
 		val fileMenu = JMenu("File")
+		fileMenu.add(submitAction)
+		fileMenu.addSeparator()
 		addAction(fileMenu, OpenAction(workFile, frame, environment))
 		addAction(fileMenu, SaveAction(workFile, environment))
 		fileMenu.addSeparator()
