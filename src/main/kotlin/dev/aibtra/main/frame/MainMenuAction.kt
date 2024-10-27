@@ -26,6 +26,10 @@ open class MainMenuAction(
 			accelerators.get(id, KeyStroke.getKeyStroke(keyStrokeDefault))?.let {
 				putValue(ACCELERATOR_KEY, it)
 			}
+		} ?: run {
+			keyStrokeDefault?.let {
+				putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(it))
+			}
 		}
 	}
 }
