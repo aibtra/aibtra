@@ -38,7 +38,8 @@ data class OpenAIConfiguration(
 		val diffConfig: DiffManager.Config,
 		val submitOnInvocation: Boolean = false,
 		val submitOnProfileChange: Boolean = false,
-		val wordWrap: Boolean = false
+		val wordWrap: Boolean = false,
+		val accelerator: String? = null
 	) {
 
 		fun supportsSelection(): Boolean {
@@ -129,7 +130,8 @@ data class OpenAIConfiguration(
 			),
 			ResponseType.SELECTION,
 			DiffManager.Config(true, false, true),
-			wordWrap = true
+			wordWrap = true,
+			accelerator = "ctrl shift P"
 		)
 
 		private val IMPROVE = Profile(
@@ -149,7 +151,8 @@ data class OpenAIConfiguration(
 			),
 			ResponseType.SELECTION,
 			DiffManager.Config(true, false, true),
-			wordWrap = true
+			wordWrap = true,
+			accelerator = "ctrl shift I"
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
@@ -277,7 +280,8 @@ data class OpenAIConfiguration(
 				)
 			),
 			ResponseType.SELECTION_JSON,
-			DiffManager.Config(false, false, true)
+			DiffManager.Config(false, false, true),
+			accelerator = "ctrl shift R"
 		)
 
 		private val GENERIC_O1_MINI = Profile(
