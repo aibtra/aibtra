@@ -95,7 +95,8 @@ class MainStartup {
 				showMainFrame(WorkingMode.FILE, arguments.options, environment, fileToOpen)
 			}
 			else {
-				showMainFrame(WorkingMode.OPEN, arguments.options, environment, null)
+				val workingMode = if ("true" == environment.paths.getProperty("startup.pasteFromClipboard")) WorkingMode.CLIPBOARD else WorkingMode.OPEN
+				showMainFrame(workingMode, arguments.options, environment, null)
 			}
 		}
 
