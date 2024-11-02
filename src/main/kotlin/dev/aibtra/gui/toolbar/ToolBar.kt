@@ -10,6 +10,7 @@ import dev.aibtra.main.frame.Theme
 import java.awt.Component
 import javax.swing.AbstractButton
 import javax.swing.Action
+import javax.swing.JComponent
 import javax.swing.JToggleButton
 import javax.swing.JToolBar
 
@@ -24,6 +25,7 @@ class ToolBar(
 	init {
 		themeListener = {
 			updateIcons()
+			updateUI()
 		}
 
 		theme.addChangeListener(themeListener)
@@ -77,6 +79,11 @@ class ToolBar(
 		for ((action, button) in actionToButton) {
 			updateIcon(action, button)
 		}
+	}
+
+	private fun updateUI() {
+		toolBar.updateUI()
+		toolBar.components.mapNotNull { it as? JComponent }.forEach { it.updateUI() }
 	}
 
 	private fun updateIcon(action: ToolBarAction, button: AbstractButton) {
