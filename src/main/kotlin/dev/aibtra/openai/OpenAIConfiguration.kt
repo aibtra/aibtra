@@ -105,7 +105,7 @@ data class OpenAIConfiguration(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false),
+			DiffManager.Config(true, false, true),
 			wordWrap = true
 		)
 
@@ -125,7 +125,7 @@ data class OpenAIConfiguration(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false),
+			DiffManager.Config(true, false, true),
 			wordWrap = true
 		)
 
@@ -142,7 +142,7 @@ data class OpenAIConfiguration(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false),
+			DiffManager.Config(true, false, true),
 			wordWrap = true
 		)
 

@@ -1,9 +1,9 @@
 package dev.aibtra.diff
 
-class DiffExtender(private val joinCloseBlocks: Boolean = true) {
+class DiffExtender(private val joinCloseBlocks: Boolean = true, private val enabled: Boolean = true) {
 	fun extend(raw: String, ref: String, diff: Diff, finished: Boolean): Diff {
 		// If ref is empty, this is a new request, hence reset.
-		if (ref.isEmpty()) {
+		if (ref.isEmpty() || !enabled) {
 			return Diff(raw, ref, listOf(), Diff.OrgDiff(raw, ref, ref, 0, ref.length, listOf()), false)
 		}
 
