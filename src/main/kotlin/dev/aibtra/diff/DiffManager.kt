@@ -180,9 +180,7 @@ class DiffManager(
 				val ref = input.ref
 				val config = input.config
 				val finished = input.finished
-				val rawTo = if (finished) raw.length else computeRawTo(raw, ref, config.endBalancerCharCount, lastState)
-				val blocks = if (ref.isNotEmpty()) DiffBuilder(raw.substring(0, rawTo), ref, true, true, true).build() else listOf()
-				val diff = Diff(raw, rawTo, ref, blocks, finished)
+				val diff = DiffExtender().extend(raw, ref, state.diff, finished)
 
 				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 				require(rawFormatted.length == raw.length)
@@ -247,48 +245,6 @@ class DiffManager(
 		data = Data(data.input, data.state, data.sequenceId, rawScrollPos, refScrollPos)
 
 		scrollListeners.toList().forEach { it(rawScrollPos, refScrollPos) }
-	}
-
-	private fun computeRawTo(raw: String, ref: String, endBalancerCharCount: Int, lastState: State): Int {
-		if (lastState.diff.rawTo == 0 // if not yet initialized, our best guess it to use equal length
-			|| raw != lastState.diff.raw // if raw has changed, everything could have changed, hence reset
-			|| ref.isEmpty()  // if ref is empty or shrank, this is a new request, hence reset
-			|| ref.length < lastState.diff.ref.length
-		) {
-			return Math.min(raw.length, ref.length)
-		}
-
-		var rawTo = lastState.diff.rawTo
-		var refTo = lastState.diff.ref.length
-		var rawCount = 0
-		var refCount = 0
-		var allCount = 0
-		for (block in lastState.diff.blocks.reversed()) {
-			val equal = rawTo - block.rawTo
-			val refEqual = refTo - block.refTo
-			require(equal == refEqual)
-
-			rawCount += equal
-			refCount += equal
-			allCount += equal
-
-			val rawChange = block.rawTo - block.rawFrom
-			val refChange = block.refTo - block.refFrom
-			rawCount += rawChange
-			refCount += refChange
-			allCount += rawChange + refChange
-
-			rawTo = block.rawFrom - 1
-			refTo = block.refFrom - 1
-
-			if (allCount > endBalancerCharCount) {
-				break
-			}
-		}
-
-		val imbalance = rawCount - refCount
-		val balancedRawTo = lastState.diff.rawTo - imbalance
-		return Math.min(raw.length, Math.max(balancedRawTo, lastState.diff.rawTo))
 	}
 
 	private fun writeDebugFile(sequenceId: Int, operationName: String, type: String, text: String, diffChars: List<DiffChar>?) {
@@ -409,7 +365,6 @@ class DiffManager(
 	data class Config(
 		val filterMarkdown: Boolean = true,
 		val showRefBeforeAndAfter: Boolean = true,
-		val endBalancerCharCount: Int = 50,
 		val debugLogDirectory: String? = null
 	) {
 		companion object : ConfigurationFactory<Config> {
