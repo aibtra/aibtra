@@ -40,6 +40,10 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		return scrollPane
 	}
 
+	fun requestFocusInWindow() {
+		textArea.requestFocusInWindow()
+	}
+
 	protected fun updateCharacterAttributes(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
 		highlighter.run(chars, highlightStyle)
 	}
