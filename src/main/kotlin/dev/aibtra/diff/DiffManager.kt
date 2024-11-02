@@ -206,7 +206,7 @@ class DiffManager(
 				val config = input.config
 				val finished = input.finished
 				val selection = input.raw.isPart()
-				val diff = DiffExtender().extend(raw.all, ref, state.diff, finished)
+				val diff = DiffExtender(enabled = config.enabled).extend(raw.all, ref, state.diff, finished)
 
 				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 				require(rawFormatted.length == raw.all.length)
@@ -360,7 +360,7 @@ class DiffManager(
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
-		val INITIAL_CONFIG = Config(false, false)
+		val INITIAL_CONFIG = Config(false, false, true)
 
 		fun getSelectedBlocksFromRef(state: State, range: IntRange): List<DiffBlock> {
 			require(range.first >= 0 && range.last < state.refFormatted.length)
@@ -389,7 +389,8 @@ class DiffManager(
 	@Serializable
 	data class Config(
 		val filterMarkdown: Boolean,
-		val showRefBeforeAndAfter: Boolean
+		val showRefBeforeAndAfter: Boolean,
+		val enabled: Boolean
 	)
 
 	fun interface RawNormalizer {
