@@ -389,8 +389,8 @@ class DiffManager(
 
 	@Serializable
 	data class Config(
-		val filterMarkdown: Boolean = true,
-		val showRefBeforeAndAfter: Boolean = true,
+		val filterMarkdown: Boolean,
+		val showRefBeforeAndAfter: Boolean
 	)
 
 	fun interface RawNormalizer {
