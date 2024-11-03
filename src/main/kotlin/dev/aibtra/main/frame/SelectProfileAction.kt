@@ -4,11 +4,10 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.openai.OpenAIConfiguration
 import javax.swing.JComboBox
 
 class SelectProfileAction(
-	comboBox: JComboBox<OpenAIConfiguration.Profile.Name>,
+	comboBox: JComboBox<*>,
 	environment: Environment
 ) : MainMenuAction("selectProfile", "Select Profile", "ctrl P", environment.accelerators, {
 	comboBox.requestFocus()
