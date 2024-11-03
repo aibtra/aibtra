@@ -231,13 +231,10 @@ class DiffManager(
 		}
 	}
 
-	private fun updateScrollPos(rawScrollPos: ScrollPos, refScrollPos: ScrollPos) {
+	private fun updateScrollPos(rawScrollPosRaw: ScrollPos, refScrollPosRaw: ScrollPos) {
+		val rawScrollPos = if (rawScrollPosRaw.bottom > data.state.diff.raw.length) data.rawScrollPos else rawScrollPosRaw
+		val refScrollPos = if (refScrollPosRaw.bottom > data.state.diff.ref.length) data.refScrollPos else refScrollPosRaw
 		if (rawScrollPos == data.rawScrollPos && refScrollPos == data.refScrollPos) {
-			return
-		}
-
-		if (rawScrollPos.bottom > data.state.diff.raw.length ||
-			refScrollPos.bottom > data.state.diff.ref.length) {
 			return
 		}
 
