@@ -21,7 +21,7 @@ import kotlin.jvm.optionals.getOrNull
 @Serializable
 data class OpenAIConfiguration(
 	val apiToken: String? = null,
-	val profiles: List<Profile> = DEFAULT_PROFILES,
+	val profiles: List<Profile?> = DEFAULT_PROFILES,
 	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID,
 	val lastCommands: List<String> = listOf(),
 	val profileIdToHash: Map<String, String> = createProfileIdToHash(DEFAULT_PROFILES)
@@ -84,11 +84,11 @@ data class OpenAIConfiguration(
 	}
 
 	fun profile(id: String): Profile? {
-		return profiles.find { it.name.id == id }
+		return profiles.filterNotNull().find { it.name.id == id }
 	}
 
 	fun currentProfile(workingMode: WorkingMode): Profile {
-		return profiles.find {
+		return profiles.filterNotNull().find {
 			it.name.id == workingModeToDefaultProfileId.getOrDefault(workingMode, WORKING_MODE_TO_DEFAULT_PROFILE_ID[workingMode])
 		} ?: PROOFREAD
 	}
@@ -297,7 +297,7 @@ data class OpenAIConfiguration(
 			DiffManager.Config(false, false, false)
 		)
 
-		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, CODE_REFINEMENT, GENERIC_O1_MINI)
+		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
 
 		override fun name(): String = "openai"
 
@@ -323,8 +323,8 @@ data class OpenAIConfiguration(
 			})
 		}
 
-		fun createProfileIdToHash(profiles: List<Profile>): Map<String, String> {
-			return profiles.associate { it.name.id to createProfileHash(it) }
+		fun createProfileIdToHash(profiles: List<Profile?>): Map<String, String> {
+			return profiles.filterNotNull().associate { it.name.id to createProfileHash(it) }
 		}
 
 		private fun createProfileHash(profile: Profile): String {
@@ -343,7 +343,7 @@ data class OpenAIConfiguration(
 		override fun deserialize(decoder: Decoder): OpenAIConfiguration {
 			var configuration = serializer().deserialize(decoder)
 			val idToHashDefault = HashMap(createProfileIdToHash(DEFAULT_PROFILES))
-			for (profile in configuration.profiles) {
+			for (profile in configuration.profiles.filterNotNull()) {
 				val id = profile.name.id
 				val expectedHash = configuration.profileIdToHash[id]
 				val defaultHash = idToHashDefault.remove(id)
@@ -352,7 +352,7 @@ data class OpenAIConfiguration(
 				}
 
 				if (defaultHash != expectedHash) {
-					val defaultProfile = DEFAULT_PROFILES.find { it.name.id == id }
+					val defaultProfile = DEFAULT_PROFILES.filterNotNull().find { it.name.id == id }
 					configuration = defaultProfile?.let {
 						val replacedConfiguration = replaceProfile(configuration, profile) { _ -> it }
 						updateHash(replacedConfiguration, it)
@@ -364,7 +364,7 @@ data class OpenAIConfiguration(
 			}
 
 			for (id in idToHashDefault.keys.sorted()) {
-				val defaultProfile = requireNotNull(DEFAULT_PROFILES.find { it.name.id == id })
+				val defaultProfile = requireNotNull(DEFAULT_PROFILES.filterNotNull().find { it.name.id == id })
 				val replacedConfiguration = addProfile(configuration, defaultProfile)
 				configuration = updateHash(replacedConfiguration, defaultProfile)
 			}

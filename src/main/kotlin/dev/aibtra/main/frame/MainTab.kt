@@ -41,7 +41,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 	}
 	private val submitAction: MainMenuAction
 	private val applyChangeAction: MainMenuAction
-	protected val profileComboBox: JComboBox<OpenAIConfiguration.Profile.Name>
+	protected val profileComboBox: JComboBox<Any>
 	private val toggleSelectionMode: ToggleSelectionModeAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val toggleDarkModeAction: ToggleDarkModeAction
@@ -280,7 +280,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 	protected open fun fillBottomToolBar(toolBar: ToolBar) {
 	}
 
-	protected fun updateWordWrap() {
+	private fun updateWordWrap() {
 		rawTextArea.setWordWrap(profileManager.profile().wordWrap)
 		refTextArea.setWordWrap(profileManager.profile().wordWrap)
 	}
@@ -320,13 +320,19 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		}
 	}
 
-	private fun createProfileComboBox(): JComboBox<OpenAIConfiguration.Profile.Name> {
-		val comboBox = ComboBoxWithPreferredSize(profileManager.profiles().map { it.name }.toTypedArray())
+	private fun createProfileComboBox(): ComboBoxWithPreferredSize<Any> {
+		val comboBox: ComboBoxWithPreferredSize<Any> = ComboBoxWithPreferredSize(profileManager.profiles().map { it?.name ?: ProfileSeparator() }.toTypedArray())
 		val initialProfile = profileManager.profile()
 		comboBox.selectedItem = initialProfile.name
 
 		comboBox.renderer = object : DefaultListCellRenderer() {
-			override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+			override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+				if (value is ProfileSeparator) {
+					val separator = JLabel()
+					separator.border = BorderFactory.createMatteBorder(1, 0, 0, 0, list.foreground)
+					return separator
+				}
+
 				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
 				if (value is OpenAIConfiguration.Profile.Name) {
 					label.text = value.title
@@ -349,7 +355,26 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 			}
 
 			override fun itemStateChanged(e: ItemEvent?) {
-				(comboBox.selectedItem as? OpenAIConfiguration.Profile.Name)?.let {
+				val item = comboBox.selectedItem
+				if (item is ProfileSeparator) {
+					Ui.runInEdt {
+						for (index in comboBox.selectedIndex - 1 downTo 0) {
+							(comboBox.getItemAt(index) as? OpenAIConfiguration.Profile.Name)?.let {
+								profileManager.setProfile(it)
+								return@runInEdt
+							}
+						}
+						for (index in comboBox.selectedIndex + 1 until comboBox.itemCount) {
+							(comboBox.getItemAt(index) as? OpenAIConfiguration.Profile.Name)?.let {
+								profileManager.setProfile(it)
+								return@runInEdt
+							}
+						}
+					}
+					return
+				}
+
+				(item as? OpenAIConfiguration.Profile.Name)?.let {
 					profileManager.setProfile(it)
 				}
 			}
@@ -422,7 +447,12 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		val profileCurrentMenu = JMenu("Current")
 		val profileRadioButtonGroup = ButtonGroup()
 		for (profile in profileManager.profiles()) {
-			addAction(profileCurrentMenu, SetProfileAction(profile.name, profileManager, profileRadioButtonGroup))
+			if (profile == null) {
+				profileCurrentMenu.add(JSeparator())
+			}
+			else {
+				addAction(profileCurrentMenu, SetProfileAction(profile.name, profileManager, profileRadioButtonGroup))
+			}
 		}
 		profileMenu.add(profileCurrentMenu)
 		profileMenu.addSeparator()
@@ -499,6 +529,9 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 
 			preferredWidth = maxWidth + 30 // have some padding which should be sufficient for every L&F
 		}
+	}
+
+	private class ProfileSeparator {
 	}
 
 	companion object {
