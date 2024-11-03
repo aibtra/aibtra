@@ -26,16 +26,22 @@ class DiffManager(
 	private val stateListeners = ArrayList<(State, State) -> Unit>()
 	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
 
-	private var data: Data = Data(Input("", "", ScrollPos(0, 0), "", ScrollPos.INITIAL, INITIAL_CONFIG, true, null), State(listOf(), FilteredText.asIs(""), "", listOf(), Diff.INITIAL), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
+	private var data: Data = Data(Input(FilteredText.Part.of(""), "", ScrollPos(0, 0), "", ScrollPos.INITIAL, INITIAL_CONFIG, true, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), Diff.INITIAL, false), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
 	private var inScrollPosUpdate = false
 	val state: State
 		get() = data.state
 
-	fun updateRawText(raw: String, config: Config, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, selection: IntRange?, rawConfig: Config? = null, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
-			if (it.input.raw == raw && config == it.input.config && normalization == Normalization.AS_IS && callback == null) {
+			val (from, to) = selection?.let { s -> s.first to s.last + 1 } ?: (0 to raw.length)
+			require(from <= to && to <= raw.length) { "from=${from};to=${to};raw=${raw}" }
+
+			val part = FilteredText.Part(raw, from, to)
+			val input = it.input
+			val config = rawConfig ?: input.config
+			if (input.raw.all == raw && input.raw == part && config == input.config && normalization == Normalization.AS_IS && callback == null) {
 				return raw
 			}
 
@@ -44,7 +50,7 @@ class DiffManager(
 			val rawOrg: String? = when (normalization) {
 				Normalization.INITIALIZE -> raw
 				Normalization.STOP -> null
-				Normalization.AS_IS -> it.input.rawOrg
+				Normalization.AS_IS -> input.rawOrg
 			}
 
 			// We will apply the normalization as long as the raw text has not been manually changed.
@@ -61,7 +67,7 @@ class DiffManager(
 				Pair(raw, null)
 			}
 
-			updateState(it.input.copy(raw = rawNew, rawOrg = rawOrgNew, config = config, callback = callback), true, "updateRaw")
+			updateState(input.copy(raw = part, rawOrg = rawOrgNew, config = config, callback = callback), true, "updateRaw")
 			return rawNew
 		}
 	}
@@ -106,15 +112,35 @@ class DiffManager(
 				return@Consumer
 			}
 
-			val rawScrollPos = mapScrollPos(refScrollPos,
-				{ s -> s.diff.ref },
-				{ s -> s.diff.raw },
-				{ b -> b.refFrom },
-				{ b -> b.rawFrom },
-				{ b -> b.refTo },
-				{ b -> b.rawTo })
+			val rawScrollPos = if (data.state.selection) {
+				data.rawScrollPos
+			}
+			else {
+				mapScrollPos(refScrollPos,
+					{ s -> s.diff.ref },
+					{ s -> s.diff.raw },
+					{ b -> b.refFrom },
+					{ b -> b.rawFrom },
+					{ b -> b.refTo },
+					{ b -> b.rawTo })
+			}
 			updateScrollPos(rawScrollPos, refScrollPos)
 		})
+	}
+
+	fun syncRefScrollPos() : ScrollPos {
+		Ui.assertEdt()
+
+		val rawScrollPos = data.rawScrollPos
+		val refScrollPos = mapScrollPos(rawScrollPos,
+			{ s -> s.diff.raw },
+			{ s -> s.diff.ref },
+			{ b -> b.rawFrom },
+			{ b -> b.refFrom },
+			{ b -> b.rawTo },
+			{ b -> b.refTo })
+		data = Data(data.input, data.state, data.sequenceId, data.rawScrollPos, refScrollPos)
+		return refScrollPos
 	}
 
 	fun updateInitial(): String? {
@@ -124,7 +150,7 @@ class DiffManager(
 			val input = it.input
 			val rawOrg = input.rawOrg ?: return null
 			val normalized = rawNormalizer.normalize(rawOrg)
-			updateState(input.copy(raw = normalized, rawOrg = rawOrg), true, "updateInitial")
+			updateState(input.copy(raw = FilteredText.Part.of(normalized), rawOrg = rawOrg), true, "updateInitial")
 			return rawOrg
 		}
 	}
@@ -160,28 +186,31 @@ class DiffManager(
 	}
 
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
-		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
+		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.all.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
 
 		val dataState = data.state
 		data = Data(input, dataState, data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
+
 		if (debugOperationName != null) {
-			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", input.raw, null)
-			writeDebugFile(data.sequenceId, debugOperationName, "input-clean", data.state.filtered.clean, null)
+			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", input.raw.all, null)
+			writeDebugFile(data.sequenceId, debugOperationName, "input-raw-selection", input.raw.extract, null)
+			writeDebugFile(data.sequenceId, debugOperationName, "input-clean", data.state.filtered.clean.all, null)
 			writeDebugFile(data.sequenceId, debugOperationName, "input-ref", input.ref, null)
 		}
 
 		sequentialRunner.schedule(object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
-				LOG.debug("updateState (run): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
+				LOG.debug("updateState (run): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.all.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
 
 				val raw = input.raw
 				val ref = input.ref
 				val config = input.config
 				val finished = input.finished
-				val diff = DiffExtender().extend(raw, ref, state.diff, finished)
+				val selection = input.raw.isPart()
+				val diff = DiffExtender().extend(raw.all, ref, state.diff, finished)
 
 				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
-				require(rawFormatted.length == raw.length)
+				require(rawFormatted.length == raw.all.length)
 
 				val filtered: FilteredText = if (config.filterMarkdown) {
 					FilteredText.filter(raw)
@@ -197,7 +226,7 @@ class DiffManager(
 					DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED
 				}
 				val (refFormatted, refChars) = DiffFormatter(mode).format(diff)
-				val state = State(rawChars, filtered, refFormatted, refChars, diff)
+				val state = State(raw, rawChars, filtered, refFormatted, refChars, diff, selection)
 				callback {
 					Ui.assertEdt()
 
@@ -208,7 +237,7 @@ class DiffManager(
 
 					if (debugOperationName != null) {
 						writeDebugFile(data.sequenceId, debugOperationName, "state-raw", data.state.diff.raw, data.state.rawChars)
-						writeDebugFile(data.sequenceId, debugOperationName, "state-clean", data.state.filtered.clean, null)
+						writeDebugFile(data.sequenceId, debugOperationName, "state-clean", data.state.filtered.clean.all, null)
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
 
@@ -324,9 +353,9 @@ class DiffManager(
 		return dstFrom + ((dstTo - dstFrom) * ratio).toInt()
 	}
 
-	class State(val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff)
+	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff, val selection: Boolean)
 
-	private data class Input(val raw: String, val rawOrg: String?, val rawScrollPos: ScrollPos, val ref: String, val refScrollPos: ScrollPos, val config: Config, val finished: Boolean, val callback: Runnable?)
+	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val rawScrollPos: ScrollPos, val ref: String, val refScrollPos: ScrollPos, val config: Config, val finished: Boolean, val callback: Runnable?)
 
 	private class Data(val input: Input, val state: State, val sequenceId: Int, val rawScrollPos: ScrollPos, val refScrollPos: ScrollPos)
 
