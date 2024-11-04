@@ -57,7 +57,7 @@ class MainFrame(private val environment: Environment) {
 		frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
 		frame.isVisible = true
 
-		environment.frameManager.register(this, frame, !environment.systemTrayEnabled)
+		environment.frameManager.register(this, frame, ::exitOnClose)
 
 		frame.addWindowListener(object : WindowAdapter() {
 			override fun windowClosing(e: WindowEvent?) {
@@ -70,6 +70,10 @@ class MainFrame(private val environment: Environment) {
 				tabbedPane.dispose()
 			}
 		})
+	}
+
+	private fun exitOnClose(): Boolean {
+		return !environment.systemTrayEnabled && !environment.configurationProvider.get(GuiConfiguration).hotkeyEnabled
 	}
 
 	fun checkClose(runnable: Runnable) {
