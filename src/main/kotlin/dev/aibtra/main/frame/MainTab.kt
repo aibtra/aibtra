@@ -435,7 +435,9 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		if (GuiConfiguration.isHotkeySupported()) {
 			addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
 		}
-		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
+		if (GuiConfiguration.isPasteOnCloseSupported()) {
+			addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
+		}
 		menuBar.add(editMenu)
 
 		val viewMenu = JMenu("View")
