@@ -432,7 +432,9 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		}
 		addAction(editMenu, toggleSelectionMode)
 		editMenu.addSeparator()
-		addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
+		if (GuiConfiguration.isHotkeySupported()) {
+			addAction(editMenu, ToggleHotkeyAction(environment.hotkeyListener, environment.configurationProvider, environment.accelerators, dialogDisplayer))
+		}
 		addAction(editMenu, TogglePasteOnCloseAction(environment.configurationProvider, environment.accelerators))
 		menuBar.add(editMenu)
 
