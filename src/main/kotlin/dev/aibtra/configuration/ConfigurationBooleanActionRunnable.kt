@@ -21,8 +21,10 @@ class ConfigurationBooleanActionRunnable<T>(
 		}
 
 		val newConfig = configurationProvider.get(configurationFactory)
-		val newValue = get(newConfig) // maybe set does not actually flip the value
-		action.setSelected(newValue)
 		invoke(newConfig)
+
+		val finalConfig = configurationProvider.get(configurationFactory)
+		val finalValue = get(finalConfig) // maybe set does not actually flip the value or invoke() reverts the value
+		action.setSelected(finalValue)
 	}
 }
