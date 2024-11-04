@@ -71,7 +71,7 @@ data class GuiConfiguration(
 				return false
 			}
 
-			return SystemInfo.isWindows
+			return SystemInfo.isWindows || SystemInfo.isLinux
 		}
 	}
 
