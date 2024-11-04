@@ -47,6 +47,7 @@ class MainStartup {
 
 		fun start(paths: ApplicationPaths, args: Array<String>) {
 			configureLogging(paths)
+			ConfigurationFactory.initialize(paths)
 
 			FlatDarkLaf.setup() // required for very early (error dialogs) and to properly initialize the default font size
 			GlobalExceptionHandler.install()

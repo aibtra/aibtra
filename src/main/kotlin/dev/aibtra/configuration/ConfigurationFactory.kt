@@ -4,6 +4,7 @@
 
 package dev.aibtra.configuration
 
+import dev.aibtra.main.frame.ApplicationPaths
 import kotlinx.serialization.KSerializer
 
 interface ConfigurationFactory<D> {
@@ -14,4 +15,12 @@ interface ConfigurationFactory<D> {
 	fun default(): D
 
 	fun createSerializer(): KSerializer<D> = serializer()
+
+	companion object {
+		internal lateinit var paths: ApplicationPaths
+
+		fun initialize(paths: ApplicationPaths) {
+			this.paths = paths
+		}
+	}
 }
