@@ -6,41 +6,58 @@
 
 package dev.aibtra.gui
 
+import com.formdev.flatlaf.util.SystemInfo
 import com.github.kwhat.jnativehook.GlobalScreen
+import com.github.kwhat.jnativehook.NativeHookException
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener
 import com.github.kwhat.jnativehook.keyboard.SwingKeyAdapter
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.Logger
+import dev.aibtra.gui.dialogs.Dialogs
+import dev.aibtra.main.frame.FrameManager
 import dev.aibtra.main.frame.GuiConfiguration
 import java.awt.event.KeyEvent
 
 class HotkeyListener(
 	private val configurationProvider: ConfigurationProvider,
+	private val frameManager: FrameManager,
 ) {
 	private var nativeKeyListener: NativeKeyListener? = null
 	private var runnable: Runnable? = null
 
 	fun configure(runnable: Runnable): Boolean  {
-		val guiConfiguration = configurationProvider.get(GuiConfiguration)
-		val hotkeyEnabled = guiConfiguration.hotkeyEnabled
 		if (!GuiConfiguration.isHotkeySupported()) {
 			this.runnable = null
 			return false // For debugging, we still want to get "true" returned, if configured.
 		}
 
 		this.runnable = runnable
-		update()
-		return hotkeyEnabled
+		return update()
 	}
 
-	fun update() {
-		val guiConfiguration = configurationProvider.get(GuiConfiguration)
-		nativeKeyListener = if (guiConfiguration.hotkeyEnabled && runnable != null) {
+	fun update() : Boolean {
+		val hotkeyEnabled = configurationProvider.get(GuiConfiguration).hotkeyEnabled
+		nativeKeyListener = if (hotkeyEnabled && runnable != null) {
 			nativeKeyListener ?: createKeyListener(runnable).also {
 				LOG.info("Hotkey enabled")
 
 				if (!GlobalScreen.isNativeHookRegistered()) {
-					GlobalScreen.registerNativeHook()
+					try {
+						GlobalScreen.registerNativeHook()
+					} catch (ex: NativeHookException) {
+						LOG.error(ex.message ?: "", ex)
+						if (SystemInfo.isMacOS) {
+							// Ignore, the operating system will display an appropriate dialog. If we were to display a dialog ourselves, it would cause the operating system's dialog to be pushed to the background.
+						}
+						else {
+							showWarningDialog("Failed to register hotkey.\n\nSometimes, security settings may prevent registration of the hotkey.")
+						}
+
+						configurationProvider.change(GuiConfiguration) { config ->
+							config.copy(hotkeyEnabled = false)
+						}
+						return false
+					}
 				}
 				GlobalScreen.addNativeKeyListener(it)
 			}
@@ -52,6 +69,14 @@ class HotkeyListener(
 				GlobalScreen.removeNativeKeyListener(it)
 			}
 			null
+		}
+
+		return hotkeyEnabled
+	}
+
+	private fun showWarningDialog(message: String) {
+		frameManager.getFrame()?.let {
+			Dialogs.showWarning("Hotkey", message, it.dialogDisplayer)
 		}
 	}
 
@@ -65,7 +90,7 @@ class HotkeyListener(
 			var control: Boolean = false
 
 			override fun keyPressed(keyEvent: KeyEvent) {
-				if (keyEvent.keyCode == KeyEvent.VK_CONTROL) {
+				if (keyEvent.keyCode == CTRL_KEY_CODE) {
 					control = true
 					count = 0
 					return
@@ -98,5 +123,9 @@ class HotkeyListener(
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
+
+		val CTRL_KEY_CODE = if (SystemInfo.isMacOS) KeyEvent.VK_META else KeyEvent.VK_CONTROL
+
+		val ACCELERATOR_DESCRIPTION = "${if (SystemInfo.isMacOS) "Cmd" else "Ctrl"}-C-C"
 	}
 }
