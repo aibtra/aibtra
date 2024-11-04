@@ -25,7 +25,7 @@ class HotkeyListener(
 		val hotkeyEnabled = guiConfiguration.hotkeyEnabled
 		if (!GuiConfiguration.isHotkeySupported()) {
 			this.runnable = null
-			return hotkeyEnabled // For debugging, we still want to get "true" returned, if configured.
+			return false // For debugging, we still want to get "true" returned, if configured.
 		}
 
 		this.runnable = runnable

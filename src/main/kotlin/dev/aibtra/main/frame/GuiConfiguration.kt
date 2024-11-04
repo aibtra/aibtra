@@ -8,6 +8,7 @@ package dev.aibtra.main.frame
 
 import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationFactory
+import dev.aibtra.configuration.ConfigurationFactory.Companion.paths
 import dev.aibtra.gui.Ui
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -59,10 +60,17 @@ data class GuiConfiguration(
 		}
 
 		fun isHotkeySupported(): Boolean {
+			if ("true" == paths.getProperty("startup.forceHotkey")) {
+				return true
+			}
+
+			if (Ui.isDebugging()) {
+				// GlobalScreen may slow down machine significantly in Debug mode, e.g. after a break point has been hit:
+				// the mouse cursor lags extremely behind.
+				return false
+			}
+
 			return SystemInfo.isWindows
-							// GlobalScreen may slow down machine significantly in Debug mode, e.g. after a break point has been hit:
-							// the mouse cursor lags extremely behind.
-							&& !Ui.isDebugging()
 		}
 	}
 
