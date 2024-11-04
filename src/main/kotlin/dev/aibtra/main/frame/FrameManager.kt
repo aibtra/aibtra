@@ -12,7 +12,7 @@ import javax.swing.JFrame
 class FrameManager {
 	private var frame: MainFrame? = null
 
-	fun register(frame: MainFrame, jFrame: JFrame, exitOnClose: Boolean) {
+	fun register(frame: MainFrame, jFrame: JFrame, exitOnClose: () -> Boolean) {
 		this.frame = frame
 
 		jFrame.addWindowListener(object : WindowAdapter() {
@@ -23,7 +23,7 @@ class FrameManager {
 					frame.closed()
 				}
 
-				if (exitOnClose) {
+				if (exitOnClose()) {
 					exit()
 				}
 			}
