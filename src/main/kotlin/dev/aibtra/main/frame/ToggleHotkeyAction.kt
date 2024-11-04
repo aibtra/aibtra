@@ -4,6 +4,7 @@
 
 package dev.aibtra.main.frame
 
+import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.gui.HotkeyListener
 import dev.aibtra.gui.dialogs.DialogDisplayer
@@ -21,12 +22,11 @@ class ToggleHotkeyAction(
 		{ config -> config.hotkeyEnabled },
 		{ config: GuiConfiguration, value: Boolean -> config.copy(hotkeyEnabled = value) },
 		{ config: GuiConfiguration ->
-			hotkeyListener.update()
-
-			if (config.hotkeyEnabled) {
+			val hotkeyEnabled = hotkeyListener.update()
+			if (hotkeyEnabled) {
 				Dialogs.showInfoDialog(
 					"Hotkey",
-					"The hotkey is now active. Pressing Ctrl-C-C in any application will invoke Aibtra.", dialogDisplayer
+					"The hotkey has now been activated. Pressing ${HotkeyListener.ACCELERATOR_DESCRIPTION} in any application will invoke Aibtra.\n\nIf the hotkey does not work immediately, please exit and restart Aibtra.", dialogDisplayer
 				)
 			}
 		}
