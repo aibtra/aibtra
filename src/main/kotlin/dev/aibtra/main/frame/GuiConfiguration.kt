@@ -73,6 +73,11 @@ data class GuiConfiguration(
 
 			return SystemInfo.isWindows || SystemInfo.isLinux || SystemInfo.isMacOS
 		}
+
+		fun isPasteOnCloseSupported(): Boolean {
+			// The Robot generally works on macOS; however, after closing the window, the previous window does not regain focus, causing the key presses to be sent to nowhere
+			return SystemInfo.isWindows || SystemInfo.isLinux
+		}
 	}
 
 	object MonospacedFontSerializer : KSerializer<Font> {
