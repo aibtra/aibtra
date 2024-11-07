@@ -37,9 +37,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 
-class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val dialogDisplayer: DialogDisplayer) {
+class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val mainScope: CoroutineScope, private val dialogDisplayer: DialogDisplayer) {
 	private val coroutineScope = CoroutineScope(Job() + dispatcher)
-	private val mainScope = MainScope()
 
 	fun invoke() {
 		coroutineScope.launch(dispatcher) {

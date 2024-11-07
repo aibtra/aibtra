@@ -9,6 +9,8 @@ import dev.aibtra.core.DebugLog
 import dev.aibtra.gui.HotkeyListener
 import dev.aibtra.main.frame.*
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import java.util.*
 
 class MainApplication(
@@ -21,6 +23,7 @@ class MainApplication(
 	override val guiConfiguration: GuiConfiguration = configurationProvider.get(GuiConfiguration)
 	override val accelerators: Accelerators = configurationProvider.get(Accelerators)
 	override val timer = Timer(true)
+	override val mainScope = MainScope()
 	override val frameManager = FrameManager()
 	override val theme = Theme(configurationProvider)
 	override val hotkeyListener = HotkeyListener(configurationProvider)

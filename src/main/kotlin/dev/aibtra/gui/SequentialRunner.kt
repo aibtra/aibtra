@@ -59,8 +59,8 @@ class SequentialRunner(private val mainScope: CoroutineScope, private val mainDi
 	}
 
 	companion object {
-		fun createGuiThreadRunner(threadDispatcher: CoroutineDispatcher): SequentialRunner {
-			return SequentialRunner(MainScope(), Dispatchers.Main, threadDispatcher) {
+		fun createGuiThreadRunner(threadDispatcher: CoroutineDispatcher, mainScope: CoroutineScope): SequentialRunner {
+			return SequentialRunner(mainScope, Dispatchers.Main, threadDispatcher) {
 				throwable -> GlobalExceptionHandler.handle(throwable)
 			}
 		}

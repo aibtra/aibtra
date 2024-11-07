@@ -19,9 +19,10 @@ import java.util.concurrent.atomic.AtomicReference
 class RequestManager(
 	private val diffManager: DiffManager,
 	coroutineDispatcher: CoroutineDispatcher,
+	mainScope: CoroutineScope,
 	private val dialogDisplayer: DialogDisplayer
 ) {
-	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
+	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher, mainScope)
 	private val inProgressListeners = ArrayList<InProgressListener>()
 	private val currentRun: AtomicReference<Run?> = AtomicReference(null)
 	var inProgress = false

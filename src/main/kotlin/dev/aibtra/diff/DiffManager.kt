@@ -21,9 +21,10 @@ class DiffManager(
 	initialConfig: Config,
 	private val rawNormalizer: RawNormalizer,
 	coroutineDispatcher: CoroutineDispatcher,
+	mainScope: CoroutineScope,
 	private val debugLog: DebugLog
 ) {
-	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher)
+	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher, mainScope)
 	private val stateListeners = ArrayList<(State) -> Unit>()
 	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
 

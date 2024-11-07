@@ -100,7 +100,7 @@ class MainStartup {
 					val frame = MainFrame(environment)
 					frame.show()
 
-					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, frame.dialogDisplayer).invoke()
+					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.mainScope, frame.dialogDisplayer).invoke()
 					Pair(frame, true)
 				}
 

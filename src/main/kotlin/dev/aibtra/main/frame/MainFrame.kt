@@ -49,10 +49,11 @@ class MainFrame(private val environment: Environment) {
 		dialogDisplayer = create(frame)
 
 		val coroutineDispatcher = environment.coroutineDispatcher
+		val mainScope = environment.mainScope
 		diffManager = DiffManager(
 			environment.configurationProvider.get(DiffManager.Config), {
 				TextNormalizer(environment.configurationProvider.get(Schemes).current().textNormalizerConfig).normalize(it)
-			}, coroutineDispatcher, environment.debugLog
+			}, coroutineDispatcher, mainScope, environment.debugLog
 		)
 
 		rawTextArea = RawTextArea({ text -> diffManager.updateRawText(text, initial = true) }, environment)
@@ -86,7 +87,7 @@ class MainFrame(private val environment: Environment) {
 			refTextArea.scrollTo(ref)
 		}
 
-		requestManager = RequestManager(diffManager, coroutineDispatcher, dialogDisplayer)
+		requestManager = RequestManager(diffManager, coroutineDispatcher, mainScope, dialogDisplayer)
 		requestManager.addProgressListener { inProgress ->
 			if (inProgress) {
 				frame.rootPane.glassPane.isVisible = true

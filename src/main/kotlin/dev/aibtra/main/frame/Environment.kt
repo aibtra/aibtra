@@ -8,6 +8,7 @@ import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.DebugLog
 import dev.aibtra.gui.HotkeyListener
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
 interface Environment {
@@ -20,6 +21,7 @@ interface Environment {
 	val buildInfo: BuildInfo
 	val timer: Timer
 	val coroutineDispatcher: CoroutineDispatcher
+	val mainScope: CoroutineScope
 	val systemTrayEnabled: Boolean
 	val hotkeyListener: HotkeyListener
 	val debugLog: DebugLog
