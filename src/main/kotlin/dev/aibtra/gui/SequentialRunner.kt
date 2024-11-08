@@ -13,12 +13,12 @@ typealias Update = suspend () -> Unit
 typealias Callback = (Update) -> Unit
 typealias Run = suspend (Callback, CoroutineScope) -> Unit
 
-class SequentialRunner(private val mainScope: CoroutineScope, private val mainDispatcher: CoroutineDispatcher, private val threadDispatcher: CoroutineDispatcher, private val exceptionHandle: (Throwable) -> Unit) {
+class SequentialRunner(private val mainScope: CoroutineScope, private val mainDispatcher: CoroutineDispatcher, private val threadDispatcher: CoroutineDispatcher, private val exceptionHandler: (Throwable) -> Unit) {
 	private val threadScope = CoroutineScope(EmptyCoroutineContext)
 	private var currentJob: Job? = null
 
 	fun schedule(run: Run, cancelCurrent: Boolean) {
-		launchSafe(mainScope, mainDispatcher, exceptionHandle) {
+		launchSafe(mainScope, mainDispatcher, exceptionHandler) {
 			currentJob?.let {
 				if (it.isCompleted || cancelCurrent) {
 					it.cancel()
@@ -29,9 +29,9 @@ class SequentialRunner(private val mainScope: CoroutineScope, private val mainDi
 			}
 
 			val job = AtomicReference<Job>()
-			job.set(launchSafe(threadScope, threadDispatcher, exceptionHandle) {
+			job.set(launchSafe(threadScope, threadDispatcher, exceptionHandler) {
 				run({ update: Update ->
-					launchSafe(mainScope, mainDispatcher, exceptionHandle) {
+					launchSafe(mainScope, mainDispatcher, exceptionHandler) {
 						if (job.get() == currentJob) {
 							update()
 						}
