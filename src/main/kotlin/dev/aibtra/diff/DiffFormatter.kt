@@ -7,7 +7,7 @@ package dev.aibtra.diff
 class DiffFormatter(private val mode: Mode) {
 	fun format(diff: Diff): Pair<String, List<DiffChar>> {
 		val raw = diff.raw
-		val rawTo = diff.rawTo
+		val rawTo = diff.raw.length
 		val ref = diff.ref
 		val blocks = diff.blocks
 		if (ref.isEmpty() && blocks.isEmpty()) {
@@ -69,9 +69,18 @@ class DiffFormatter(private val mode: Mode) {
 			refFrom = block.refTo
 		}
 
-		appendEqualBlock(raw, rawFrom, rawTo, ref, refFrom, ref.length, formatted, chars)
+		if (diff.refFinished) {
+			appendEqualBlock(raw, rawFrom, raw.length, ref, refFrom, ref.length, formatted, chars)
+			rawFrom = raw.length
+			refFrom = ref.length
+		}
 
+		val rawDiff = raw.length - rawFrom
+		val refDiff = ref.length - refFrom
 		if (mode == Mode.KEEP_RAW_FOR_MODIFIED) {
+			formatted.append(raw.substring(rawFrom))
+			chars.addAll(List(rawDiff) { i -> DiffChar(DiffKind.EQUAL, null, rawFrom + i, Math.min(refFrom + (i.toDouble() * refDiff / rawDiff).toInt(), ref.length - 1)) })
+
 			for (block in blocks) {
 				if (block.rawFrom == block.rawTo) {
 					if (block.rawFrom > 0) {
@@ -82,18 +91,20 @@ class DiffFormatter(private val mode: Mode) {
 					}
 				}
 			}
-
-			formatted.append(raw.substring(rawTo))
-			chars.addAll(List(raw.length - rawTo) { i -> DiffChar(DiffKind.EQUAL, null, rawTo + i, ref.length - 1) })
 		}
-		else if (mode == Mode.KEEP_REF_FOR_MODIFIED) {
-			for (block in blocks) {
-				if (block.refFrom == block.refTo) {
-					if (block.refFrom > 0) {
-						chars[block.refFrom - 1] = DiffChar(DiffKind.GAP_LEFT, block, block.rawFrom, block.refFrom - 1)
-					}
-					if (block.refFrom < chars.size) {
-						chars[block.refFrom] = DiffChar(DiffKind.GAP_RIGHT, block, block.rawFrom, block.refFrom)
+		else {
+			formatted.append(ref.substring(refFrom))
+			chars.addAll(List(refDiff) { i -> DiffChar(DiffKind.EQUAL, null, Math.min(rawFrom + (i.toDouble() * rawFrom / refFrom).toInt(), raw.length - 1), refFrom + i) })
+
+			if (mode == Mode.KEEP_REF_FOR_MODIFIED) {
+				for (block in blocks) {
+					if (block.refFrom == block.refTo) {
+						if (block.refFrom > 0) {
+							chars[block.refFrom - 1] = DiffChar(DiffKind.GAP_LEFT, block, block.rawFrom, block.refFrom - 1)
+						}
+						if (block.refFrom < chars.size) {
+							chars[block.refFrom] = DiffChar(DiffKind.GAP_RIGHT, block, block.rawFrom, block.refFrom)
+						}
 					}
 				}
 			}
