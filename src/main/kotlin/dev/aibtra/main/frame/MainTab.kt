@@ -202,6 +202,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 					val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
 					if (blocks.isNotEmpty()) {
 						val popupMenu = JPopupMenu()
+						popupMenu.isFocusable = false
 						popupMenu.add(JMenuItem(applyChangeAction))
 						popupMenu.show(e.component, e.x, e.y)
 					}
