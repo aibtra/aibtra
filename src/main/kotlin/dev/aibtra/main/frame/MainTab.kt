@@ -408,7 +408,8 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		profileManager.addListener { lastName, name ->
 			val profile = profileManager.profile()
 			diffManager.setConfig(profile.diffConfig)
-			if (profileManager.profile().submitOnProfileChange && lastName != name) {
+
+			if (profileManager.profile().submitOnProfileChange && lastName != name && diffManager.state.rawText.all.isNotBlank()) {
 				submitter.run()
 			}
 		}
