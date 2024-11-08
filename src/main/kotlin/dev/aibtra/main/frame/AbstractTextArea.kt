@@ -142,6 +142,10 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		})
 	}
 
+	fun getSelectionText(): String {
+		return textArea.selectedText
+	}
+
 	fun getSelectionRange(): IntRange? {
 		val start = textArea.selectionStart
 		val end = textArea.selectionEnd.let {

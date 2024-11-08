@@ -28,7 +28,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 	protected val diffManager: DiffManager
 	protected val profileManager: ProfileManager
 	protected val requestManager: RequestManager
-	private val bottomToolBar : ToolBar
+	private val bottomToolBar: ToolBar
 	private val submitter: Submitter
 	private val mainPanel: JPanel
 
@@ -186,7 +186,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		diffManager.updateRawText(rawTextArea.getText(), rawTextArea.getSelectionRange(), profileManager.profile().diffConfig)
 	}
 
-	protected open fun normalizeText(raw: String) : String {
+	protected open fun normalizeText(raw: String): String {
 		return raw
 	}
 
@@ -198,15 +198,24 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		val control = refTextArea.getControl()
 		refTextArea.addMouseListener(object : MouseAdapter() {
 			override fun mouseReleased(e: MouseEvent) {
-				refTextArea.getSelectionRange()?.let {
-					val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
-					if (blocks.isNotEmpty()) {
-						val popupMenu = JPopupMenu()
-						popupMenu.isFocusable = false
-						popupMenu.add(JMenuItem(applyChangeAction))
-						popupMenu.show(e.component, e.x, e.y)
+					refTextArea.getSelectionRange()?.let {
+						val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
+						JPopupMenu().apply {
+							if (blocks.isNotEmpty()) {
+								add(JMenuItem(applyChangeAction))
+							}
+							if (SwingUtilities.isRightMouseButton(e)) {
+								if (componentCount > 0) {
+									add(JSeparator())
+								}
+								add(JMenuItem(CopyRefSelectionAction(refTextArea)))
+							}
+							else {
+								isFocusable = false
+							}						
+							show(e.component, e.x, e.y)
+						}
 					}
-				}
 			}
 		})
 		return control
@@ -254,11 +263,11 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 	protected open fun addFileActions(menu: JMenu) {
 	}
 
-	protected open fun addEditActions(menu: JMenu) : Boolean {
+	protected open fun addEditActions(menu: JMenu): Boolean {
 		return false
 	}
 
-	protected open fun addSchemeActions(menu: JMenu) : Boolean {
+	protected open fun addSchemeActions(menu: JMenu): Boolean {
 		return false
 	}
 
