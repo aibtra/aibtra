@@ -42,8 +42,14 @@ class SubmitAction(
 			}
 
 			diffManager.addStateListener { state, _ ->
-				action.isEnabled = state.diff.raw.isNotEmpty()
+				updateState(state)
 			}
+
+			updateState(diffManager.state)
+		}
+
+		private fun updateState(state: DiffManager.State) {
+			action.isEnabled = state.diff.raw.isNotEmpty()
 		}
 	}
 }
