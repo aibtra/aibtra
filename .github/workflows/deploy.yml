@@ -83,6 +83,7 @@ jobs:
 
     env:
       TAG: ${{ github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || github.ref == 'refs/heads/sandbox' && 'experimental' || 'fail' }}
+      RELEASE_TITLE: ${{ github.ref == 'refs/heads/main' && 'Stable release' || github.ref == 'refs/heads/develop' && 'Latest Build' || github.ref == 'refs/heads/sandbox' && 'Experimental Build' || 'fail' }}
 
     steps:
     - name: Fail if unsupported branch
@@ -105,7 +106,7 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "${{ env.tag }}"
         prerelease: ${{ github.ref != 'refs/heads/main' }}
-        title: "tag=${{ env.TAG }} release"
+        title: "${{ env.RELEASE_TITLE }}"
         files: |
           binaries/*
 
