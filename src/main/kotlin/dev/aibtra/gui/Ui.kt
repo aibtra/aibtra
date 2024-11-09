@@ -7,6 +7,7 @@ package dev.aibtra.gui
 import dev.aibtra.gui.action.DefaultAction
 import java.awt.GraphicsEnvironment
 import javax.swing.JButton
+import javax.swing.JLabel
 import javax.swing.SwingUtilities
 
 object Ui {
@@ -35,6 +36,12 @@ object Ui {
 		val button = JButton(action.title)
 		button.addActionListener(action)
 		return button
+	}
+
+	fun createInfoHtmlLabel(content: String, width: Int): JLabel {
+		val label = JLabel("<html><body style='width: $width'>$content</body></html>")
+		label.font = label.font.deriveFont(label.font.size - 1f)
+		return label
 	}
 
 	fun isDebugging(): Boolean {
