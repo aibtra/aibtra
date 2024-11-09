@@ -10,7 +10,11 @@ import dev.aibtra.gui.dialogs.*
 import dev.aibtra.openai.OpenAIConfiguration
 import dev.aibtra.openai.OpenAIService
 import dev.aibtra.text.FilteredText
+import java.awt.Desktop
+import java.awt.Insets
+import javax.swing.JEditorPane
 import javax.swing.JLabel
+import javax.swing.event.HyperlinkEvent
 
 class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {
 	init {
@@ -28,12 +32,29 @@ class Submitter(private val environment: Environment, private val requestManager
 		}
 		else {
 			OkCancelDialog("API Token") {
-				val panel = Panel(5, 3)
+				val panel = Panel(3, 3)
 				val width = if (GuiConfiguration.Fonts.DEFAULT_FONT_SIZE < 16) 400 else 800
-				panel.add(JLabel("<html><body style='width: $width'>Please provide an API token to access the OpenAI API.<br><br>It's recommended to create a dedicated token for this purpose to track usage. The token will be <b>stored in plaintext</b> in a configuration file on your local disk!</body></html>"), 0, 0, span = 3)
+
+				val editorPane = JEditorPane("text/html", "<html><body style='width: $width'><b>Please provide an API token to access the OpenAI API.</b><br><br>It's recommended to create a dedicated token for this purpose to track usage. The token will be <b>stored in plaintext</b> in a configuration file on your local disk!<br><br>To create a token, follow <a href=\"https://platform.openai.com/settings/organization/api-keys\">this link</a>.</body></html>.")
+				editorPane.isEditable = false
+				editorPane.margin = null
+				editorPane.border = null
+				editorPane.isFocusable = false
+				editorPane.addHyperlinkListener { e ->
+					if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
+						if (Desktop.isDesktopSupported()) {
+							Desktop.getDesktop().browse(e.url.toURI())
+						}
+					}
+				}
+
+				var row = 0
+				panel.add(editorPane, row++, 0, span = 3)
+				panel.addSeparatorRow(row++)
 
 				val editor = Editor.password("Token")
-				panel.add(editor, 2, 0)
+				panel.add(editor, row, 0)
+
 				OkCancelDialog.Content(panel) {
 					val token: String = editor.text
 					configurationProvider.change(OpenAIConfiguration) {
