@@ -8,7 +8,9 @@ package dev.aibtra.main.frame
 
 import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationFactory
+import dev.aibtra.gui.Ui
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -18,18 +20,25 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.awt.Font
 import java.awt.SystemTray
-import javax.swing.JLabel
+import javax.swing.JTextArea
 
 @Serializable
 data class GuiConfiguration(
-	val fonts: Fonts = Fonts(),
+	@SerialName("fonts.2") val fonts: Fonts = Fonts(),
 	val darkTheme: Boolean = true, // Dark mode is in general preferred by programmers: https://css-tricks.com/poll-results-light-on-dark-is-preferred/
 	val systemTray: Boolean = true
 ) {
 	@Serializable
 	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
 		companion object {
-			val DEFAULT_FONT_SIZE = JLabel().font.size
+			private val textAreaFontSize = JTextArea().font.size
+
+			val DEFAULT_FONT_SIZE = if (Ui.isHiDPI()) {
+				textAreaFontSize
+			}
+			else {
+				Math.max(textAreaFontSize, 13)
+			}
 		}
 	}
 
