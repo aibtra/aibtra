@@ -42,7 +42,7 @@ class Panel(
 	fun addSeparatorRow(row: Int) {
 		require(row in 0 until rows)
 
-		val constraints = "cell 0 $row, span $cols, gapy 10"
+		val constraints = "cell 0 $row, span $cols, gapy 0"
 		panel.add(JPanel(), constraints)
 	}
 

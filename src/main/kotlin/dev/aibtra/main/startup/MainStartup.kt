@@ -115,7 +115,9 @@ class MainStartup {
 					frame.show()
 
 					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.mainScope, environment.paths, frame.dialogDisplayer).invoke()
-					setMainFrameContent(workingMode, options, fileToOpen, frame, environment)
+					Setup.show(environment.configurationProvider, frame, environment) {
+						setMainFrameContent(workingMode, options, fileToOpen, frame, environment)
+					}
 				}
 			}
 		}

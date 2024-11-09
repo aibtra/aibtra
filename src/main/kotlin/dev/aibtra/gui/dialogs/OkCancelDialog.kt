@@ -13,7 +13,7 @@ class OkCancelDialog(
 	private val title: String,
 	val content: () -> Content
 ) {
-	fun show(dialogDisplayer: DialogDisplayer) {
+	fun show(dialogDisplayer: DialogDisplayer, cancelRunnable: Runnable? = null) {
 		Ui.assertEdt()
 
 		dialogDisplayer.show { frame ->
@@ -38,6 +38,7 @@ class OkCancelDialog(
 
 			val cancelAction = DefaultAction("Cancel") {
 				dialog.dispose()
+				cancelRunnable?.run()
 			}
 
 			val okButton = Ui.createButton(okAction)
