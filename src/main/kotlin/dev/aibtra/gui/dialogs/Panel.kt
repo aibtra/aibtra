@@ -39,5 +39,12 @@ class Panel(
 		add(editor.getInput(), row, col + 2, grow = true)
 	}
 
+	fun addSeparatorRow(row: Int) {
+		require(row in 0 until rows)
+
+		val constraints = "cell 0 $row, span $cols, gapy 10"
+		panel.add(JPanel(), constraints)
+	}
+
 	fun control(): Component = panel
 }
