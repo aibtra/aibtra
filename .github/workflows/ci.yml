@@ -6,11 +6,13 @@ on:
       - main
       - develop
       - next
+      - feature/**
   pull_request:
     branches:
       - main
       - develop
       - next
+      - feature/**
 
 jobs:
   test:
