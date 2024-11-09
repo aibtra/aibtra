@@ -93,3 +93,8 @@ runtime {
         skipInstaller = true
     }
 }
+
+tasks.register<Copy>("deployment") {
+}
+
+tasks["deployment"].dependsOn("jpackage")
