@@ -1,7 +1,9 @@
 package dev.aibtra.openai
 
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import java.io.IOException
 
 class OpenAIServiceTest {
 
@@ -220,6 +222,40 @@ class OpenAIServiceTest {
 			0,
 			"a\nb\nc\nfoo\nd\ne\nf"
 		)
+	}
+
+	@Test
+	fun testQuotesEscaped() {
+		assert(
+			"x",
+			"""
+				{
+				  "old": "print(\"\") ",
+				  "oldLineStart": 29,
+				  "new": "println(\"\")"
+				}
+			""".trimIndent(),
+			0,
+			"println(\"\")"
+		)
+	}
+
+	@Test
+	fun testQuotesNotEscaped() {
+		assertThrows(IOException::class.java) {
+			assert(
+				"x",
+				"""
+				{
+				  "old": "print("")",
+				  "oldLineStart": 29,
+				  "new": "println("")"
+				}
+			""".trimIndent(),
+				0,
+				""
+			)
+		}
 	}
 
 	private fun assert(content: String, json: String, focusStart: Int, expected: String) {
