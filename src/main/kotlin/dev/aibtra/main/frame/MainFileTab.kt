@@ -60,6 +60,14 @@ internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: 
 		addAction(menu, SaveAction(workFile, environment))
 	}
 
+	override fun focusGained() {
+		workFile.checkModifiedExternally()
+	}
+
+	override fun dispose() {
+		workFile.dispose()
+	}
+
 	fun getFile(): Path? {
 		return workFile.state?.path
 	}

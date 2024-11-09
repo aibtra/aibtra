@@ -107,4 +107,10 @@ internal class MainTabbedPane(private val centerPane: Container, private val fra
 
 		return null
 	}
+
+	fun focusGained() {
+		for (tab in tabs) {
+			tab.focusGained()
+		}
+	}
 }
