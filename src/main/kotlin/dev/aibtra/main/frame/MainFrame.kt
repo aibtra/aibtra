@@ -10,6 +10,7 @@ import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import java.awt.*
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 import java.nio.file.Path
 import javax.swing.*
 
@@ -68,6 +69,15 @@ class MainFrame(private val environment: Environment) {
 
 			override fun windowClosed(e: WindowEvent?) {
 				tabbedPane.dispose()
+			}
+		})
+
+		frame.addWindowFocusListener(object : WindowFocusListener {
+			override fun windowGainedFocus(e: WindowEvent?) {
+				tabbedPane.focusGained()
+			}
+
+			override fun windowLostFocus(e: WindowEvent?) {
 			}
 		})
 	}

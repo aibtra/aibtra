@@ -177,7 +177,10 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		tabbedPane.updateTitle(this)
 	}
 
-	internal fun dispose() {
+	internal open fun focusGained() {
+	}
+
+	internal open fun dispose() {
 		toolBar.dispose()
 		bottomToolBar.dispose()
 	}
