@@ -5,13 +5,13 @@ on:
     branches:
       - main
       - develop
-      - next
+      - sandbox
       - feature/**
   pull_request:
     branches:
       - main
       - develop
-      - next
+      - sandbox
       - feature/**
 
 jobs:
