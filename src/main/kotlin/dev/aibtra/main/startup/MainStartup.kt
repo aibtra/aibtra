@@ -19,6 +19,7 @@ import dev.aibtra.gui.action.DefaultAction
 import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.dialogs.Dialogs
 import dev.aibtra.main.frame.*
+import dev.aibtra.main.frame.MainFrame.Companion.frameTitle
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -70,7 +71,7 @@ class MainStartup {
 					if (arguments.options.backgroundMode) {
 						createLogger().info("Starting in background")
 						if (hotkeyConfigured) {
-							showBackgroundFrame()
+							showBackgroundFrame(paths)
 						}
 					}
 					else {
@@ -134,9 +135,9 @@ class MainStartup {
 			}
 		}
 
-		private fun showBackgroundFrame() {
+		private fun showBackgroundFrame(paths: ApplicationPaths) {
 			Ui.runInEdt {
-				val frame = JFrame(MainFrame.FRAME_TITLE)
+				val frame = JFrame(frameTitle(paths))
 				frame.iconImage = Icons.LOGO.getImageIcon(true).image
 				frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
 
