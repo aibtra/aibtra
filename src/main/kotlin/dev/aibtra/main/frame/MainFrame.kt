@@ -22,7 +22,7 @@ class MainFrame(private val environment: Environment) {
 	private val tabbedPane: MainTabbedPane
 
 	init {
-		frame = JFrame(FRAME_TITLE)
+		frame = JFrame(frameTitle(environment.paths))
 		frame.iconImage = Icons.LOGO.getImageIcon(true).image
 
 		centerPane = Container()
@@ -128,6 +128,10 @@ class MainFrame(private val environment: Environment) {
 	}
 
 	companion object {
-		const val FRAME_TITLE = "Aibtra 1.0 alpha"
+		private const val VERSION = "1.0 Alpha"
+
+		fun frameTitle(paths: ApplicationPaths) : String {
+			return paths.appName + " " + (paths.getProperty("debug.displayVersion") ?: VERSION)
+		}
 	}
 }
