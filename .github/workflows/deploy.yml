@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macOS-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest, macos-13]
 
     env:
       TAG: ${{ github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || github.ref == 'refs/heads/sandbox' && 'experimental' || 'fail' }}
@@ -62,13 +62,21 @@ jobs:
         echo "${{ env.TAG }}" > aibtra/lib/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-linux.tar.gz aibtra/*
 
-    - name: Bundle (macOS)
-      if: matrix.os == 'macOS-latest'
+    - name: Bundle (macOS ARM)
+      if: matrix.os == 'macos-latest'
       run: |
         cd build/jpackage
         ls -al
         echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
         tar -czf aibtra-${{ env.TAG }}-macos.tar.gz aibtra.app
+
+    - name: Bundle (macOS Intel)
+      if: matrix.os == 'macos-13'
+      run: |
+        cd build/jpackage
+        ls -al
+        echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
+        tar -czf aibtra-${{ env.TAG }}-macos-intel.tar.gz aibtra.app
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
