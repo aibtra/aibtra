@@ -6,6 +6,9 @@ package dev.aibtra.main.frame
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.*
+import kotlin.io.path.exists
+import kotlin.io.path.inputStream
 
 class ApplicationPaths(
 	val settingsPath: Path,
@@ -31,6 +34,7 @@ class ApplicationPaths(
 				Files.createDirectories(settingsPath)
 			}
 
+			loadSystemProperties(settingsPath.resolve("system.properties"))
 			return ApplicationPaths(settingsPath, appName, propertyPrefix)
 		}
 
@@ -58,6 +62,18 @@ class ApplicationPaths(
 			}
 
 			return Path.of(settingsPath)
+		}
+
+		private fun loadSystemProperties(path: Path) {
+			if (path.exists()) {
+				val properties = Properties().apply {
+					path.inputStream().use { load(it) }
+				}
+
+				properties.forEach { (key, value) ->
+					System.setProperty(key as String, value as String)
+				}
+			}
 		}
 	}
 }
