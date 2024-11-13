@@ -49,6 +49,7 @@ jobs:
     - name: Bundle (Windows)
       if: matrix.os == 'windows-latest'
       run: |
+        cp resources/windows/README* build/jpackage/
         cd build/jpackage
         dir
         echo "${{ env.TAG }}" > aibtra/app/aibtra.bundletype
@@ -65,6 +66,7 @@ jobs:
     - name: Bundle (macOS ARM)
       if: matrix.os == 'macos-latest'
       run: |
+        cp -R resources/macos/README* build/jpackage/
         cd build/jpackage
         ls -al
         echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
@@ -73,6 +75,7 @@ jobs:
     - name: Bundle (macOS Intel)
       if: matrix.os == 'macos-13'
       run: |
+        cp -R resources/macos/README* build/jpackage/
         cd build/jpackage
         ls -al
         echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
