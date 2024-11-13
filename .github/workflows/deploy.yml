@@ -53,7 +53,7 @@ jobs:
         cd build/jpackage
         dir
         echo "${{ env.TAG }}" > aibtra/app/aibtra.bundletype
-        7z a -tzip aibtra-${{ env.TAG }}-windows.zip aibtra\*
+        7z a -tzip aibtra-${{ env.TAG }}-windows.zip *
 
     - name: Bundle (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -70,7 +70,7 @@ jobs:
         cd build/jpackage
         ls -al
         echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
-        tar -czf aibtra-${{ env.TAG }}-macos.tar.gz aibtra.app
+        tar -czf aibtra-${{ env.TAG }}-macos-arm.tar.gz *
 
     - name: Bundle (macOS Intel)
       if: matrix.os == 'macos-13'
@@ -79,7 +79,7 @@ jobs:
         cd build/jpackage
         ls -al
         echo "${{ env.TAG }}" > aibtra.app/Contents/app/aibtra.bundletype
-        tar -czf aibtra-${{ env.TAG }}-macos-intel.tar.gz aibtra.app
+        tar -czf aibtra-${{ env.TAG }}-macos-intel.tar.gz *
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
