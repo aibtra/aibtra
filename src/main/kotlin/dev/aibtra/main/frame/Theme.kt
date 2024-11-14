@@ -7,12 +7,11 @@ package dev.aibtra.main.frame
 import com.formdev.flatlaf.FlatDarkLaf
 import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.FlatLightLaf
-import com.formdev.flatlaf.FlatLightLaf.setup
 import dev.aibtra.configuration.ConfigurationProvider
+import java.awt.Color
 import java.awt.Frame
+import java.util.*
 import javax.swing.SwingUtilities
-import javax.swing.UIDefaults
-import javax.swing.plaf.ColorUIResource
 
 
 class Theme(val configurationProvider: ConfigurationProvider) {
@@ -41,25 +40,7 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 		}
 
 		val guiColors = configurationProvider.get(GuiColors)
-		if (dark) {
-			FlatLaf.setup(object : FlatDarkLaf() {
-				override fun getDefaults(): UIDefaults {
-					val defaults = super.getDefaults()
-					defaults["TextArea.background"] = defaults["Panel.background"]
-					defaults["TextArea.foreground"] = ColorUIResource(guiColors.dark.textColor)
-					return defaults
-				}
-			})
-		}
-		else {
-			setup(object : FlatLightLaf() {
-				override fun getDefaults(): UIDefaults {
-					val defaults = super.getDefaults()
-					defaults["TextArea.foreground"] = ColorUIResource(guiColors.light.textColor)
-					return defaults
-				}
-			})
-		}
+		FlatLaf.setup(if (dark) DarkLaf(guiColors) else LightLaf(guiColors))
 
 		for (frame in Frame.getFrames()) {
 			SwingUtilities.updateComponentTreeUI(frame)
@@ -67,6 +48,30 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 
 		for (listener in listeners) {
 			listener(this)
+		}
+	}
+
+	companion object {
+		private fun toHex(color: Color): String {
+			return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+		}
+	}
+
+	private class DarkLaf(val colors: GuiColors) : FlatDarkLaf() {
+		override fun getAdditionalDefaults(): Properties {
+			val properties = super.getAdditionalDefaults() ?: Properties()
+			properties["@background"] = toHex(colors.dark.backgroundColor)
+			properties["@foreground"] = toHex(colors.dark.foregroundColor)
+			return properties
+		}
+	}
+
+	private class LightLaf(val colors: GuiColors) : FlatLightLaf() {
+		override fun getAdditionalDefaults(): Properties {
+			val properties = super.getAdditionalDefaults() ?: Properties()
+			properties["@background"] = toHex(colors.light.backgroundColor)
+			properties["@foreground"] = toHex(colors.light.foregroundColor)
+			return properties
 		}
 	}
 }
