@@ -51,7 +51,7 @@ data class GuiColors(
 	}
 
 	companion object : ConfigurationFactory<GuiColors> {
-		private val SHADOW_ALPHA = 0x5F
+		private const val SHADOW_ALPHA = 0x5F
 
 		override fun name(): String {
 			return "colors"
