@@ -13,7 +13,7 @@ import java.awt.*
 import javax.swing.*
 import javax.swing.event.*
 
-class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIProfiles.Profile) {
+class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIRefinementConfiguration.Profile) {
 	init {
 		commandControl.registerEnterListener { ev ->
 			run()
@@ -69,7 +69,7 @@ class Submitter(private val environment: Environment, private val requestManager
 		require(apiToken != null) { "API token must not be null" }
 
 		val profile = profile()
-		val service = OpenAIService(apiToken, environment.debugLog)
+		val service = OpenAIRefinementService(apiToken, environment.debugLog)
 		val request = OpenAIRequest(profile, service, { commandControl.retrieveCommand() }) { failure, mightBeAuthentication ->
 			Ui.runInEdt {
 				if (mightBeAuthentication) {

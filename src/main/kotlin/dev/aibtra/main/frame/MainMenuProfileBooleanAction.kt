@@ -15,9 +15,9 @@ open class MainMenuProfileBooleanAction(
 	keyStrokeDefault: String? = null,
 	accelerators: Accelerators?,
 	private val profileManager: ProfileManager,
-	val get: (OpenAIProfiles.Profile) -> Boolean,
-	set: (OpenAIProfiles.Profile, Boolean) -> OpenAIProfiles.Profile,
-	invoke: (OpenAIProfiles.Profile) -> Unit
+	val get: (OpenAIRefinementConfiguration.Profile) -> Boolean,
+	set: (OpenAIRefinementConfiguration.Profile, Boolean) -> OpenAIRefinementConfiguration.Profile,
+	invoke: (OpenAIRefinementConfiguration.Profile) -> Unit
 ) :
 	MainMenuAction(
 		id, title, toolBarIcon, toolBarText, keyStrokeDefault, accelerators,

@@ -3,7 +3,6 @@ package dev.aibtra.main.frame
 import dev.aibtra.configuration.*
 import dev.aibtra.gui.*
 import dev.aibtra.openai.*
-import dev.aibtra.openai.OpenAIProfiles.*
 import java.awt.*
 import java.awt.event.*
 import java.util.function.*
@@ -17,7 +16,7 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 	private val panel = JPanel()
 	private val enterListeners = ArrayList<(ev: KeyEvent) -> Unit>()
 
-	private var profile : Profile? = null
+	private var profile : OpenAIRefinementConfiguration.Profile? = null
 
 	init {
 		panel.layout = BorderLayout()
@@ -32,7 +31,7 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 		setConstantText("", afterArea)
 		panel.isVisible = false
 
-		configurationProvider.get(OpenAIProfiles).lastCommands.firstOrNull()?.let {
+		configurationProvider.get(OpenAIRefinementConfiguration).lastCommands.firstOrNull()?.let {
 			commandArea.text = it
 		}
 
@@ -51,10 +50,10 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 		})
 	}
 
-	fun setProfile(profile: Profile?) {
+	fun setProfile(profile: OpenAIRefinementConfiguration.Profile?) {
 		this.profile = profile
 
-		val split: List<String>? = profile?.let { OpenAIProfiles.getCommandInstructions(it) }
+		val split: List<String>? = profile?.let { OpenAIRefinementConfiguration.getCommandInstructions(it) }
 		if (split == null || split.size != 2) {
 			panel.isVisible = false
 			return
@@ -79,7 +78,7 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 			return ""
 		}
 
-		configurationProvider.change(OpenAIProfiles) {
+		configurationProvider.change(OpenAIRefinementConfiguration) {
 			val newCommands = it.lastCommands.stream().filter { it != command && it.isNotBlank() }.collect(Collectors.toList())
 			newCommands.addFirst(command)
 
