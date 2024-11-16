@@ -66,13 +66,7 @@ data class OpenAIProfiles(
 	}
 
 	@Serializable
-	data class Instruction(val role: Role, val text: String, val mode: InstructionMode = InstructionMode.ANY)
-
-	@Suppress("unused")
-	@Serializable
-	enum class Role(val id: String) {
-		USER("user"), SYSTEM("system"), ASSISTANT("assistant")
-	}
+	data class Instruction(val role: OpenAIRole, val text: String, val mode: InstructionMode = InstructionMode.ANY)
 
 	@Serializable
 	enum class ResponseType {
@@ -116,13 +110,13 @@ data class OpenAIProfiles(
 			true,
 			listOf(
 				Instruction(
-					Role.USER, "Correct typos and grammar in the markdown following " +
+					OpenAIRole.USER, "Correct typos and grammar in the markdown following " +
 									"AND stay as close as possible to the original " +
 									"AND do not change the markdown structure " +
 									"AND preserve the detected language " +
 									"AND do not include additional comments in the response, but purely the correction:"
 				),
-				Instruction(Role.USER, SELECTION_MACRO)
+				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
 			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
@@ -137,13 +131,13 @@ data class OpenAIProfiles(
 			true,
 			listOf(
 				Instruction(
-					Role.USER, "Proofread " +
+					OpenAIRole.USER, "Proofread " +
 									"AND improve wording, but stay close to the original, only apply changes to quite uncommon wording " +
 									"AND do not change the markdown structure or indentation or other special symbols " +
 									"AND preserve the detected language " +
 									"AND do not include additional comments in the response, but purely the correction:"
 				),
-				Instruction(Role.USER, SELECTION_MACRO)
+				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
 			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
@@ -158,10 +152,10 @@ data class OpenAIProfiles(
 			true,
 			listOf(
 				Instruction(
-					Role.USER, "Rewrite to Standard English " +
+					OpenAIRole.USER, "Rewrite to Standard English " +
 									"BUT stay as close as possible to the original:"
 				),
-				Instruction(Role.USER, SELECTION_MACRO)
+				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
 			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
@@ -174,8 +168,8 @@ data class OpenAIProfiles(
 			true,
 			false,
 			listOf(
-				Instruction(Role.USER, COMMAND_MACRO),
-				Instruction(Role.USER, SELECTION_MACRO)
+				Instruction(OpenAIRole.USER, COMMAND_MACRO),
+				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
 			DiffManager.Config(false, false, DiffTokenizingMode.NONE, true)
@@ -188,34 +182,34 @@ data class OpenAIProfiles(
 			false,
 			listOf(
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"I have following file:"
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					CONTENT_MACRO
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"Focus only on this part of the file and apply changes only to this part:",
 					InstructionMode.SELECTION_ONLY
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					SELECTION_MACRO,
 					InstructionMode.SELECTION_ONLY
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"Apply these changes:\n\n$COMMAND_MACRO"
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"Send back only the entire modified file. Do not include any additional comments.",
 					InstructionMode.FULL_ONLY
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"""
 						|Send back only the changed part of the file ("new") and which exact part to replace ("old", including the line number where the old block starts). Preserve the indentation of every line exactly as is. Use following JSON format for your result:
 						|{
@@ -237,34 +231,34 @@ data class OpenAIProfiles(
 			false,
 			listOf(
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"I have following file:"
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					CONTENT_MACRO
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"Focus only on this part of the file and apply changes only to this part:",
 					InstructionMode.SELECTION_ONLY
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					SELECTION_MACRO,
 					InstructionMode.SELECTION_ONLY
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"Apply these changes:\n\n$COMMAND_MACRO"
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"Send back only the entire modified file. Do not include any additional comments.",
 					InstructionMode.FULL_ONLY
 				),
 				Instruction(
-					Role.USER,
+					OpenAIRole.USER,
 					"""
 						|Send back only the changed part of the file ("new") and which exact part to replace ("old", including the line number where the old block starts). Preserve the indentation of every line exactly as is. Use following JSON format for your result:
 						|{
@@ -286,8 +280,8 @@ data class OpenAIProfiles(
 			false,
 			false,
 			listOf(
-				Instruction(Role.USER, COMMAND_MACRO),
-				Instruction(Role.USER, CONTENT_MACRO)
+				Instruction(OpenAIRole.USER, COMMAND_MACRO),
+				Instruction(OpenAIRole.USER, CONTENT_MACRO)
 			),
 			ResponseType.CONTENT,
 			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, false)
