@@ -8,7 +8,7 @@ import dev.aibtra.core.WorkingMode
 import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.dialogs.Dialogs
 import dev.aibtra.gui.toolbar.ToolBar
-import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.openai.OpenAIProfiles
 import dev.aibtra.text.Schemes
 import dev.aibtra.text.TextNormalizer
 import java.awt.Component
@@ -147,7 +147,7 @@ internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: Mai
 		}
 
 		fun updateEnabledState() {
-			(profileComboBox.selectedItem as? OpenAIConfiguration.Profile.Name)?.let { name ->
+			(profileComboBox.selectedItem as? OpenAIProfiles.Profile.Name)?.let { name ->
 				profileManager.getProfile(name)?.let { profile ->
 					comboBox.isEnabled = profile.supportsSchemes
 				}

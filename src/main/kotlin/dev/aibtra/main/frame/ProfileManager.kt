@@ -2,29 +2,29 @@ package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.WorkingMode
-import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.openai.OpenAIProfiles
 
 class ProfileManager(private val workingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
 
-	private val listeners = ArrayList<(OpenAIConfiguration.Profile.Name, OpenAIConfiguration.Profile.Name) -> Unit>()
-	private var name: OpenAIConfiguration.Profile.Name = configurationProvider.get(OpenAIConfiguration).currentProfile(workingMode).name
+	private val listeners = ArrayList<(OpenAIProfiles.Profile.Name, OpenAIProfiles.Profile.Name) -> Unit>()
+	private var name: OpenAIProfiles.Profile.Name = configurationProvider.get(OpenAIProfiles).currentProfile(workingMode).name
 
-	fun profile(): OpenAIConfiguration.Profile {
-		val configuration = configurationProvider.get(OpenAIConfiguration)
+	fun profile(): OpenAIProfiles.Profile {
+		val configuration = configurationProvider.get(OpenAIProfiles)
 		return configuration.profile(name.id) ?: configuration.currentProfile(workingMode)
 	}
 
-	fun profiles(): List<OpenAIConfiguration.Profile?> {
-		val configuration = configurationProvider.get(OpenAIConfiguration)
+	fun profiles(): List<OpenAIProfiles.Profile?> {
+		val configuration = configurationProvider.get(OpenAIProfiles)
 		return configuration.profiles
 	}
 
-	fun getProfile(name: OpenAIConfiguration.Profile.Name): OpenAIConfiguration.Profile? {
-		val configuration = configurationProvider.get(OpenAIConfiguration)
+	fun getProfile(name: OpenAIProfiles.Profile.Name): OpenAIProfiles.Profile? {
+		val configuration = configurationProvider.get(OpenAIProfiles)
 		return configuration.profile(name.id)
 	}
 
-	fun setProfile(name: OpenAIConfiguration.Profile.Name) {
+	fun setProfile(name: OpenAIProfiles.Profile.Name) {
 		if (name.id == this.name.id) {
 			return
 		}
@@ -32,7 +32,7 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 		val lastName = this.name
 		this.name = name
 
-		configurationProvider.change(OpenAIConfiguration) {
+		configurationProvider.change(OpenAIProfiles) {
 			it.copy(workingModeToDefaultProfileId = it.workingModeToDefaultProfileId.plus(workingMode to name.id))
 		}
 
@@ -40,7 +40,7 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 	}
 
 	fun overrideProfile(id: String) {
-		val name = configurationProvider.get(OpenAIConfiguration).profile(id)?.name
+		val name = configurationProvider.get(OpenAIProfiles).profile(id)?.name
 		if (name == null || name.id == this.name.id) {
 			return
 		}
@@ -50,15 +50,15 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 		fireChanged(name, name)
 	}
 
-	fun updateCurrentProfile(update: (OpenAIConfiguration.Profile) -> OpenAIConfiguration.Profile): OpenAIConfiguration.Profile {
-		configurationProvider.change(OpenAIConfiguration) {
-			OpenAIConfiguration.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
+	fun updateCurrentProfile(update: (OpenAIProfiles.Profile) -> OpenAIProfiles.Profile): OpenAIProfiles.Profile {
+		configurationProvider.change(OpenAIProfiles) {
+			OpenAIProfiles.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
 		}
 		fireChanged(name, name)
-		return configurationProvider.get(OpenAIConfiguration).currentProfile(workingMode)
+		return configurationProvider.get(OpenAIProfiles).currentProfile(workingMode)
 	}
 
-	fun addListener(listener: (OpenAIConfiguration.Profile.Name, OpenAIConfiguration.Profile.Name) -> Unit) {
+	fun addListener(listener: (OpenAIProfiles.Profile.Name, OpenAIProfiles.Profile.Name) -> Unit) {
 		listeners.add(listener)
 	}
 
@@ -66,7 +66,7 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 		fireChanged(name, name)
 	}
 
-	private fun fireChanged(lastName: OpenAIConfiguration.Profile.Name, name: OpenAIConfiguration.Profile.Name) {
+	private fun fireChanged(lastName: OpenAIProfiles.Profile.Name, name: OpenAIProfiles.Profile.Name) {
 		listeners.forEach { it(lastName, name) }
 	}
 }

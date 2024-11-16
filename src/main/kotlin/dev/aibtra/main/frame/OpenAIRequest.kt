@@ -1,24 +1,24 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.openai.OpenAIProfiles
 import dev.aibtra.openai.OpenAIService
 import dev.aibtra.text.FilteredText
 import java.io.IOException
 
-class OpenAIRequest(val profile: OpenAIConfiguration.Profile, private val service: OpenAIService, val retrieveCommand : () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
+class OpenAIRequest(val profile: OpenAIProfiles.Profile, private val service: OpenAIService, val retrieveCommand : () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
 	override fun run(filtered: FilteredText, callback: RequestManager.RequestCallback) {
 		val part = filtered.clean
 		val keywordResolver: (key: String) -> String? = { key ->
 			when (key) {
-				OpenAIConfiguration.CONTENT_KEYWORD -> {
+				OpenAIProfiles.CONTENT_KEYWORD -> {
 					part.all
 				}
 
-				OpenAIConfiguration.SELECTION_KEYWORD -> {
+				OpenAIProfiles.SELECTION_KEYWORD -> {
 					part.extract
 				}
 
-				OpenAIConfiguration.COMMAND_KEYWORD -> {
+				OpenAIProfiles.COMMAND_KEYWORD -> {
 					retrieveCommand()
 				}
 
@@ -34,7 +34,7 @@ class OpenAIRequest(val profile: OpenAIConfiguration.Profile, private val servic
 		val selection = if (part.isPart()) OpenAIService.Selection(part.from) else null
 		service.request(profile, selection, keywordResolver) { result ->
 			result.content?.let { builder ->
-				val recreateMode = if (responseType == OpenAIConfiguration.ResponseType.SELECTION) {
+				val recreateMode = if (responseType == OpenAIProfiles.ResponseType.SELECTION) {
 					// If the user chooses to process the entire file, we will have passed the complete file to the model.
 					// Therefore, our selection encompasses the whole file, making RecreateMode.PART identical to FULL.
 					if (result.finished) {

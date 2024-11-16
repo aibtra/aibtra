@@ -11,9 +11,7 @@ import dev.aibtra.gui.DelayedUiRefresher
 import dev.aibtra.gui.Ui
 import dev.aibtra.gui.dialogs.DialogDisplayer
 import dev.aibtra.gui.toolbar.ToolBar
-import dev.aibtra.openai.OpenAIConfiguration
-import dev.aibtra.text.Schemes
-import dev.aibtra.text.TextNormalizer
+import dev.aibtra.openai.OpenAIProfiles
 import java.awt.*
 import java.awt.event.*
 import java.nio.file.Files
@@ -337,7 +335,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 				}
 
 				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
-				if (value is OpenAIConfiguration.Profile.Name) {
+				if (value is OpenAIProfiles.Profile.Name) {
 					label.text = value.title
 				}
 				else {
@@ -351,7 +349,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 		comboBox.adjustWidth()
 
 		comboBox.addItemListener(object : ItemListener {
-			private var lastSelected: OpenAIConfiguration.Profile.Name
+			private var lastSelected: OpenAIProfiles.Profile.Name
 
 			init {
 				lastSelected = initialProfile.name
@@ -362,13 +360,13 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 				if (item is ProfileSeparator) {
 					Ui.runInEdt {
 						for (index in comboBox.selectedIndex - 1 downTo 0) {
-							(comboBox.getItemAt(index) as? OpenAIConfiguration.Profile.Name)?.let {
+							(comboBox.getItemAt(index) as? OpenAIProfiles.Profile.Name)?.let {
 								profileManager.setProfile(it)
 								return@runInEdt
 							}
 						}
 						for (index in comboBox.selectedIndex + 1 until comboBox.itemCount) {
-							(comboBox.getItemAt(index) as? OpenAIConfiguration.Profile.Name)?.let {
+							(comboBox.getItemAt(index) as? OpenAIProfiles.Profile.Name)?.let {
 								profileManager.setProfile(it)
 								return@runInEdt
 							}
@@ -377,7 +375,7 @@ internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tab
 					return
 				}
 
-				(item as? OpenAIConfiguration.Profile.Name)?.let {
+				(item as? OpenAIProfiles.Profile.Name)?.let {
 					profileManager.setProfile(it)
 				}
 			}
