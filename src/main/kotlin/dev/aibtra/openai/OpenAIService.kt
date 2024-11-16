@@ -26,7 +26,7 @@ import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
-	fun request(profile: OpenAIConfiguration.Profile, selection: Selection?, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
+	fun request(profile: OpenAIProfiles.Profile, selection: Selection?, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = profile.model
 		input["n"] = 1
@@ -37,9 +37,9 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 
 		val contentKeyword = when {
-			profile.responseType == OpenAIConfiguration.ResponseType.SELECTION -> OpenAIConfiguration.SELECTION_KEYWORD
-			profile.responseType == OpenAIConfiguration.ResponseType.CONTENT -> OpenAIConfiguration.CONTENT_KEYWORD
-			isPatchResponseType(profile.responseType) -> OpenAIConfiguration.CONTENT_KEYWORD
+			profile.responseType == OpenAIProfiles.ResponseType.SELECTION -> OpenAIProfiles.SELECTION_KEYWORD
+			profile.responseType == OpenAIProfiles.ResponseType.CONTENT -> OpenAIProfiles.CONTENT_KEYWORD
+			isPatchResponseType(profile.responseType) -> OpenAIProfiles.CONTENT_KEYWORD
 			else -> throw NoWhenBranchMatchedException()
 		}
 
@@ -48,7 +48,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 			profile.responseType
 		}
 		else {
-			OpenAIConfiguration.ResponseType.CONTENT
+			OpenAIProfiles.ResponseType.CONTENT
 		}
 
 		if (streaming && isPatchResponseType(responseType)) {
@@ -134,7 +134,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 									val choice = requireNotNull(choices[0])
 									val messageOut = objNotNull<JSONObject>(choice, "message")
 									val message = objNotNull<String>(messageOut, "content")
-									val res = if (responseType == OpenAIConfiguration.ResponseType.SELECTION_JSON) {
+									val res = if (responseType == OpenAIProfiles.ResponseType.SELECTION_JSON) {
 										applyJson(message, content, selection?.from ?: 0)
 									}
 									else {
@@ -176,7 +176,7 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		}
 	}
 
-	private fun applyFixes(content: String, result: StringBuilder, responseType: OpenAIConfiguration.ResponseType): Boolean {
+	private fun applyFixes(content: String, result: StringBuilder, responseType: OpenAIProfiles.ResponseType): Boolean {
 		if (dropMarkdownPrefix(content, result)) {
 			return true
 		}
@@ -254,8 +254,8 @@ class OpenAIService(private val apiToken: String, private val debugLog: DebugLog
 		val MARKDOWN_PREFIX_PATTERN = Regex("^\\s*```(\\w+)?\n")
 		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
 
-		fun isPatchResponseType(type: OpenAIConfiguration.ResponseType) : Boolean {
-			return type == OpenAIConfiguration.ResponseType.SELECTION_JSON
+		fun isPatchResponseType(type: OpenAIProfiles.ResponseType) : Boolean {
+			return type == OpenAIProfiles.ResponseType.SELECTION_JSON
 		}
 
 		internal fun applyJson(input: String, content: String, focusStart: Int): String {

@@ -5,7 +5,7 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.gui.Icon
-import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.openai.OpenAIProfiles
 
 open class MainMenuProfileBooleanAction(
 	id: String,
@@ -15,9 +15,9 @@ open class MainMenuProfileBooleanAction(
 	keyStrokeDefault: String? = null,
 	accelerators: Accelerators?,
 	private val profileManager: ProfileManager,
-	val get: (OpenAIConfiguration.Profile) -> Boolean,
-	set: (OpenAIConfiguration.Profile, Boolean) -> OpenAIConfiguration.Profile,
-	invoke: (OpenAIConfiguration.Profile) -> Unit
+	val get: (OpenAIProfiles.Profile) -> Boolean,
+	set: (OpenAIProfiles.Profile, Boolean) -> OpenAIProfiles.Profile,
+	invoke: (OpenAIProfiles.Profile) -> Unit
 ) :
 	MainMenuAction(
 		id, title, toolBarIcon, toolBarText, keyStrokeDefault, accelerators,

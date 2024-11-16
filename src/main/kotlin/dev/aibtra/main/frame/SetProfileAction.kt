@@ -4,11 +4,11 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.openai.OpenAIProfiles
 import javax.swing.ButtonGroup
 
 class SetProfileAction(
-	profile: OpenAIConfiguration.Profile.Name,
+	profile: OpenAIProfiles.Profile.Name,
 	profileManager: ProfileManager,
 	radioButtonGroup: ButtonGroup
 ) : MainMenuAction("profile-" + profile.id, profile.title, profileManager.getProfile(profile)?.accelerator, null, {

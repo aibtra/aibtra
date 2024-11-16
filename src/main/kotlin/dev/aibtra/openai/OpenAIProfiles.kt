@@ -2,7 +2,7 @@
  * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
  */
 
-@file:UseSerializers(OpenAIConfiguration.MainSerializer::class)
+@file:UseSerializers(OpenAIProfiles.MainSerializer::class)
 
 package dev.aibtra.openai
 
@@ -19,8 +19,7 @@ import java.security.MessageDigest
 import kotlin.jvm.optionals.getOrNull
 
 @Serializable
-data class OpenAIConfiguration(
-	val apiToken: String? = null,
+data class OpenAIProfiles(
 	val profiles: List<Profile?> = DEFAULT_PROFILES,
 	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID,
 	val lastCommands: List<String> = listOf(),
@@ -93,7 +92,7 @@ data class OpenAIConfiguration(
 		} ?: PROOFREAD
 	}
 
-	companion object : ConfigurationFactory<OpenAIConfiguration> {
+	companion object : ConfigurationFactory<OpenAIProfiles> {
 		private const val PROOFREAD_ID = "proofread"
 		private const val CUSTOM_INSTRUCTIONS_ID = "custom-instructions"
 		private const val CODE_ADJUSTMENT_ID = "code-adjustment"
@@ -299,11 +298,11 @@ data class OpenAIConfiguration(
 
 		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
 
-		override fun name(): String = "openai"
+		override fun name(): String = "openai-profiles"
 
-		override fun default(): OpenAIConfiguration = OpenAIConfiguration()
+		override fun default(): OpenAIProfiles = OpenAIProfiles()
 
-		override fun createSerializer(): KSerializer<OpenAIConfiguration> {
+		override fun createSerializer(): KSerializer<OpenAIProfiles> {
 			return MainSerializer
 		}
 
@@ -312,7 +311,7 @@ data class OpenAIConfiguration(
 			return instructions?.text?.split(COMMAND_MACRO)
 		}
 
-		fun replaceProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile, change: (Profile) -> Profile): OpenAIConfiguration {
+		fun replaceProfile(originalConfig: OpenAIProfiles, targetProfile: Profile, change: (Profile) -> Profile): OpenAIProfiles {
 			return originalConfig.copy(profiles = originalConfig.profiles.map { profile ->
 				if (profile === targetProfile) {
 					change(profile)
@@ -337,10 +336,10 @@ data class OpenAIConfiguration(
 		}
 	}
 
-	object MainSerializer : KSerializer<OpenAIConfiguration> {
+	object MainSerializer : KSerializer<OpenAIProfiles> {
 		override val descriptor: SerialDescriptor = serializer().descriptor
 
-		override fun deserialize(decoder: Decoder): OpenAIConfiguration {
+		override fun deserialize(decoder: Decoder): OpenAIProfiles {
 			var configuration = serializer().deserialize(decoder)
 			val idToHashDefault = HashMap(createProfileIdToHash(DEFAULT_PROFILES))
 			for (profile in configuration.profiles.filterNotNull()) {
@@ -372,26 +371,26 @@ data class OpenAIConfiguration(
 			return configuration
 		}
 
-		override fun serialize(encoder: Encoder, value: OpenAIConfiguration) {
+		override fun serialize(encoder: Encoder, value: OpenAIProfiles) {
 			serializer().serialize(encoder, value)
 		}
 
-		private fun addProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile): OpenAIConfiguration {
+		private fun addProfile(originalConfig: OpenAIProfiles, targetProfile: Profile): OpenAIProfiles {
 			return originalConfig.copy(profiles = originalConfig.profiles + targetProfile)
 		}
 
-		private fun removeProfile(originalConfig: OpenAIConfiguration, targetProfile: Profile): OpenAIConfiguration {
+		private fun removeProfile(originalConfig: OpenAIProfiles, targetProfile: Profile): OpenAIProfiles {
 			return originalConfig.copy(profiles = originalConfig.profiles.filter { it !== targetProfile })
 		}
 
-		private fun updateHash(originalConfig: OpenAIConfiguration, profile: Profile): OpenAIConfiguration {
+		private fun updateHash(originalConfig: OpenAIProfiles, profile: Profile): OpenAIProfiles {
 			val id = profile.name.id
 			val hash = createProfileHash(profile)
 			val replacedProfileIdToHash: Map<String, String> = originalConfig.profileIdToHash + (id to hash)
 			return originalConfig.copy(profileIdToHash = replacedProfileIdToHash)
 		}
 
-		private fun removeHash(originalConfig: OpenAIConfiguration, profileId: String): OpenAIConfiguration {
+		private fun removeHash(originalConfig: OpenAIProfiles, profileId: String): OpenAIProfiles {
 			val replacedProfileIdToHash: Map<String, String> = originalConfig.profileIdToHash - profileId
 			return originalConfig.copy(profileIdToHash = replacedProfileIdToHash)
 		}

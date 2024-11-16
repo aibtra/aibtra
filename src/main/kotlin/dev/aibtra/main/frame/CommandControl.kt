@@ -2,8 +2,8 @@ package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.gui.Ui
-import dev.aibtra.openai.OpenAIConfiguration
-import dev.aibtra.openai.OpenAIConfiguration.Profile
+import dev.aibtra.openai.OpenAIProfiles
+import dev.aibtra.openai.OpenAIProfiles.Profile
 import java.awt.BorderLayout
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
@@ -33,7 +33,7 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 		setConstantText("", afterArea)
 		panel.isVisible = false
 
-		configurationProvider.get(OpenAIConfiguration).lastCommands.firstOrNull()?.let {
+		configurationProvider.get(OpenAIProfiles).lastCommands.firstOrNull()?.let {
 			commandArea.text = it
 		}
 
@@ -55,7 +55,7 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 	fun setProfile(profile: Profile?) {
 		this.profile = profile
 
-		val split: List<String>? = profile?.let { OpenAIConfiguration.getCommandInstructions(it) }
+		val split: List<String>? = profile?.let { OpenAIProfiles.getCommandInstructions(it) }
 		if (split == null || split.size != 2) {
 			panel.isVisible = false
 			return
@@ -80,7 +80,7 @@ class CommandControl(val configurationProvider: ConfigurationProvider) {
 			return ""
 		}
 
-		configurationProvider.change(OpenAIConfiguration) {
+		configurationProvider.change(OpenAIProfiles) {
 			val newCommands = it.lastCommands.stream().filter { it != command && it.isNotBlank() }.collect(Collectors.toList())
 			newCommands.addFirst(command)
 

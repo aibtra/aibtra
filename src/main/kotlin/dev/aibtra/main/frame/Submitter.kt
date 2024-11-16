@@ -7,13 +7,14 @@ package dev.aibtra.main.frame
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.gui.Ui
 import dev.aibtra.gui.dialogs.*
-import dev.aibtra.openai.OpenAIConfiguration
+import dev.aibtra.openai.OpenAICredentials
+import dev.aibtra.openai.OpenAIProfiles
 import dev.aibtra.openai.OpenAIService
 import java.awt.Desktop
 import javax.swing.JEditorPane
 import javax.swing.event.HyperlinkEvent
 
-class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {
+class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIProfiles.Profile) {
 	init {
 		commandControl.registerEnterListener { ev ->
 			run()
@@ -23,8 +24,8 @@ class Submitter(private val environment: Environment, private val requestManager
 
 	fun run() {
 		val configurationProvider = environment.configurationProvider
-		val configuration = configurationProvider.get(OpenAIConfiguration)
-		if (configuration.apiToken != null) {
+		val credentials = configurationProvider.get(OpenAICredentials)
+		if (credentials.apiToken != null) {
 			submit(configurationProvider, dialogDisplayer)
 		}
 		else {
@@ -54,7 +55,7 @@ class Submitter(private val environment: Environment, private val requestManager
 
 				OkCancelDialog.Content(panel) {
 					val token: String = editor.text
-					configurationProvider.change(OpenAIConfiguration) {
+					configurationProvider.change(OpenAICredentials) {
 						it.copy(apiToken = token)
 					}
 
@@ -65,7 +66,7 @@ class Submitter(private val environment: Environment, private val requestManager
 	}
 
 	private fun submit(configurationProvider: ConfigurationProvider, dialogDisplayer: DialogDisplayer) {
-		val apiToken = configurationProvider.get(OpenAIConfiguration).apiToken
+		val apiToken = configurationProvider.get(OpenAICredentials).apiToken
 		require(apiToken != null) { "API token must not be null" }
 
 		val profile = profile()
@@ -73,7 +74,7 @@ class Submitter(private val environment: Environment, private val requestManager
 		val request = OpenAIRequest(profile, service, { commandControl.retrieveCommand() }) { failure, mightBeAuthentication ->
 			Ui.runInEdt {
 				if (mightBeAuthentication) {
-					configurationProvider.change(OpenAIConfiguration) {
+					configurationProvider.change(OpenAICredentials) {
 						it.copy(apiToken = null)
 					}
 				}
