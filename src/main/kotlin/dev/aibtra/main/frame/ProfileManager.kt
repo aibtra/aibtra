@@ -6,25 +6,25 @@ import dev.aibtra.openai.*
 
 class ProfileManager(private val workingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
 
-	private val listeners = ArrayList<(OpenAIProfiles.Profile.Name, OpenAIProfiles.Profile.Name) -> Unit>()
-	private var name: OpenAIProfiles.Profile.Name = configurationProvider.get(OpenAIProfiles).currentProfile(workingMode).name
+	private val listeners = ArrayList<(OpenAIRefinementConfiguration.Profile.Name, OpenAIRefinementConfiguration.Profile.Name) -> Unit>()
+	private var name: OpenAIRefinementConfiguration.Profile.Name = configurationProvider.get(OpenAIRefinementConfiguration).currentProfile(workingMode).name
 
-	fun profile(): OpenAIProfiles.Profile {
-		val configuration = configurationProvider.get(OpenAIProfiles)
+	fun profile(): OpenAIRefinementConfiguration.Profile {
+		val configuration = configurationProvider.get(OpenAIRefinementConfiguration)
 		return configuration.profile(name.id) ?: configuration.currentProfile(workingMode)
 	}
 
-	fun profiles(): List<OpenAIProfiles.Profile?> {
-		val configuration = configurationProvider.get(OpenAIProfiles)
+	fun profiles(): List<OpenAIRefinementConfiguration.Profile?> {
+		val configuration = configurationProvider.get(OpenAIRefinementConfiguration)
 		return configuration.profiles
 	}
 
-	fun getProfile(name: OpenAIProfiles.Profile.Name): OpenAIProfiles.Profile? {
-		val configuration = configurationProvider.get(OpenAIProfiles)
+	fun getProfile(name: OpenAIRefinementConfiguration.Profile.Name): OpenAIRefinementConfiguration.Profile? {
+		val configuration = configurationProvider.get(OpenAIRefinementConfiguration)
 		return configuration.profile(name.id)
 	}
 
-	fun setProfile(name: OpenAIProfiles.Profile.Name) {
+	fun setProfile(name: OpenAIRefinementConfiguration.Profile.Name) {
 		if (name.id == this.name.id) {
 			return
 		}
@@ -32,7 +32,7 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 		val lastName = this.name
 		this.name = name
 
-		configurationProvider.change(OpenAIProfiles) {
+		configurationProvider.change(OpenAIRefinementConfiguration) {
 			it.copy(workingModeToDefaultProfileId = it.workingModeToDefaultProfileId.plus(workingMode to name.id))
 		}
 
@@ -40,7 +40,7 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 	}
 
 	fun overrideProfile(id: String) {
-		val name = configurationProvider.get(OpenAIProfiles).profile(id)?.name
+		val name = configurationProvider.get(OpenAIRefinementConfiguration).profile(id)?.name
 		if (name == null || name.id == this.name.id) {
 			return
 		}
@@ -50,15 +50,15 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 		fireChanged(name, name)
 	}
 
-	fun updateCurrentProfile(update: (OpenAIProfiles.Profile) -> OpenAIProfiles.Profile): OpenAIProfiles.Profile {
-		configurationProvider.change(OpenAIProfiles) {
-			OpenAIProfiles.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
+	fun updateCurrentProfile(update: (OpenAIRefinementConfiguration.Profile) -> OpenAIRefinementConfiguration.Profile): OpenAIRefinementConfiguration.Profile {
+		configurationProvider.change(OpenAIRefinementConfiguration) {
+			OpenAIRefinementConfiguration.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
 		}
 		fireChanged(name, name)
-		return configurationProvider.get(OpenAIProfiles).currentProfile(workingMode)
+		return configurationProvider.get(OpenAIRefinementConfiguration).currentProfile(workingMode)
 	}
 
-	fun addListener(listener: (OpenAIProfiles.Profile.Name, OpenAIProfiles.Profile.Name) -> Unit) {
+	fun addListener(listener: (OpenAIRefinementConfiguration.Profile.Name, OpenAIRefinementConfiguration.Profile.Name) -> Unit) {
 		listeners.add(listener)
 	}
 
@@ -66,7 +66,7 @@ class ProfileManager(private val workingMode: WorkingMode, val configurationProv
 		fireChanged(name, name)
 	}
 
-	private fun fireChanged(lastName: OpenAIProfiles.Profile.Name, name: OpenAIProfiles.Profile.Name) {
+	private fun fireChanged(lastName: OpenAIRefinementConfiguration.Profile.Name, name: OpenAIRefinementConfiguration.Profile.Name) {
 		listeners.forEach { it(lastName, name) }
 	}
 }

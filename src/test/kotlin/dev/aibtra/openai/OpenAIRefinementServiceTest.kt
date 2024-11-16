@@ -4,7 +4,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import java.io.*
 
-class OpenAIServiceTest {
+class OpenAIRefinementServiceTest {
 
 	@Test
 	fun testExactObject() {
@@ -258,7 +258,7 @@ class OpenAIServiceTest {
 	}
 
 	private fun assert(content: String, json: String, focusStart: Int, expected: String) {
-		val actual = OpenAIService.applyJson(json, content, focusStart)
+		val actual = OpenAIRefinementService.applyJson(json, content, focusStart)
 		Assertions.assertEquals(expected, actual)
 	}
 }
