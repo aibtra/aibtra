@@ -17,7 +17,7 @@ import java.net.*
 import java.nio.charset.*
 
 class OpenAIRefinementService(private val apiToken: String, private val debugLog: DebugLog) {
-	fun request(profile: OpenAIRefinementConfiguration.Profile, selection: Selection?, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {
+	fun request(profile: OpenAIRefinementConfiguration.Profile, selection: Selection?, macroResolver: MacroResolver, callback: (result: Result) -> Boolean) {
 		val input = JSONObject()
 		input["model"] = profile.model
 		input["n"] = 1
@@ -27,10 +27,10 @@ class OpenAIRefinementService(private val apiToken: String, private val debugLog
 			input["stream"] = true
 		}
 
-		val contentKeyword = when {
-			profile.responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION -> OpenAIRefinementConfiguration.SELECTION_KEYWORD
-			profile.responseType == OpenAIRefinementConfiguration.ResponseType.CONTENT -> OpenAIRefinementConfiguration.CONTENT_KEYWORD
-			isPatchResponseType(profile.responseType) -> OpenAIRefinementConfiguration.CONTENT_KEYWORD
+		val contentMacro = when {
+			profile.responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION -> OpenAIRefinementConfiguration.SELECTION_MACRO
+			profile.responseType == OpenAIRefinementConfiguration.ResponseType.CONTENT -> OpenAIRefinementConfiguration.CONTENT_MACRO
+			isPatchResponseType(profile.responseType) -> OpenAIRefinementConfiguration.CONTENT_MACRO
 			else -> throw NoWhenBranchMatchedException()
 		}
 
@@ -55,13 +55,11 @@ class OpenAIRefinementService(private val apiToken: String, private val debugLog
 
 			val messageIn = JSONObject()
 			messageIn["role"] = instruction.role.id
-			messageIn["content"] = KEYWORD_REGEX.replace(instruction.text) { matchResult ->
-				val key = matchResult.groupValues[1]
-				val value = keywordResolver(key) ?: throw IOException("Unknown keyword '$key'")
-				if (key == contentKeyword) {
-					contentVar = value
-				}
-				value
+
+			val resolution = HashMap<String, String>()
+			messageIn["content"] = macroResolver.replace(instruction.text, resolution)
+			resolution[contentMacro]?.let {
+				contentVar = it
 			}
 			messagesIn.add(messageIn)
 		}

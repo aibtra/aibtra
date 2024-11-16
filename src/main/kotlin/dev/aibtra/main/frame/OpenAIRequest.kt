@@ -1,29 +1,19 @@
 package dev.aibtra.main.frame
 
+import dev.aibtra.core.*
 import dev.aibtra.openai.*
 import dev.aibtra.text.*
 import java.io.*
 
-class OpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand : () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
+class OpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand: () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
 	override fun run(filtered: FilteredText, callback: RequestManager.RequestCallback) {
 		val part = filtered.clean
-		val keywordResolver: (key: String) -> String? = { key ->
-			when (key) {
-				OpenAIRefinementConfiguration.CONTENT_KEYWORD -> {
-					part.all
-				}
-
-				OpenAIRefinementConfiguration.SELECTION_KEYWORD -> {
-					part.extract
-				}
-
-				OpenAIRefinementConfiguration.COMMAND_KEYWORD -> {
-					retrieveCommand()
-				}
-
-				else -> {
-					null
-				}
+		val macroResolver = MacroResolver {
+			when (it) {
+				OpenAIRefinementConfiguration.CONTENT_MACRO -> part.all
+				OpenAIRefinementConfiguration.SELECTION_MACRO -> part.extract
+				OpenAIRefinementConfiguration.COMMAND_MACRO -> retrieveCommand()
+				else -> null
 			}
 		}
 
@@ -31,7 +21,7 @@ class OpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private 
 		// the responseType dictates whether we receive the whole file or just the selected portion.
 		val responseType = profile.responseType
 		val selection = if (part.isPart()) OpenAIRefinementService.Selection(part.from) else null
-		service.request(profile, selection, keywordResolver) { result ->
+		service.request(profile, selection, macroResolver) { result ->
 			result.content?.let { builder ->
 				val recreateMode = if (responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION) {
 					// If the user chooses to process the entire file, we will have passed the complete file to the model.
