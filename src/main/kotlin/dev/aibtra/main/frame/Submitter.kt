@@ -9,11 +9,8 @@ import dev.aibtra.gui.Ui
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.openai.OpenAIConfiguration
 import dev.aibtra.openai.OpenAIService
-import dev.aibtra.text.FilteredText
 import java.awt.Desktop
-import java.awt.Insets
 import javax.swing.JEditorPane
-import javax.swing.JLabel
 import javax.swing.event.HyperlinkEvent
 
 class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIConfiguration.Profile) {
