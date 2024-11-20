@@ -270,7 +270,7 @@ class DiffManager(
 	}
 
 	private fun writeDebugFile(sequenceId: Int, operationName: String, type: String, text: String, diffChars: List<DiffChar>?) {
-		debugLog.run("diffManager-${sequenceId}-${operationName}-${type}", DebugLog.Level.DEBUG) { log, active ->
+		debugLog.run("diffManager", "${sequenceId}-${operationName}-${type}", DebugLog.Level.DEBUG) { log, active ->
 			if (!active) {
 				return@run
 			}
