@@ -17,8 +17,10 @@ class DebugLog(
 	private val debugDirectory = initializeDebugDirectory(config)
 	private val debugStartTime = System.currentTimeMillis()
 
-	fun run(title: String, level: Level, task: (log: Log, logActive: Boolean) -> Unit) {
-		if (debugDirectory == null || level.precedence < config.level.precedence) {
+	fun run(category: String, title: String, level: Level, task: (log: Log, logActive: Boolean) -> Unit) {
+		if (debugDirectory == null ||
+			level.precedence < config.level.precedence ||
+			config.categories.isNotEmpty() && !config.categories.contains(category)) {
 			task(object : Log {
 				override fun println(line: String) {
 				}
@@ -26,7 +28,7 @@ class DebugLog(
 			return
 		}
 
-		val debugFile = Files.createTempFile(debugDirectory, "$debugStartTime-${System.currentTimeMillis()}-$title-", ".txt")
+		val debugFile = Files.createTempFile(debugDirectory, "$debugStartTime-${System.currentTimeMillis()}-$category-$title-", ".txt")
 		PrintWriter(Files.newBufferedWriter(debugFile)).use { writer ->
 			task(object : Log {
 				override fun println(line: String) {
@@ -63,7 +65,8 @@ class DebugLog(
 	@Serializable
 	data class Config(
 		val directory: String? = null,
-		val level: Level = Level.DEBUG
+		val level: Level = Level.DEBUG,
+		val categories: Set<String> = setOf()
 	) {
 		companion object : ConfigurationFactory<Config> {
 			override fun name(): String = "debug"
