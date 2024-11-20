@@ -18,9 +18,7 @@ class DebugLog(
 	private val debugStartTime = System.currentTimeMillis()
 
 	fun run(category: String, title: String, level: Level, task: (log: Log, logActive: Boolean) -> Unit) {
-		if (debugDirectory == null ||
-			level.precedence < config.level.precedence ||
-			config.categories.isNotEmpty() && !config.categories.contains(category)) {
+		if (!shallLog(level, category)) {
 			task(object : Log {
 				override fun println(line: String) {
 				}
@@ -28,8 +26,7 @@ class DebugLog(
 			return
 		}
 
-		val debugFile = Files.createTempFile(debugDirectory, "$debugStartTime-${System.currentTimeMillis()}-$category-$title-", ".txt")
-		PrintWriter(Files.newBufferedWriter(debugFile)).use { writer ->
+		PrintWriter(Files.newBufferedWriter(createDebugFile(category, title))).use { writer ->
 			task(object : Log {
 				override fun println(line: String) {
 					writer.println(line)
@@ -37,6 +34,24 @@ class DebugLog(
 				}
 			}, true)
 		}
+	}
+
+	fun log(category: String, title: String, level: Level, text: String) {
+		if (shallLog(level, category)) {
+			Files.newBufferedWriter(createDebugFile(category, title)).use { writer ->
+				writer.write(text)
+			}
+		}
+	}
+
+	private fun shallLog(level: Level, category: String): Boolean {
+		return debugDirectory != null &&
+						level.precedence >= config.level.precedence &&
+						!(config.categories.isNotEmpty() && !config.categories.contains(category))
+	}
+
+	private fun DebugLog.createDebugFile(category: String, title: String): Path? {
+		return Files.createTempFile(requireNotNull(debugDirectory), "$debugStartTime-${System.currentTimeMillis()}-$category-$title-", ".txt")
 	}
 
 	companion object {
