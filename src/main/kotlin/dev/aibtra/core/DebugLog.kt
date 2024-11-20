@@ -10,6 +10,8 @@ import dev.aibtra.configuration.*
 import kotlinx.serialization.Serializable
 import java.io.*
 import java.nio.file.*
+import java.time.*
+import java.time.format.*
 
 class DebugLog(
 	val config: Config
@@ -51,11 +53,15 @@ class DebugLog(
 	}
 
 	private fun DebugLog.createDebugFile(category: String, title: String): Path? {
-		return Files.createTempFile(requireNotNull(debugDirectory), "$debugStartTime-${System.currentTimeMillis()}-$category-$title-", ".txt")
+		val currentTime = LocalDateTime.now()
+		val formattedTime = currentTime.format(DATE_TIME_FORMATTER)
+		val now = System.currentTimeMillis()
+		return Files.createTempFile(requireNotNull(debugDirectory), "$formattedTime-${String.format("%010d", now - debugStartTime)}-$category-$title-", ".txt")
 	}
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
+		private val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
 
 		fun initializeDebugDirectory(config: Config): Path? {
 			if (config.directory == null) {
