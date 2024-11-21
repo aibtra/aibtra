@@ -74,6 +74,7 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 
 		if (latestSha == null ||
 			latestSha == buildInfo.sha) {
+			LOG.info("No new version found (latestSha=$latestSha, buildInfo.sha=${buildInfo.sha})")
 			return
 		}
 
@@ -93,6 +94,7 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 	}
 
 	private fun findLatestSha(bundleType: BuildInfo.BundleType): String? {
+		LOG.info("Checking for new version ($bundleType)")
 		try {
 			return URI(UPDATES_URL).toURL().openConnection().getInputStream().use { stream ->
 				val obj = JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8))
