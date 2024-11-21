@@ -49,19 +49,25 @@ jobs:
 
     - name: Bundle (Windows)
       if: matrix.os == 'windows-latest'
+      shell: powershell
       run: |
-        cp resources/windows/README* build/jpackage/
-        cd build/jpackage
-        dir
-        echo "${{ env.BUNDLE_TYPE }}" > aibtra/app/aibtra.bundletype
-        7z a -tzip aibtra-${{ env.TAG }}-windows.zip *
+        Copy-Item -Path resources/windows/README* -Destination build/jpackage/
+        Copy-Item -Path resources/windows/scripts/update.* -Destination build/jpackage/aibtra
+        Set-Location -Path build/jpackage
+        Get-ChildItem
+        "${env:BUNDLE_TYPE}" | Out-File -FilePath aibtra\app\aibtra.bundletype -Encoding ASCII
+        $aibtraFullPath = (Resolve-Path "aibtra").Path
+        Get-ChildItem -Path aibtra -Recurse -File | ForEach-Object { $_.FullName.Substring($aibtraFullPath.Length + 1) } | Out-File -FilePath "aibtra\update.files" -Encoding UTF8
+        7z a -tzip "aibtra-${env:TAG}-windows.zip" *
 
     - name: Bundle (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
+        cp resources/linux/scripts/update.* build/jpackage/aibtra
         cd build/jpackage
         ls -al
         echo "${{ env.BUNDLE_TYPE }}" > aibtra/lib/app/aibtra.bundletype
+        find aibtra -type f -exec sh -c 'printf "%s\n" "${1#aibtra/}"' _ {} \; > aibtra/update.files
         tar -czf aibtra-${{ env.TAG }}-linux.tar.gz aibtra/*
 
     - name: Bundle (macOS ARM)
@@ -71,6 +77,7 @@ jobs:
         cd build/jpackage
         ls -al
         echo "${{ env.BUNDLE_TYPE }}" > aibtra.app/Contents/app/aibtra.bundletype
+        find aibtra.app -type f -exec sh -c 'printf "%s\n" "${1#aibtra.app/}"' _ {} \; > aibtra.app/update.files
         tar -czf aibtra-${{ env.TAG }}-macos-arm.tar.gz *
 
     - name: Bundle (macOS Intel)
@@ -80,6 +87,7 @@ jobs:
         cd build/jpackage
         ls -al
         echo "${{ env.BUNDLE_TYPE }}" > aibtra.app/Contents/app/aibtra.bundletype
+        find aibtra.app -type f -exec sh -c 'printf "%s\n" "${1#aibtra.app/}"' _ {} \; > aibtra.app/update.files
         tar -czf aibtra-${{ env.TAG }}-macos-intel.tar.gz *
 
     - name: Upload artifacts

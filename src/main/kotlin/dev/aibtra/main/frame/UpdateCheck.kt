@@ -8,6 +8,7 @@
 
 package dev.aibtra.main.frame
 
+import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationFactory
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.JsonUtils
@@ -85,7 +86,13 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 			Ui.assertEdt()
 
 			val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop() else null
-			if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+			if (SystemInfo.isWindows) {
+				Dialogs.showInfoDialog("New Version", "A new version is available!\n\nExit Aibtra, then run update.bat to upgrade to the new version.", dialogDisplayer)
+			}
+			else if (SystemInfo.isLinux) {
+				Dialogs.showInfoDialog("New Version", "A new version is available!\n\nExit Aibtra, then run update.sh to upgrade to the new version.", dialogDisplayer)
+			}
+			else if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
 				Dialogs.showConfirmationDialog("New Version", "A new version is available!", "Open Browser", dialogDisplayer) {
 					desktop.browse(URI(RELEASES_URL))
 				}
