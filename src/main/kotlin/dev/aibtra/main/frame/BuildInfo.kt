@@ -17,7 +17,7 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
 
-		fun load(paths: ApplicationPaths) : BuildInfo {
+		fun load(paths: ApplicationPaths): BuildInfo {
 			val javaClass = MainStartup::class.java
 			val jarPath = Path.of(javaClass.protectionDomain.codeSource.location.toURI())
 			val bundleFile = jarPath.parent.resolve("aibtra.bundletype")
@@ -30,7 +30,8 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 					LOG.error("Invalid bundle type $fileContent")
 					BundleType.STABLE
 				}
-			} else {
+			}
+			else {
 				if (Ui.isDebugging()) BundleType.EXPERIMENTAL else BundleType.STABLE
 			}
 
@@ -42,7 +43,7 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 					properties.load(it)
 				}
 
-				val sha = paths.getProperty("build.sha")  ?: properties.getProperty("sha") ?: "<unknown>"
+				val sha = paths.getProperty("build.sha") ?: properties.getProperty("sha") ?: "<unknown>"
 				val instant = paths.getProperty("build.time") ?: properties.getProperty("time") ?: "unknown"
 				return BuildInfo(sha, instant, bundleType)
 			}
