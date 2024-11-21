@@ -9,6 +9,7 @@ package dev.aibtra.main.frame
 import dev.aibtra.core.Logger
 import dev.aibtra.gui.Ui
 import dev.aibtra.main.startup.MainStartup
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -23,11 +24,16 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 			val bundleFile = jarPath.parent.resolve("aibtra.bundletype")
 
 			val bundleType = if (Files.isRegularFile(bundleFile)) {
-				val fileContent = Files.readString(bundleFile).trim()
 				try {
-					BundleType.valueOf(fileContent)
-				} catch (e: IllegalArgumentException) {
-					LOG.error("Invalid bundle type $fileContent")
+					val fileContent = Files.readString(bundleFile).trim()
+					try {
+						BundleType.valueOf(fileContent)
+					} catch (e: IllegalArgumentException) {
+						LOG.error("Invalid bundle type $fileContent")
+						BundleType.STABLE
+					}
+				} catch (e: IOException) {
+					LOG.error("Invalid bundle file $bundleFile")
 					BundleType.STABLE
 				}
 			}
