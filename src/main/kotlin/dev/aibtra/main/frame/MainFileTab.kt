@@ -24,6 +24,7 @@ internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: 
 				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
 
 				state.initialLine?.let {
+					// Needs to be postponed to function correctly
 					Ui.runInEdt {
 						rawTextArea.scrollToLine(it)
 					}
