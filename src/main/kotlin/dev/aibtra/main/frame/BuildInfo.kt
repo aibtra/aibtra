@@ -7,7 +7,6 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.core.Logger
-import dev.aibtra.gui.Ui
 import dev.aibtra.main.startup.MainStartup
 import java.io.IOException
 import java.nio.file.Files
@@ -38,7 +37,9 @@ class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType
 				}
 			}
 			else {
-				if (Ui.isDebugging()) BundleType.EXPERIMENTAL else BundleType.STABLE
+				paths.getProperty("bundleType")?.let {
+					BundleType.valueOf(it)
+				} ?: BundleType.STABLE
 			}
 
 			LOG.info("Bundle type is $bundleType")
