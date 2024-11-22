@@ -99,7 +99,7 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 			return URI(UPDATES_URL).toURL().openConnection().getInputStream().use { stream ->
 				val obj = JSONParser().parse(InputStreamReader(stream, StandardCharsets.UTF_8))
 				val root = obj as? JSONObject
-				root?.get(bundleType.name) as? String
+				root?.get(bundleType.name.lowercase(Locale.getDefault())) as? String
 			}
 		} catch (e: Exception) {
 			LOG.error(e)
