@@ -19,7 +19,7 @@ class ApplyChangeAction(
 		val state = diffManager.state
 		val rawText = state.diff.raw
 		val refText = state.diff.ref
-		require(rawTextArea.getText() == rawText)
+		require(rawTextArea.getText() == rawText) { "RAW TEXT AREA\n${rawTextArea.getText()}\nRAW TEXT\n$rawText" }
 
 		refTextArea.getSelectionRange()?.let {
 			val blocks = DiffManager.getSelectedBlocksFromRef(state, it).reversed()
