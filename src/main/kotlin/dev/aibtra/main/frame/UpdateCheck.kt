@@ -35,6 +35,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val mainScope: CoroutineScope, private val paths: ApplicationPaths, private val dialogDisplayer: DialogDisplayer) {
 	private val coroutineScope = CoroutineScope(Job() + dispatcher)
@@ -55,14 +56,7 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 			return
 		}
 
-		val now = LocalDateTime.now()
-		if (config.lastCheck?.isAfter(now.minus(config.intervalDays.toLong(), ChronoUnit.DAYS)) == true &&
-			paths.getProperty("updateCheck.force") != "true") {
-			return
-		}
-
 		val bundleType = buildInfo.bundleType ?: return
-
 		val latestSha = try {
 			findLatestSha(bundleType)
 		} catch (e: Exception) {
@@ -70,13 +64,22 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 			return
 		}
 
-		configurationProvider.change(Config) { it.copy(lastCheck = now) }
-
 		if (latestSha == null ||
 			latestSha == buildInfo.sha) {
 			LOG.info("No new version found (latestSha=$latestSha, buildInfo.sha=${buildInfo.sha})")
 			return
 		}
+
+		LOG.info("Newer version found (latestSha=$latestSha, buildInfo.sha=${buildInfo.sha})")
+
+		val now = LocalDateTime.now()
+		if (config.lastFoundSha == latestSha &&
+			config.lastCheck?.isAfter(now.minus(config.intervalDays.toLong(), ChronoUnit.DAYS)) == true &&
+			paths.getProperty("updateCheck.force") != "true") {
+			return
+		}
+
+		configurationProvider.change(Config) { it.copy(lastCheck = now, lastFoundSha = latestSha) }
 
 		mainScope.launch(Dispatchers.Main, block = {
 			Ui.assertEdt()
@@ -123,7 +126,8 @@ class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: C
 	@Serializable
 	data class Config(
 		val lastCheck: LocalDateTime? = null,
-		val intervalDays: Int = 7,
+		val lastFoundSha: String? = null,
+		val intervalDays: Int = 1,
 		val enabled: Boolean = true
 	) {
 		companion object : ConfigurationFactory<Config> {
