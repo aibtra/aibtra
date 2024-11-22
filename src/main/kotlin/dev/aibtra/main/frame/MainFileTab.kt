@@ -30,9 +30,7 @@ internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: 
 				}
 			}
 
-			Ui.runInEdt {
-				updateTitle()
-			}
+			updateTitle()
 		}
 
 		init()
