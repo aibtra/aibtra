@@ -38,6 +38,12 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		textArea.requestFocusInWindow()
 	}
 
+	protected fun disableEditing() : NonEditableDocumentFilter {
+		val filter = NonEditableDocumentFilter()
+		(textArea.document as AbstractDocument).documentFilter = filter
+		return filter
+	}
+
 	protected fun updateCharacterAttributes(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
 		highlighter.run(chars, highlightStyle)
 	}
@@ -306,4 +312,48 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 	}
 
 	class HighlightStyle(val color: (GuiColors.Colors) -> Color, val shadow: (GuiColors.Colors) -> Color?, val sprinkled: Boolean, val strikethrough: Boolean, val gapStyle: GapStyle)
+
+	protected class NonEditableDocumentFilter : DocumentFilter() {
+		private var locked = true
+
+		override fun insertString(fb: FilterBypass?, offset: Int, string: String?, attr: AttributeSet?) {
+			if (locked) {
+				beep()
+				return
+			}
+
+			super.insertString(fb, offset, string, attr)
+		}
+
+		override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
+			if (locked) {
+				beep()
+				return
+			}
+
+			super.replace(fb, offset, length, text, attrs)
+		}
+
+		override fun remove(fb: FilterBypass?, offset: Int, length: Int) {
+			if (locked) {
+				beep()
+				return
+			}
+
+			super.remove(fb, offset, length)
+		}
+
+		private fun beep() {
+			Toolkit.getDefaultToolkit().beep()
+		}
+
+		fun update(runnable: Runnable) {
+			locked = false
+			try {
+				runnable.run()
+			} finally {
+				locked = true
+			}
+		}
+	}
 }
