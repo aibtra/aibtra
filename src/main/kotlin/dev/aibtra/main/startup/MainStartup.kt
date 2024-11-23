@@ -95,7 +95,7 @@ class MainStartup {
 			createLogger().info("show main frame: workingMode=$workingMode;file=$fileToOpen;options=$options")
 
 			Ui.runInEdt {
-				environment.frameManager.getFrame()?.let {
+				(environment.frameManager.getFrame() as? MainFrame)?.let {
 					it.toFront()
 					if (fileToOpen != null || workingMode == WorkingMode.CLIPBOARD) {
 						setMainFrameContent(workingMode, options, fileToOpen, it, environment)

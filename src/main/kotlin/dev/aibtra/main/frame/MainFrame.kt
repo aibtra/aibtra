@@ -7,13 +7,14 @@ package dev.aibtra.main.frame
 import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
+import dev.aibtra.gui.frames.*
 import java.awt.*
 import java.awt.event.*
 import java.nio.file.*
 import javax.swing.*
 
-class MainFrame(private val environment: Environment) {
-	val dialogDisplayer: DialogDisplayer
+class MainFrame(private val environment: Environment) : FrameManager.Frame {
+	override val dialogDisplayer: DialogDisplayer
 
 	private val frame: JFrame
 	private val centerPane: Container
@@ -84,11 +85,11 @@ class MainFrame(private val environment: Environment) {
 		return !environment.systemTrayEnabled && !environment.configurationProvider.get(GuiConfiguration).hotkeyEnabled
 	}
 
-	fun checkClose(runnable: Runnable) {
+	override fun checkClose(runnable: Runnable) {
 		tabbedPane.checkClose(runnable)
 	}
 
-	fun closed() {
+	override fun closed() {
 		val location = frame.location
 		val size = frame.size
 		environment.configurationProvider.change(MainLayout) {

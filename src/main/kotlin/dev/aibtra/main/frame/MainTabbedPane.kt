@@ -1,5 +1,6 @@
 package dev.aibtra.main.frame
 
+import dev.aibtra.gui.frames.*
 import java.awt.*
 import java.util.function.*
 import javax.swing.*
