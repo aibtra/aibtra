@@ -8,10 +8,11 @@ import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
+import dev.aibtra.main.refinement.*
 import java.nio.file.*
 import javax.swing.*
 
-internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(WorkingMode.FILE, tabbedPane, environment, dialogDisplayer) {
+internal class MainFileTab(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainTextualTab(WorkingMode.FILE, tabbedPane, environment, dialogDisplayer) {
 	private val workFile: WorkFile
 
 	init {
@@ -33,8 +34,6 @@ internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: 
 
 			updateTitle()
 		}
-
-		init()
 	}
 
 	override fun getTitle() : String {
@@ -55,7 +54,7 @@ internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: 
 		}, runnable)
 	}
 
-	override fun addFileActions(menu: JMenu) {
+	override fun addTextualFileActions(menu: JMenu) {
 		addAction(menu, SaveAction(workFile, environment))
 	}
 

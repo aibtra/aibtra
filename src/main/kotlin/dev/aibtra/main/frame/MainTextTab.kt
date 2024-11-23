@@ -7,12 +7,13 @@ package dev.aibtra.main.frame
 import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
+import dev.aibtra.main.refinement.*
 import dev.aibtra.openai.*
 import dev.aibtra.text.*
 import java.awt.*
 import javax.swing.*
 
-internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: MainTabbedPane, private val environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(workingMode, tabbedPane, environment, dialogDisplayer) {
+internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainTextualTab(workingMode, tabbedPane, environment, dialogDisplayer) {
 	private val copyAndCloseAction: MainMenuAction
 	private val schemeComboBox: JComboBox<Schemes.Scheme>
 	private val toggleFilterMarkdownAction: MainMenuAction
@@ -24,8 +25,6 @@ internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: Mai
 
 		copyAndCloseAction = CopyAndCloseAction(this, environment, requestManager, diffManager, rawTextArea, environment.configurationProvider)
 		toggleFilterMarkdownAction = ToggleFilterMarkdownAction(diffManager, profileManager, environment.accelerators)
-
-		init()
 	}
 
 	override fun getTitle(): String {
@@ -52,7 +51,7 @@ internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: Mai
 		}
 	}
 
-	override fun addEditActions(menu: JMenu) : Boolean {
+	override fun addTextualEditActions(menu: JMenu) : Boolean {
 		addAction(menu, copyAndCloseAction)
 		return true
 	}
@@ -73,7 +72,7 @@ internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: Mai
 		return true
 	}
 
-	override fun fillLeftToolBar(toolBar: ToolBar) {
+	override fun fillTopToolBarLeft(toolBar: ToolBar) {
 		toolBar.add(schemeComboBox)
 	}
 
