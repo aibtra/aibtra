@@ -145,7 +145,7 @@ internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: Mai
 		}
 
 		fun updateEnabledState() {
-			(profileComboBox.selectedItem as? OpenAIRefinementConfiguration.Profile.Name)?.let { name ->
+			(profileComboBox.selectedItem as? OpenAIProfile.Name)?.let { name ->
 				profileManager.getProfile(name)?.let { profile ->
 					comboBox.isEnabled = profile.supportsSchemes
 				}

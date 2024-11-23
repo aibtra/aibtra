@@ -25,7 +25,7 @@ data class OpenAIRefinementConfiguration(
 
 	@Serializable
 	data class Profile(
-		val name: Name,
+		override val name: OpenAIProfile.Name,
 		val model: String,
 		val streaming: Boolean,
 		val supportsSchemes: Boolean = false,
@@ -36,7 +36,7 @@ data class OpenAIRefinementConfiguration(
 		val submitOnProfileChange: Boolean = false,
 		val wordWrap: Boolean = false,
 		val accelerator: String? = null
-	) {
+	) : OpenAIProfile {
 
 		fun supportsSelection(): Boolean {
 			for (instruction in instructions) {
@@ -52,9 +52,6 @@ data class OpenAIRefinementConfiguration(
 			// A reminder to not overwrite toString()
 			return toString()
 		}
-
-		@Serializable
-		data class Name(val id: String, val title: String)
 	}
 
 	enum class InstructionMode(private val matchSelection: Boolean, private val matchFull: Boolean) {
@@ -101,7 +98,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val PROOFREAD = Profile(
-			Profile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),
+			OpenAIProfile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),
 			MODEL_4O,
 			true,
 			true,
@@ -122,7 +119,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val IMPROVE = Profile(
-			Profile.Name("improve", "Improve Text (GPT-4o)"),
+			OpenAIProfile.Name("improve", "Improve Text (GPT-4o)"),
 			MODEL_4O,
 			true,
 			true,
@@ -143,7 +140,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
-			Profile.Name("to-standard-english", "To Standard English (GPT-4o)"),
+			OpenAIProfile.Name("to-standard-english", "To Standard English (GPT-4o)"),
 			MODEL_4O,
 			true,
 			true,
@@ -160,7 +157,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val CUSTOM_INSTRUCTIONS = Profile(
-			Profile.Name(CUSTOM_INSTRUCTIONS_ID, "Custom Instructions (GPT-4o)"),
+			OpenAIProfile.Name(CUSTOM_INSTRUCTIONS_ID, "Custom Instructions (GPT-4o)"),
 			MODEL_4O,
 			true,
 			false,
@@ -173,7 +170,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val CODE_ADJUSTMENT = Profile(
-			Profile.Name(CODE_ADJUSTMENT_ID, "Code adjustment (GPT-4o)"),
+			OpenAIProfile.Name(CODE_ADJUSTMENT_ID, "Code adjustment (GPT-4o)"),
 			MODEL_4O,
 			true,
 			false,
@@ -222,7 +219,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val CODE_REFINEMENT = Profile(
-			Profile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
+			OpenAIProfile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
 			MODEL_O1_MINI,
 			false,
 			false,
@@ -272,7 +269,7 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val GENERIC_O1_MINI = Profile(
-			Profile.Name(GENERIC_O1_MINI_ID, "Generic o1-mini"),
+			OpenAIProfile.Name(GENERIC_O1_MINI_ID, "Generic o1-mini"),
 			MODEL_O1_MINI,
 			false,
 			false,
