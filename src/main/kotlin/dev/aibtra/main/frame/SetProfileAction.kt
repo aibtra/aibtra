@@ -8,7 +8,7 @@ import dev.aibtra.openai.*
 import javax.swing.*
 
 class SetProfileAction(
-	profile: OpenAIRefinementConfiguration.Profile.Name,
+	profile: OpenAIProfile.Name,
 	profileManager: ProfileManager,
 	radioButtonGroup: ButtonGroup
 ) : MainMenuAction("profile-" + profile.id, profile.title, profileManager.getProfile(profile)?.accelerator, null, {
