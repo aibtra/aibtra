@@ -5,7 +5,6 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.*
-import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 
 class ToggleHotkeyAction(

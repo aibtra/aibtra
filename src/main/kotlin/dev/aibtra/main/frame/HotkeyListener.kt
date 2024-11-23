@@ -4,15 +4,15 @@
  *
  */
 
-package dev.aibtra.gui
+package dev.aibtra.main.frame
 
 import com.formdev.flatlaf.util.*
 import com.github.kwhat.jnativehook.*
 import com.github.kwhat.jnativehook.keyboard.*
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
+import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
-import dev.aibtra.main.frame.*
 import java.awt.event.*
 
 class HotkeyListener(

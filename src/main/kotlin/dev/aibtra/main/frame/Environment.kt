@@ -6,7 +6,6 @@ package dev.aibtra.main.frame
 
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
-import dev.aibtra.gui.*
 import kotlinx.coroutines.*
 import java.util.*
 
