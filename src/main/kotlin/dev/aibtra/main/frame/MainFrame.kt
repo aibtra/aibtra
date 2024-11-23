@@ -12,7 +12,8 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import java.nio.file.Path
-import javax.swing.*
+import javax.swing.JFrame
+import javax.swing.JMenuBar
 
 class MainFrame(private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer

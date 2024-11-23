@@ -7,8 +7,6 @@ package dev.aibtra.main.frame
 import dev.aibtra.core.WorkingMode
 import dev.aibtra.gui.action.ActionRunnable
 import dev.aibtra.gui.dialogs.DialogDisplayer
-import java.io.File
-import javax.swing.JFileChooser
 
 internal class NewAction(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainMenuAction("new", "New", "ctrl N", environment.accelerators, ActionRunnable {
 	val tab = MainTextTab(WorkingMode.OPEN, tabbedPane, environment, dialogDisplayer)

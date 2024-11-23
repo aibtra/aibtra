@@ -8,11 +8,7 @@ import dev.aibtra.gui.Ui
 import dev.aibtra.gui.action.DefaultAction
 import dev.aibtra.main.frame.Theme
 import java.awt.Component
-import javax.swing.AbstractButton
-import javax.swing.Action
-import javax.swing.JComponent
-import javax.swing.JToggleButton
-import javax.swing.JToolBar
+import javax.swing.*
 
 class ToolBar(
 	private val theme: Theme,

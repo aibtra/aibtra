@@ -1,9 +1,8 @@
 package dev.aibtra.diff
 
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.lang.StringBuilder
 import kotlin.random.Random
 
 class FuzzyMatcherTest {
