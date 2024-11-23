@@ -10,9 +10,10 @@ import dev.aibtra.text.FilteredText
 import java.awt.Color
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
-import javax.swing.*
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
+import javax.swing.AbstractAction
+import javax.swing.JComponent
+import javax.swing.JTextArea
+import javax.swing.KeyStroke
 import javax.swing.text.AbstractDocument
 import javax.swing.text.AttributeSet
 import javax.swing.text.DocumentFilter

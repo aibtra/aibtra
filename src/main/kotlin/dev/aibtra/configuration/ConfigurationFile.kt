@@ -11,7 +11,6 @@ import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Consumer
 
 internal class ConfigurationFile<D>(
 	private val path: Path,

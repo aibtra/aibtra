@@ -7,7 +7,7 @@ package dev.aibtra.main.frame
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.diff.DiffChar
 import dev.aibtra.diff.DiffKind
-import java.awt.*
+import java.awt.Toolkit
 import java.awt.event.MouseListener
 import javax.swing.JTextArea
 import javax.swing.text.*

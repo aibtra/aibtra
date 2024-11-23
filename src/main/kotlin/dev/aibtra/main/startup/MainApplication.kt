@@ -9,7 +9,6 @@ import dev.aibtra.core.DebugLog
 import dev.aibtra.gui.HotkeyListener
 import dev.aibtra.main.frame.*
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import java.util.*
 

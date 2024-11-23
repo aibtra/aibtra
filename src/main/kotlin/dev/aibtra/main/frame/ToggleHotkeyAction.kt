@@ -4,7 +4,6 @@
 
 package dev.aibtra.main.frame
 
-import com.formdev.flatlaf.util.SystemInfo
 import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.gui.HotkeyListener
 import dev.aibtra.gui.dialogs.DialogDisplayer

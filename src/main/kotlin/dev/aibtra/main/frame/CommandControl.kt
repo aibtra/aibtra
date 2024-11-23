@@ -9,7 +9,10 @@ import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.util.function.Consumer
 import java.util.stream.Collectors
-import javax.swing.*
+import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.JTextArea
+import javax.swing.UIManager
 
 class CommandControl(val configurationProvider: ConfigurationProvider) {
 	private val beforeArea = JTextArea()
