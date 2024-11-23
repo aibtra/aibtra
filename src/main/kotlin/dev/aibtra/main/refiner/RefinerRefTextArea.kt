@@ -20,18 +20,17 @@ class RefinerRefTextArea(environment: Environment) :
 	private val styleGapLeft: HighlightStyle
 	private val styleGapRight: HighlightStyle
 	private val configurationProvider: ConfigurationProvider
-	private val documentFilter = NonEditableDocumentFilter()
+	private val documentFilter : NonEditableDocumentFilter
 
 	private var state: State = State(listOf())
 
 	init {
+		documentFilter = disableEditing()
+
 		// We are using a JTextArea and Highlighters instead of a JEditorPane/JTextPane, because these have some bugs related to layouting, especially wrapping of lines which are critical for us.
 		textArea.lineWrap = false
 		textArea.wrapStyleWord = true
 		textArea.document.putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n")
-
-		// The JTextArea should be editable, so selection works, but we will prevent actual editing
-		(textArea.document as AbstractDocument).documentFilter = documentFilter
 
 		val guiConfiguration = environment.guiConfiguration
 		textArea.font = guiConfiguration.fonts.monospacedFont
@@ -65,12 +64,9 @@ class RefinerRefTextArea(environment: Environment) :
 			textArea.caretPosition = start
 		}
 
-		documentFilter.locked = false
-		try {
+		documentFilter.update {
 			doc.remove(start, existing.length - start)
 			doc.insertString(start, text.substring(start), SimpleAttributeSet.EMPTY)
-		} finally {
-			documentFilter.locked = true
 		}
 
 		state = State(chars)
@@ -100,39 +96,4 @@ class RefinerRefTextArea(environment: Environment) :
 	}
 
 	private data class State(val diffChars: List<DiffChar>)
-
-	private class NonEditableDocumentFilter : DocumentFilter() {
-		var locked = true
-
-		override fun insertString(fb: FilterBypass?, offset: Int, string: String?, attr: AttributeSet?) {
-			if (locked) {
-				beep()
-				return
-			}
-
-			super.insertString(fb, offset, string, attr)
-		}
-
-		override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
-			if (locked) {
-				beep()
-				return
-			}
-
-			super.replace(fb, offset, length, text, attrs)
-		}
-
-		override fun remove(fb: FilterBypass?, offset: Int, length: Int) {
-			if (locked) {
-				beep()
-				return
-			}
-
-			super.remove(fb, offset, length)
-		}
-
-		private fun beep() {
-			Toolkit.getDefaultToolkit().beep()
-		}
-	}
 }
