@@ -13,6 +13,7 @@ import dev.aibtra.configuration.*
 import dev.aibtra.core.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
+import dev.aibtra.gui.frames.*
 import java.awt.event.*
 
 class HotkeyListener(
