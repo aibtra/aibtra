@@ -4,9 +4,9 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.diff.DiffManager
-import dev.aibtra.gui.action.ActionRunnable
-import java.util.concurrent.atomic.AtomicBoolean
+import dev.aibtra.diff.*
+import dev.aibtra.gui.action.*
+import java.util.concurrent.atomic.*
 
 class SubmitAction(
 	environment: Environment,

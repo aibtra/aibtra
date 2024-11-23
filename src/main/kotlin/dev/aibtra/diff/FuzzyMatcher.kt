@@ -1,6 +1,6 @@
 package dev.aibtra.diff
 
-import dev.aibtra.OptimisticLevenshteinDistance
+import dev.aibtra.*
 
 class FuzzyMatcher(val from: Int, val to: Int, val steps: Long) {
 	init {

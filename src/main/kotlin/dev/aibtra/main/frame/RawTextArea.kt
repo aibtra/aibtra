@@ -4,20 +4,13 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.diff.DiffChar
-import dev.aibtra.diff.DiffKind
-import dev.aibtra.text.FilteredText
-import java.awt.Color
-import java.awt.event.ActionEvent
-import java.awt.event.KeyEvent
-import javax.swing.AbstractAction
-import javax.swing.JComponent
-import javax.swing.JTextArea
-import javax.swing.KeyStroke
-import javax.swing.text.AbstractDocument
-import javax.swing.text.AttributeSet
-import javax.swing.text.DocumentFilter
-import javax.swing.undo.UndoManager
+import dev.aibtra.diff.*
+import dev.aibtra.text.*
+import java.awt.*
+import java.awt.event.*
+import javax.swing.*
+import javax.swing.text.*
+import javax.swing.undo.*
 
 class RawTextArea(private val textInitializer: TextInitializer, environment: Environment) :
 	AbstractTextArea<RawTextArea.TextArea>(TextArea(), environment) {

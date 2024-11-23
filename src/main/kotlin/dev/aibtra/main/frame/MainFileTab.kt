@@ -4,12 +4,12 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.diff.DiffManager
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import java.nio.file.Path
-import javax.swing.JMenu
+import dev.aibtra.core.*
+import dev.aibtra.diff.*
+import dev.aibtra.gui.*
+import dev.aibtra.gui.dialogs.*
+import java.nio.file.*
+import javax.swing.*
 
 internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(WorkingMode.FILE, tabbedPane, environment, dialogDisplayer) {
 	private val workFile: WorkFile

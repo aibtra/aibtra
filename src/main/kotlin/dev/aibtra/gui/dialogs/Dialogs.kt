@@ -4,12 +4,11 @@
 
 package dev.aibtra.gui.dialogs
 
-import dev.aibtra.core.Logger
-import java.awt.Window
-import java.io.IOException
-import java.util.function.Consumer
-import javax.swing.JOptionPane
-import javax.swing.UIManager
+import dev.aibtra.core.*
+import java.awt.*
+import java.io.*
+import java.util.function.*
+import javax.swing.*
 
 object Dialogs {
 	private val LOG = Logger.getLogger(Dialogs::class)

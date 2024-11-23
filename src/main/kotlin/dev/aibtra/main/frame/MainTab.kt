@@ -4,20 +4,18 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.diff.DiffManager
-import dev.aibtra.diff.DiffManager.State
-import dev.aibtra.gui.DelayedUiRefresher
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.toolbar.ToolBar
-import dev.aibtra.openai.OpenAIProfiles
+import dev.aibtra.core.*
+import dev.aibtra.diff.*
+import dev.aibtra.diff.DiffManager.*
+import dev.aibtra.gui.*
+import dev.aibtra.gui.dialogs.*
+import dev.aibtra.gui.toolbar.*
+import dev.aibtra.openai.*
 import java.awt.*
 import java.awt.event.*
-import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.*
 import javax.swing.*
-import kotlin.reflect.KFunction2
+import kotlin.reflect.*
 
 internal abstract class MainTab(initialWorkingMode: WorkingMode, private val tabbedPane: MainTabbedPane, private val environment: Environment, val dialogDisplayer: DialogDisplayer) {
 	private val commandControl: CommandControl

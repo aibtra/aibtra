@@ -4,16 +4,12 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationFactory
-import dev.aibtra.core.Logger
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import javax.swing.KeyStroke
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+import javax.swing.*
 
 @Serializable
 class Accelerators(private val actionIdToAccelerator: Map<String, @Serializable(with = KeyStrokeSerializer::class) KeyStroke?> = mapOf()) {

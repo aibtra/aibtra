@@ -1,8 +1,8 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.openai.OpenAIProfiles
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import dev.aibtra.openai.*
 
 class ProfileManager(private val workingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
 

@@ -4,7 +4,7 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.diff.DiffManager
+import dev.aibtra.diff.*
 
 class ToggleShowRefBeforeAndAfterAction(
 	diffManager: DiffManager,

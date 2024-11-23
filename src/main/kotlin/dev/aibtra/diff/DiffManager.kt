@@ -4,17 +4,12 @@
 
 package dev.aibtra.diff
 
-import dev.aibtra.core.DebugLog
-import dev.aibtra.core.Logger
-import dev.aibtra.gui.Callback
-import dev.aibtra.gui.Run
-import dev.aibtra.gui.SequentialRunner
-import dev.aibtra.gui.Ui
-import dev.aibtra.text.FilteredText
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.serialization.Serializable
-import java.util.function.Consumer
+import dev.aibtra.core.*
+import dev.aibtra.gui.*
+import dev.aibtra.text.*
+import kotlinx.coroutines.*
+import kotlinx.serialization.*
+import java.util.function.*
 
 class DiffManager(
 	private val rawNormalizer: RawNormalizer,

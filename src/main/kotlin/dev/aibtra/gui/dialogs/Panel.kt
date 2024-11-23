@@ -4,9 +4,9 @@
 
 package dev.aibtra.gui.dialogs
 
-import net.miginfocom.swing.MigLayout
-import java.awt.Component
-import javax.swing.JPanel
+import net.miginfocom.swing.*
+import java.awt.*
+import javax.swing.*
 
 class Panel(
 	private val rows: Int,

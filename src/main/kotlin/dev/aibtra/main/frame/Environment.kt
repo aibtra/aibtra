@@ -4,11 +4,10 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.DebugLog
-import dev.aibtra.gui.HotkeyListener
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import dev.aibtra.gui.*
+import kotlinx.coroutines.*
 import java.util.*
 
 interface Environment {

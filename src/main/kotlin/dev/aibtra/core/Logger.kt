@@ -4,15 +4,11 @@
 
 package dev.aibtra.core
 
-import dev.aibtra.main.startup.MainStartup
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.util.logging.FileHandler
-import java.util.logging.Level
-import java.util.logging.LogManager
+import dev.aibtra.main.startup.*
+import java.nio.file.*
+import java.util.logging.*
 import java.util.logging.Logger
-import kotlin.reflect.KClass
+import kotlin.reflect.*
 
 class Logger private constructor(private val logger: Logger) {
 	fun debug(message: String?) {

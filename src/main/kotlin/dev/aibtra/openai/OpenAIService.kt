@@ -4,26 +4,17 @@
 
 package dev.aibtra.openai
 
-import com.vladsch.flexmark.ast.FencedCodeBlock
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.data.MutableDataSet
-import dev.aibtra.core.DebugLog
-import dev.aibtra.core.JsonUtils
+import com.vladsch.flexmark.ast.*
+import com.vladsch.flexmark.parser.*
+import com.vladsch.flexmark.util.data.*
+import dev.aibtra.core.*
 import dev.aibtra.core.JsonUtils.Companion.objNotNull
-import dev.aibtra.core.Logger
-import dev.aibtra.diff.FuzzyMatcher
-import org.json.simple.JSONArray
-import org.json.simple.JSONObject
-import org.json.simple.parser.JSONParser
-import org.json.simple.parser.ParseException
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.io.StringReader
-import java.net.HttpURLConnection
-import java.net.URI
-import java.net.UnknownHostException
-import java.nio.charset.StandardCharsets
+import dev.aibtra.diff.*
+import org.json.simple.*
+import org.json.simple.parser.*
+import java.io.*
+import java.net.*
+import java.nio.charset.*
 
 class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
 	fun request(profile: OpenAIProfiles.Profile, selection: Selection?, keywordResolver: (key: String) -> String?, callback: (result: Result) -> Boolean) {

@@ -4,12 +4,10 @@
 
 package dev.aibtra.diff
 
-import de.regnis.q.sequence.QSequenceDifference
-import de.regnis.q.sequence.QSequenceDifferenceBlock
-import de.regnis.q.sequence.QSequenceDifferenceBlockShifter
-import de.regnis.q.sequence.core.QSequenceMedia
-import de.regnis.q.sequence.media.QSequenceMediaDummyIndexTransformer
-import java.util.stream.Collectors
+import de.regnis.q.sequence.*
+import de.regnis.q.sequence.core.*
+import de.regnis.q.sequence.media.*
+import java.util.stream.*
 
 class DiffBuilder(
 	private val raw: String,

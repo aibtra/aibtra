@@ -4,11 +4,9 @@
 
 package dev.aibtra.gui
 
-import dev.aibtra.gui.action.DefaultAction
-import java.awt.GraphicsEnvironment
-import javax.swing.JButton
-import javax.swing.JLabel
-import javax.swing.SwingUtilities
+import dev.aibtra.gui.action.*
+import java.awt.*
+import javax.swing.*
 
 object Ui {
 	private val hiDPI = detectHiDPI()

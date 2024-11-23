@@ -4,10 +4,8 @@
 
 package dev.aibtra.gui.action
 
-import java.awt.event.ActionEvent
-import javax.swing.AbstractAction
-import javax.swing.Action
-import javax.swing.ButtonGroup
+import java.awt.event.*
+import javax.swing.*
 
 open class DefaultAction(
 	val title: String,

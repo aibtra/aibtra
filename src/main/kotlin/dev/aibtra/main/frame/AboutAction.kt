@@ -4,11 +4,10 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.Logger
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.dialogs.Dialogs
-import java.awt.Desktop
-import java.net.URI
+import dev.aibtra.core.*
+import dev.aibtra.gui.dialogs.*
+import java.awt.*
+import java.net.*
 
 class AboutAction(
 	environment: Environment,

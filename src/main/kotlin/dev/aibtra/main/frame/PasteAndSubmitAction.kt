@@ -4,12 +4,11 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.Logger
-import dev.aibtra.diff.DiffManager
-import java.awt.Toolkit
-import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.UnsupportedFlavorException
-import java.io.IOException
+import dev.aibtra.core.*
+import dev.aibtra.diff.*
+import java.awt.*
+import java.awt.datatransfer.*
+import java.io.*
 
 class PasteAndSubmitAction(
 	environment: Environment,

@@ -6,11 +6,10 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.Logger
-import dev.aibtra.main.startup.MainStartup
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
+import dev.aibtra.core.*
+import dev.aibtra.main.startup.*
+import java.io.*
+import java.nio.file.*
 import java.util.*
 
 class BuildInfo(val sha: String, val instant: String, val bundleType: BundleType?) {

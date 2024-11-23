@@ -4,10 +4,10 @@
 
 package dev.aibtra.gui.toolbar
 
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.action.DefaultAction
-import dev.aibtra.main.frame.Theme
-import java.awt.Component
+import dev.aibtra.gui.*
+import dev.aibtra.gui.action.*
+import dev.aibtra.main.frame.*
+import java.awt.*
 import javax.swing.*
 
 class ToolBar(

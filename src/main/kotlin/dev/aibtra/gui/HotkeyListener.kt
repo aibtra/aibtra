@@ -6,17 +6,14 @@
 
 package dev.aibtra.gui
 
-import com.formdev.flatlaf.util.SystemInfo
-import com.github.kwhat.jnativehook.GlobalScreen
-import com.github.kwhat.jnativehook.NativeHookException
-import com.github.kwhat.jnativehook.keyboard.NativeKeyListener
-import com.github.kwhat.jnativehook.keyboard.SwingKeyAdapter
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.Logger
-import dev.aibtra.gui.dialogs.Dialogs
-import dev.aibtra.main.frame.FrameManager
-import dev.aibtra.main.frame.GuiConfiguration
-import java.awt.event.KeyEvent
+import com.formdev.flatlaf.util.*
+import com.github.kwhat.jnativehook.*
+import com.github.kwhat.jnativehook.keyboard.*
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import dev.aibtra.gui.dialogs.*
+import dev.aibtra.main.frame.*
+import java.awt.event.*
 
 class HotkeyListener(
 	private val configurationProvider: ConfigurationProvider,

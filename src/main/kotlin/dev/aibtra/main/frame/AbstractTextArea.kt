@@ -4,21 +4,15 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.Logger
-import dev.aibtra.diff.DiffChar
-import dev.aibtra.diff.DiffManager
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import dev.aibtra.diff.*
 import java.awt.*
-import java.awt.event.MouseEvent
-import java.awt.event.MouseMotionAdapter
-import java.awt.geom.Point2D
-import java.awt.geom.Rectangle2D
-import java.awt.image.BufferedImage
-import javax.swing.JScrollPane
-import javax.swing.JTextArea
-import javax.swing.event.CaretListener
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
+import java.awt.event.*
+import java.awt.geom.*
+import java.awt.image.*
+import javax.swing.*
+import javax.swing.event.*
 import javax.swing.text.*
 
 open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environment: Environment) {

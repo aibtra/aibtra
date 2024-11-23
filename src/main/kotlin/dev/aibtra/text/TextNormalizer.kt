@@ -4,7 +4,7 @@
 
 package dev.aibtra.text
 
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 
 class TextNormalizer(val config: Config) {
 	fun normalize(text: String): String {

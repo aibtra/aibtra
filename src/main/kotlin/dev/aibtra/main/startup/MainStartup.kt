@@ -4,43 +4,30 @@
 
 package dev.aibtra.main.startup
 
-import com.formdev.flatlaf.FlatDarkLaf
-import dev.aibtra.configuration.ConfigurationFactory
-import dev.aibtra.configuration.ConfigurationFile
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.GlobalExceptionHandler
+import com.formdev.flatlaf.*
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
 import dev.aibtra.core.Logger
-import dev.aibtra.core.SingleInstanceAppLock
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.gui.Ui
+import dev.aibtra.gui.*
 import dev.aibtra.gui.Ui.createButton
 import dev.aibtra.gui.Ui.toHiDPIPixel
-import dev.aibtra.gui.action.DefaultAction
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.dialogs.Dialogs
+import dev.aibtra.gui.action.*
+import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.frame.*
 import dev.aibtra.main.frame.MainFrame.Companion.frameTitle
-import joptsimple.OptionParser
-import joptsimple.OptionSet
-import kotlinx.coroutines.asCoroutineDispatcher
+import joptsimple.*
+import kotlinx.coroutines.*
 import java.awt.*
-import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.UnsupportedFlavorException
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.logging.Formatter
-import java.util.logging.LogRecord
+import java.awt.datatransfer.*
+import java.awt.event.*
+import java.io.*
+import java.nio.file.*
+import java.time.*
+import java.time.format.*
+import java.util.concurrent.*
+import java.util.logging.*
 import javax.swing.*
-import kotlin.reflect.KClass
+import kotlin.reflect.*
 
 class MainStartup {
 	companion object {

@@ -4,12 +4,12 @@
 
 package dev.aibtra.gui
 
-import dev.aibtra.main.frame.GuiConfiguration
-import java.awt.Image
-import java.awt.image.BaseMultiResolutionImage
-import java.net.URL
-import javax.imageio.ImageIO
-import javax.swing.ImageIcon
+import dev.aibtra.main.frame.*
+import java.awt.*
+import java.awt.image.*
+import java.net.*
+import javax.imageio.*
+import javax.swing.*
 
 class Icon private constructor(
 	private val imageLight: ImageIcon,

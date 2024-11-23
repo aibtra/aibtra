@@ -4,11 +4,9 @@
 
 package dev.aibtra.main.frame
 
-import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.*
 import java.util.*
-import kotlin.io.path.exists
-import kotlin.io.path.inputStream
+import kotlin.io.path.*
 
 class ApplicationPaths(
 	val settingsPath: Path,

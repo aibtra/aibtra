@@ -4,8 +4,7 @@
 
 package dev.aibtra.configuration
 
-import dev.aibtra.gui.action.ActionRunnable
-import dev.aibtra.gui.action.DefaultAction
+import dev.aibtra.gui.action.*
 
 class ConfigurationBooleanActionRunnable<T>(
 	private val configurationProvider: ConfigurationProvider,

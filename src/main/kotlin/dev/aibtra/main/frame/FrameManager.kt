@@ -4,10 +4,9 @@
 
 package dev.aibtra.main.frame
 
-import java.awt.Frame
-import java.awt.event.WindowAdapter
-import java.awt.event.WindowEvent
-import javax.swing.JFrame
+import java.awt.*
+import java.awt.event.*
+import javax.swing.*
 
 class FrameManager {
 	private var frame: MainFrame? = null

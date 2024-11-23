@@ -4,8 +4,8 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.gui.Icon
-import dev.aibtra.openai.OpenAIProfiles
+import dev.aibtra.gui.*
+import dev.aibtra.openai.*
 
 open class MainMenuProfileBooleanAction(
 	id: String,

@@ -4,10 +4,10 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.Logger
-import dev.aibtra.diff.DiffManager
-import dev.aibtra.gui.action.ActionRunnable
-import java.util.stream.Collectors
+import dev.aibtra.core.*
+import dev.aibtra.diff.*
+import dev.aibtra.gui.action.*
+import java.util.stream.*
 
 class ApplyChangeAction(
 	refTextArea: RefTextArea,

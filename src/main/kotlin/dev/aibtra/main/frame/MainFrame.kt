@@ -4,16 +4,13 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.gui.dialogs.DialogDisplayer
+import dev.aibtra.core.*
+import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import java.awt.*
-import java.awt.event.WindowAdapter
-import java.awt.event.WindowEvent
-import java.awt.event.WindowFocusListener
-import java.nio.file.Path
-import javax.swing.JFrame
-import javax.swing.JMenuBar
+import java.awt.event.*
+import java.nio.file.*
+import javax.swing.*
 
 class MainFrame(private val environment: Environment) {
 	val dialogDisplayer: DialogDisplayer

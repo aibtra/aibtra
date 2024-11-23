@@ -1,7 +1,7 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationFactory
-import kotlinx.serialization.Serializable
+import dev.aibtra.configuration.*
+import kotlinx.serialization.*
 
 @Serializable
 internal data class MainLayout(val x: Int? = null, val y: Int? = null, val width: Int = DEFAULT_WIDTH, val height: Int = DEFAULT_HEIGHT, val maximized: Boolean = false, val dividerLocation: Int = 0) {
