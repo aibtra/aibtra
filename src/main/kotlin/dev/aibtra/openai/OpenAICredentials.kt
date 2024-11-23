@@ -4,8 +4,8 @@
 
 package dev.aibtra.openai
 
-import dev.aibtra.configuration.ConfigurationFactory
-import kotlinx.serialization.Serializable
+import dev.aibtra.configuration.*
+import kotlinx.serialization.*
 
 @Serializable
 data class OpenAICredentials(

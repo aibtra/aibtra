@@ -4,14 +4,12 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.dialogs.Dialogs
-import dev.aibtra.gui.toolbar.ToolBar
-import dev.aibtra.openai.OpenAIProfiles
-import dev.aibtra.text.Schemes
-import dev.aibtra.text.TextNormalizer
-import java.awt.Component
+import dev.aibtra.core.*
+import dev.aibtra.gui.dialogs.*
+import dev.aibtra.gui.toolbar.*
+import dev.aibtra.openai.*
+import dev.aibtra.text.*
+import java.awt.*
 import javax.swing.*
 
 internal class MainTextTab(private val workingMode: WorkingMode, tabbedPane: MainTabbedPane, private val environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(workingMode, tabbedPane, environment, dialogDisplayer) {

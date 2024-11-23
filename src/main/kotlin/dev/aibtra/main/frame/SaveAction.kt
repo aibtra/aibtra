@@ -4,7 +4,7 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.gui.action.ActionRunnable
+import dev.aibtra.gui.action.*
 
 class SaveAction(workFile: WorkFile, environment: Environment) : MainMenuAction("save", "Save", "ctrl S", environment.accelerators, ActionRunnable {
 	workFile.save() {}

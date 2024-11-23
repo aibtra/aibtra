@@ -1,18 +1,14 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.gui.Ui
-import dev.aibtra.openai.OpenAIProfiles
-import dev.aibtra.openai.OpenAIProfiles.Profile
-import java.awt.BorderLayout
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
-import java.util.function.Consumer
-import java.util.stream.Collectors
-import javax.swing.JComponent
-import javax.swing.JPanel
-import javax.swing.JTextArea
-import javax.swing.UIManager
+import dev.aibtra.configuration.*
+import dev.aibtra.gui.*
+import dev.aibtra.openai.*
+import dev.aibtra.openai.OpenAIProfiles.*
+import java.awt.*
+import java.awt.event.*
+import java.util.function.*
+import java.util.stream.*
+import javax.swing.*
 
 class CommandControl(val configurationProvider: ConfigurationProvider) {
 	private val beforeArea = JTextArea()

@@ -4,10 +4,8 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationBooleanActionRunnable
-import dev.aibtra.configuration.ConfigurationFactory
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.gui.Icon
+import dev.aibtra.configuration.*
+import dev.aibtra.gui.*
 
 open class MainMenuConfigurationBooleanAction<T>(
 	id: String,

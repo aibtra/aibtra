@@ -8,34 +8,25 @@
 
 package dev.aibtra.main.frame
 
-import com.formdev.flatlaf.util.SystemInfo
-import dev.aibtra.configuration.ConfigurationFactory
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.JsonUtils
-import dev.aibtra.core.Logger
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.dialogs.Dialogs
+import com.formdev.flatlaf.util.*
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import dev.aibtra.gui.*
+import dev.aibtra.gui.dialogs.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import org.json.simple.JSONArray
-import org.json.simple.JSONObject
-import org.json.simple.parser.JSONParser
-import java.awt.Desktop
-import java.io.InputStreamReader
-import java.net.URI
-import java.nio.charset.StandardCharsets
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.time.temporal.ChronoUnit
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+import org.json.simple.*
+import org.json.simple.parser.*
+import java.awt.*
+import java.io.*
+import java.net.*
+import java.nio.charset.*
+import java.time.*
+import java.time.format.*
+import java.time.temporal.*
 import java.util.*
 
 class UpdateCheck(private val buildInfo: BuildInfo, val configurationProvider: ConfigurationProvider, private val dispatcher: CoroutineDispatcher, private val mainScope: CoroutineScope, private val paths: ApplicationPaths, private val dialogDisplayer: DialogDisplayer) {

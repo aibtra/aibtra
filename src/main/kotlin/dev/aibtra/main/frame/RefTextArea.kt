@@ -4,12 +4,11 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.diff.DiffChar
-import dev.aibtra.diff.DiffKind
-import java.awt.Toolkit
-import java.awt.event.MouseListener
-import javax.swing.JTextArea
+import dev.aibtra.configuration.*
+import dev.aibtra.diff.*
+import java.awt.*
+import java.awt.event.*
+import javax.swing.*
 import javax.swing.text.*
 
 class RefTextArea(environment: Environment) :

@@ -1,21 +1,14 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.core.Logger
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.dialogs.Dialogs
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import org.jetbrains.annotations.TestOnly
-import java.io.IOException
+import dev.aibtra.core.*
+import dev.aibtra.gui.*
+import dev.aibtra.gui.dialogs.*
+import kotlinx.coroutines.*
+import org.jetbrains.annotations.*
+import java.io.*
 import java.nio.file.*
 import java.nio.file.StandardWatchEventKinds.*
-import kotlin.io.path.fileSize
-import kotlin.io.path.getLastModifiedTime
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
+import kotlin.io.path.*
 
 class WorkFile(val mainScope: CoroutineScope, val dialogDisplayer: DialogDisplayer) {
 

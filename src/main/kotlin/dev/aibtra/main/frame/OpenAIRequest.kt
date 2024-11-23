@@ -1,9 +1,8 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.openai.OpenAIProfiles
-import dev.aibtra.openai.OpenAIService
-import dev.aibtra.text.FilteredText
-import java.io.IOException
+import dev.aibtra.openai.*
+import dev.aibtra.text.*
+import java.io.*
 
 class OpenAIRequest(val profile: OpenAIProfiles.Profile, private val service: OpenAIService, val retrieveCommand : () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RequestManager.Request {
 	override fun run(filtered: FilteredText, callback: RequestManager.RequestCallback) {

@@ -6,22 +6,15 @@
 
 package dev.aibtra.main.frame
 
-import com.formdev.flatlaf.util.SystemInfo
-import dev.aibtra.configuration.ConfigurationFactory
+import com.formdev.flatlaf.util.*
+import dev.aibtra.configuration.*
 import dev.aibtra.configuration.ConfigurationFactory.Companion.paths
-import dev.aibtra.gui.Ui
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import java.awt.Font
-import java.awt.SystemTray
-import javax.swing.JTextArea
+import dev.aibtra.gui.*
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+import java.awt.*
+import javax.swing.*
 
 @Serializable
 data class GuiConfiguration(

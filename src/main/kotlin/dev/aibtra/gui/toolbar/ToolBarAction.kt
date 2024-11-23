@@ -4,9 +4,8 @@
 
 package dev.aibtra.gui.toolbar
 
-import dev.aibtra.gui.Icon
-import dev.aibtra.gui.action.ActionRunnable
-import dev.aibtra.gui.action.DefaultAction
+import dev.aibtra.gui.*
+import dev.aibtra.gui.action.*
 
 open class ToolBarAction(
 	title: String,

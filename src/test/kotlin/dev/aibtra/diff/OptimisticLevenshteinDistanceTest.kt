@@ -1,9 +1,8 @@
 package dev.aibtra.diff
 
-import dev.aibtra.OptimisticLevenshteinDistance
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
-import kotlin.random.Random
+import dev.aibtra.*
+import org.junit.jupiter.api.*
+import kotlin.random.*
 
 class OptimisticLevenshteinDistanceTest {
 

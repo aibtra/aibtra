@@ -4,15 +4,14 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.gui.Ui
+import dev.aibtra.configuration.*
+import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
-import dev.aibtra.openai.OpenAICredentials
-import dev.aibtra.openai.OpenAIProfiles
-import dev.aibtra.openai.OpenAIService
-import java.awt.Desktop
-import javax.swing.JEditorPane
-import javax.swing.event.HyperlinkEvent
+import dev.aibtra.gui.dialogs.Panel
+import dev.aibtra.openai.*
+import java.awt.*
+import javax.swing.*
+import javax.swing.event.*
 
 class Submitter(private val environment: Environment, private val requestManager: RequestManager, private val commandControl: CommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> OpenAIProfiles.Profile) {
 	init {

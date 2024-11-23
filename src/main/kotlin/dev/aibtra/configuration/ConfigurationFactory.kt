@@ -4,8 +4,8 @@
 
 package dev.aibtra.configuration
 
-import dev.aibtra.main.frame.ApplicationPaths
-import kotlinx.serialization.KSerializer
+import dev.aibtra.main.frame.*
+import kotlinx.serialization.*
 
 interface ConfigurationFactory<D> {
 	fun name(): String

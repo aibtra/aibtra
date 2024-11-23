@@ -4,10 +4,9 @@
 
 package dev.aibtra.gui.dialogs
 
-import java.awt.Window
-import java.util.function.Consumer
-import javax.swing.JDialog
-import javax.swing.JFrame
+import java.awt.*
+import java.util.function.*
+import javax.swing.*
 
 interface DialogDisplayer {
 	fun show(windowConsumer: Consumer<Window?>)

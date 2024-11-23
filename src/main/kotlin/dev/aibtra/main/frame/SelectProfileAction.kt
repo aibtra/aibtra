@@ -4,7 +4,7 @@
 
 package dev.aibtra.main.frame
 
-import javax.swing.JComboBox
+import javax.swing.*
 
 class SelectProfileAction(
 	comboBox: JComboBox<*>,

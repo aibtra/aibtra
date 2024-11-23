@@ -4,12 +4,11 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.diff.DiffManager
-import java.awt.Robot
-import java.awt.Toolkit
-import java.awt.datatransfer.StringSelection
-import java.awt.event.KeyEvent
+import dev.aibtra.configuration.*
+import dev.aibtra.diff.*
+import java.awt.*
+import java.awt.datatransfer.*
+import java.awt.event.*
 
 internal class CopyAndCloseAction(
 	tab: MainTextTab,

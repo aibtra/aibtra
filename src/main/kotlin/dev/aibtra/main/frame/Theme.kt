@@ -4,14 +4,11 @@
 
 package dev.aibtra.main.frame
 
-import com.formdev.flatlaf.FlatDarkLaf
-import com.formdev.flatlaf.FlatLaf
-import com.formdev.flatlaf.FlatLightLaf
-import dev.aibtra.configuration.ConfigurationProvider
-import java.awt.Color
-import java.awt.Frame
+import com.formdev.flatlaf.*
+import dev.aibtra.configuration.*
+import java.awt.*
 import java.util.*
-import javax.swing.SwingUtilities
+import javax.swing.*
 
 
 class Theme(val configurationProvider: ConfigurationProvider) {

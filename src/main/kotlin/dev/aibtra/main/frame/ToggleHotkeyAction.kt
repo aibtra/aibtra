@@ -4,10 +4,9 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.gui.HotkeyListener
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import dev.aibtra.gui.dialogs.Dialogs
+import dev.aibtra.configuration.*
+import dev.aibtra.gui.*
+import dev.aibtra.gui.dialogs.*
 
 class ToggleHotkeyAction(
 	hotkeyListener: HotkeyListener,

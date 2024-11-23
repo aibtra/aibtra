@@ -1,8 +1,7 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.main.frame.WorkFile.Eol
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import dev.aibtra.main.frame.WorkFile.*
+import org.junit.jupiter.api.*
 
 class WorkFileDetermineLineEndingTest {
 

@@ -1,13 +1,10 @@
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.core.WorkingMode
-import dev.aibtra.gui.HotkeyListener
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.dialogs.OkCancelDialog
-import dev.aibtra.gui.dialogs.Panel
-import javax.swing.JCheckBox
-import javax.swing.JLabel
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import dev.aibtra.gui.*
+import dev.aibtra.gui.dialogs.*
+import javax.swing.*
 
 class Setup {
 	companion object {

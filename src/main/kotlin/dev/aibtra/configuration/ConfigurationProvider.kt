@@ -4,7 +4,7 @@
 
 package dev.aibtra.configuration
 
-import kotlin.reflect.KClass
+import kotlin.reflect.*
 
 interface ConfigurationProvider {
 

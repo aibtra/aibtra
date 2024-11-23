@@ -4,10 +4,10 @@
 
 package dev.aibtra.gui.dialogs
 
-import dev.aibtra.gui.Ui
-import dev.aibtra.gui.action.DefaultAction
-import net.miginfocom.swing.MigLayout
-import javax.swing.JDialog
+import dev.aibtra.gui.*
+import dev.aibtra.gui.action.*
+import net.miginfocom.swing.*
+import javax.swing.*
 
 class OkCancelDialog(
 	private val title: String,

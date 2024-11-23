@@ -4,19 +4,14 @@
 
 package dev.aibtra.text
 
-import com.vladsch.flexmark.ast.BlockQuote
-import com.vladsch.flexmark.ast.Code
-import com.vladsch.flexmark.ast.FencedCodeBlock
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.Document
-import com.vladsch.flexmark.util.ast.Node
-import com.vladsch.flexmark.util.ast.NodeVisitor
-import com.vladsch.flexmark.util.ast.Visitor
-import com.vladsch.flexmark.util.data.MutableDataSet
-import java.math.BigInteger
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-import java.util.function.BiConsumer
+import com.vladsch.flexmark.ast.*
+import com.vladsch.flexmark.parser.*
+import com.vladsch.flexmark.util.ast.*
+import com.vladsch.flexmark.util.data.*
+import java.math.*
+import java.nio.charset.*
+import java.security.*
+import java.util.function.*
 
 class FilteredText(
 	val clean: Part,

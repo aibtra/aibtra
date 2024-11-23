@@ -5,9 +5,9 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.gui.Icon
-import dev.aibtra.gui.action.ActionRunnable
-import dev.aibtra.gui.toolbar.ToolBarAction
-import javax.swing.KeyStroke
+import dev.aibtra.gui.action.*
+import dev.aibtra.gui.toolbar.*
+import javax.swing.*
 
 open class MainMenuAction(
 	private val id: String,

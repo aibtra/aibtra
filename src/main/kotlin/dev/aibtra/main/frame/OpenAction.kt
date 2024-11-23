@@ -4,10 +4,10 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.gui.action.ActionRunnable
-import dev.aibtra.gui.dialogs.DialogDisplayer
-import java.io.File
-import javax.swing.JFileChooser
+import dev.aibtra.gui.action.*
+import dev.aibtra.gui.dialogs.*
+import java.io.*
+import javax.swing.*
 
 internal class OpenAction(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainMenuAction("open", "Open", "ctrl O", environment.accelerators, ActionRunnable {
 	val guiConfiguration = environment.configurationProvider.get(GuiConfiguration)

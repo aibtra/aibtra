@@ -4,8 +4,8 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.openai.OpenAIProfiles
-import javax.swing.ButtonGroup
+import dev.aibtra.openai.*
+import javax.swing.*
 
 class SetProfileAction(
 	profile: OpenAIProfiles.Profile.Name,

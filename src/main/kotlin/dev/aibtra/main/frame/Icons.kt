@@ -4,9 +4,9 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.gui.Icon
+import dev.aibtra.gui.*
 import dev.aibtra.gui.Icon.Companion.create
-import java.io.IOException
+import java.io.*
 
 object Icons {
 	val ACCEPT = loadIcon("accept")

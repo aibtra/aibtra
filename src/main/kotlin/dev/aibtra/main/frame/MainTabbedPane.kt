@@ -1,10 +1,7 @@
 package dev.aibtra.main.frame
 
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Component
-import java.awt.Container
-import java.util.function.IntConsumer
+import java.awt.*
+import java.util.function.*
 import javax.swing.*
 
 internal class MainTabbedPane(private val centerPane: Container, private val frame: JFrame, private val frameManager: FrameManager) {

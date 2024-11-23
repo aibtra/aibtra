@@ -4,7 +4,7 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.gui.dialogs.DialogDisplayer
+import dev.aibtra.gui.dialogs.*
 
 class AcknowledgmentsAction(
 	environment: Environment,

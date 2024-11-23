@@ -4,10 +4,9 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.gui.action.ActionRunnable
-import dev.aibtra.gui.action.DefaultAction
-import java.awt.Toolkit
-import java.awt.datatransfer.StringSelection
+import dev.aibtra.gui.action.*
+import java.awt.*
+import java.awt.datatransfer.*
 
 class CopyRefSelectionAction(
 	refTextArea: RefTextArea

@@ -6,8 +6,8 @@
 
 package dev.aibtra.text
 
-import dev.aibtra.configuration.ConfigurationFactory
-import kotlinx.serialization.Serializable
+import dev.aibtra.configuration.*
+import kotlinx.serialization.*
 
 @Serializable
 data class Schemes(

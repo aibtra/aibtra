@@ -4,9 +4,8 @@
 
 package dev.aibtra.main.frame
 
-import dev.aibtra.configuration.ConfigurationProvider
-import dev.aibtra.text.Schemes
-import dev.aibtra.text.TextNormalizer
+import dev.aibtra.configuration.*
+import dev.aibtra.text.*
 
 class TextNormalizerAction private constructor(
 	id: String,
