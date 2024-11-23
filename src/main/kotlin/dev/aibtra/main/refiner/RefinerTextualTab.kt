@@ -119,12 +119,12 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	override fun init(mainPanel: JPanel, overlayPanel: JPanel) {
 		val rawControl = createRawControl()
 		val refControl = createRefControl()
-		val splitPane = createSplitPane(rawControl, refControl)
+		val splitPane = MainSplitPane(rawControl, refControl, environment)
 
 		val contentPanel = JPanel()
 		contentPanel.layout = BorderLayout()
 		contentPanel.add(commandControl.getComponent(), BorderLayout.NORTH)
-		contentPanel.add(splitPane, BorderLayout.CENTER)
+		contentPanel.add(splitPane.control, BorderLayout.CENTER)
 		mainPanel.add(contentPanel)
 
 		requestManager.addProgressListener { inProgress ->
@@ -187,33 +187,6 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 			}
 		})
 		return control
-	}
-
-	private fun createSplitPane(rawControl: Component, refControl: Component): JSplitPane {
-		val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
-		splitPane.resizeWeight = 0.5
-		splitPane.topComponent = rawControl
-		splitPane.bottomComponent = refControl
-		var splitInitializing = true
-		splitPane.addComponentListener(object : ComponentAdapter() {
-			override fun componentResized(e: ComponentEvent?) {
-				if (splitInitializing) {
-					splitInitializing = false
-					updateSplitPaneDividerLocation(splitPane)
-				}
-			}
-		})
-		splitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY) {
-			if (!splitInitializing) {
-				environment.configurationProvider.change(MainLayout) {
-					it.copy(dividerLocation = splitPane.dividerLocation)
-				}
-			}
-		}
-
-		// To prevent an initial jumping from centered location to stored location in componentResized()
-		updateSplitPaneDividerLocation(splitPane)
-		return splitPane
 	}
 
 	fun requestFocus() {
@@ -312,13 +285,6 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 	override fun closed() {
 		commandControl.retrieveCommand()
-	}
-
-	private fun updateSplitPaneDividerLocation(splitPane: JSplitPane) {
-		val location = environment.configurationProvider.get(MainLayout).dividerLocation
-		if (location > 0) {
-			splitPane.dividerLocation = location
-		}
 	}
 
 	private fun configureScrolling(textArea: AbstractTextArea<*>, update: KFunction2<DiffManager, ScrollPos, Unit>) {
