@@ -4,7 +4,7 @@
 
 package dev.aibtra.configuration
 
-import dev.aibtra.main.content.*
+import dev.aibtra.core.*
 import kotlinx.serialization.*
 
 interface ConfigurationFactory<D> {
