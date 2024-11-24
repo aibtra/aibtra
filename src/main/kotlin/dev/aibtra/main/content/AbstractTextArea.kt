@@ -72,7 +72,7 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 
 		val topBounds = top.bounds
 		val bottomBounds = bottom.bounds
-		textArea.scrollRectToVisible(Rectangle(topBounds.x, topBounds.y, 0, bottomBounds.y + bottomBounds.height - topBounds.y))
+		textArea.scrollRectToVisible(Rectangle(0, topBounds.y, 0, bottomBounds.y + bottomBounds.height - topBounds.y))
 	}
 
 	fun scrollToLine(line: Int) {
