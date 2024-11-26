@@ -35,11 +35,16 @@ class ApplyChangeAction(
 		}
 	}) {
 	init {
-		refTextArea.addSelectionListener { range ->
+		val listen: (range: IntRange?) -> Unit = { range ->
 			val state = diffManager.state
 			isEnabled = range?.let {
 				DiffManager.getSelectedBlocksFromRef(state, it).isNotEmpty()
 			} ?: false
+		}
+
+		refTextArea.addSelectionListener(listen)
+		refTextArea.addContentListener {
+			listen(refTextArea.getSelectionRange())
 		}
 
 		isEnabled = false
