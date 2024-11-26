@@ -38,7 +38,7 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		textArea.requestFocusInWindow()
 	}
 
-	protected fun disableEditing() : NonEditableDocumentFilter {
+	protected fun disableEditing(): NonEditableDocumentFilter {
 		val filter = NonEditableDocumentFilter()
 		(textArea.document as AbstractDocument).documentFilter = filter
 		return filter
@@ -88,6 +88,7 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 			LOG.error(ex)
 		}
 	}
+
 	fun addContentListener(listen: () -> Unit) {
 		textArea.document.addDocumentListener(object : DocumentListener {
 			override fun insertUpdate(e: DocumentEvent) {
