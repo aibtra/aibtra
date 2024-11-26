@@ -155,28 +155,36 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 	private fun createRefControl(): Component {
 		val control = refTextArea.getControl()
-		refTextArea.addMouseListener(object : MouseAdapter() {
-			override fun mouseReleased(e: MouseEvent) {
-				refTextArea.getSelectionRange()?.let {
-					val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
-					JPopupMenu().apply {
-						if (blocks.isNotEmpty()) {
-							add(JMenuItem(applyChangeAction))
-						}
-						if (SwingUtilities.isRightMouseButton(e)) {
-							if (componentCount > 0) {
-								add(JSeparator())
-							}
-							add(JMenuItem(RefinerCopyRefSelectionAction(refTextArea)))
-						}
-						else {
-							isFocusable = false
-						}
-						show(e.component, e.x, e.y)
+		refTextArea.addPopupMenu { _, popupMenu ->
+			refTextArea.getSelectionRange()?.let {
+				val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
+				popupMenu.apply {
+					if (blocks.isNotEmpty()) {
+						add(JMenuItem(applyChangeAction))
 					}
+					if (componentCount > 0) {
+						add(JSeparator())
+					}
+					add(JMenuItem(RefinerCopyRefSelectionAction(refTextArea)))
 				}
 			}
-		})
+		}
+
+		refTextArea.addPopupMenu(leftMouseButton = true) { _, popupMenu ->
+			refTextArea.getSelectionRange()?.let {
+				val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
+				popupMenu.apply {
+					if (blocks.isNotEmpty()) {
+						add(JMenuItem(applyChangeAction))
+					}
+					if (componentCount > 0) {
+						add(JSeparator())
+					}
+					add(JMenuItem(RefinerCopyRefSelectionAction(refTextArea)))
+				}
+			}
+		}
+
 		return control
 	}
 

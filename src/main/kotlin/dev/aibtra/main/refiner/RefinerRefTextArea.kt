@@ -7,8 +7,6 @@ package dev.aibtra.main.refiner
 import dev.aibtra.configuration.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
-import java.awt.*
-import java.awt.event.*
 import javax.swing.*
 import javax.swing.text.*
 
@@ -74,10 +72,6 @@ class RefinerRefTextArea(environment: Environment) :
 		require(text == textArea.text)
 
 		updateCharacterAttributes()
-	}
-
-	fun addMouseListener(mouseListener: MouseListener) {
-		textArea.addMouseListener(mouseListener)
 	}
 
 	private fun updateCharacterAttributes() {
