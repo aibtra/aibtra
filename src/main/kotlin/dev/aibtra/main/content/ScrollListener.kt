@@ -10,23 +10,23 @@ class ScrollListener(private val scrollState: ScrollState, val keepLeftPosOnRigh
 		install(leftTextArea, Side.LEFT)
 		install(rightTextArea, Side.RIGHT)
 
-		scrollState.addScrollListener { left, right ->
+		scrollState.addScrollListener { left, right, mode ->
 			Ui.assertEdt()
 
-			leftTextArea.scrollTo(left)
-			rightTextArea.scrollTo(right)
+			leftTextArea.scrollTo(left, mode)
+			rightTextArea.scrollTo(right, mode)
 		}
 	}
 
 	private fun install(textArea: AbstractTextArea<*>, side: Side) {
-		textArea.addScrollListener { pos ->
+		textArea.addScrollListener { pos, mode ->
 			if (inScrollPosUpdate) {
 				return@addScrollListener
 			}
 
 			inScrollPosUpdate = true
 			try {
-				side.update(scrollState, pos, keepLeftPosOnRightPosUpdate())
+				side.update(scrollState, pos, mode, keepLeftPosOnRightPosUpdate())
 			} finally {
 				inScrollPosUpdate = false
 			}
@@ -35,15 +35,15 @@ class ScrollListener(private val scrollState: ScrollState, val keepLeftPosOnRigh
 
 	private enum class Side {
 		LEFT {
-			override fun update(scrollState: ScrollState, pos: ScrollState.ScrollPos, keepLeftPos: Boolean) {
-				scrollState.updateLeftPos(pos)
+			override fun update(scrollState: ScrollState, pos: ScrollState.ScrollPos, mode: ScrollState.ScrollMode?, keepLeftPos: Boolean) {
+				scrollState.updateLeftPos(pos, mode)
 			}
 		}, RIGHT {
-			override fun update(scrollState: ScrollState, pos: ScrollState.ScrollPos, keepLeftPos: Boolean) {
-				scrollState.updateRightPos(pos, keepLeftPos)
+			override fun update(scrollState: ScrollState, pos: ScrollState.ScrollPos, mode: ScrollState.ScrollMode?, keepLeftPos: Boolean) {
+				scrollState.updateRightPos(pos, mode, keepLeftPos)
 			}
 		};
 
-		abstract fun update(scrollState: ScrollState, pos: ScrollState.ScrollPos, keepLeftPos: Boolean)
+		abstract fun update(scrollState: ScrollState, pos: ScrollState.ScrollPos, mode: ScrollState.ScrollMode?, keepLeftPos: Boolean)
 	}
 }

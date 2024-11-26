@@ -75,10 +75,10 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 			Ui.runInEdt {
 				if (state.diff.refFinished && !lastState.diff.refFinished) {
 					if (!state.selection) {
-						rawTextArea.scrollTo(ScrollState.ScrollPos(1, 10))
+						rawTextArea.scrollTo(ScrollState.ScrollPos(1, 10), ScrollState.ScrollMode.FORCE_TOP)
 					}
 					else {
-						refTextArea.scrollTo(diffManager.scrollState.syncRightScrollPos())
+						refTextArea.scrollTo(diffManager.scrollState.syncRightScrollPos(), ScrollState.ScrollMode.FORCE_TOP)
 					}
 				}
 			}
