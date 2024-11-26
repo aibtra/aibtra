@@ -4,6 +4,7 @@
 
 package dev.aibtra.diff
 
+import dev.aibtra.core.*
 import dev.aibtra.gui.*
 import java.util.function.*
 import kotlin.math.*
@@ -66,7 +67,7 @@ class ScrollState {
 				{ b -> b.refFrom },
 				{ b -> b.rawTo },
 				{ b -> b.refTo })
-			updateScrollPos(leftPos, rightPos)
+			updateScrollPos(leftPos, rightPos, false)
 		})
 	}
 
@@ -90,7 +91,7 @@ class ScrollState {
 					{ b -> b.refTo },
 					{ b -> b.rawTo })
 			}
-			updateScrollPos(leftScrollPos, rightPos)
+			updateScrollPos(leftScrollPos, rightPos, true)
 		})
 	}
 
@@ -132,12 +133,14 @@ class ScrollState {
 		}
 	}
 
-	private fun updateScrollPos(leftPosRaw: ScrollPos, rightPosRaw: ScrollPos) {
+	private fun updateScrollPos(leftPosRaw: ScrollPos, rightPosRaw: ScrollPos, rightToLeft: Boolean) {
 		val leftPos = if (leftPosRaw.bottom > state.leftText.length) state.leftPos else leftPosRaw
 		val rightPos = if (rightPosRaw.bottom > state.rightText.length) state.rightPos else rightPosRaw
 		if (leftPos == state.leftPos && rightPos == state.rightPos) {
 			return
 		}
+
+		LOG.debug("SCROLL: $leftPos ${if (rightToLeft) "<--" else "-->"} $rightPos")
 
 		state = state.copy(leftPos = leftPos, rightPos = rightPos)
 		scrollListeners.toList().forEach { it(leftPos, rightPos) }
@@ -151,8 +154,8 @@ class ScrollState {
 		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int
 	): ScrollPos {
 		return ScrollPos(
-			mapScrollPos(state, pos.top, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo),
-			mapScrollPos(state, pos.bottom, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo)
+			mapScrollPos(state, pos.top, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo, "TOP"),
+			mapScrollPos(state, pos.bottom, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo, "BOTTOM")
 		)
 	}
 
@@ -162,7 +165,8 @@ class ScrollState {
 		srcPos: Int,
 		srcText: (state: State) -> String, dstText: (state: State) -> String,
 		srcFrom: (block: DiffBlock) -> Int, dstFrom: (block: DiffBlock) -> Int,
-		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int
+		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int,
+		debugTitle: String
 	): Int {
 		val srcMax = srcText(state).length - 1
 		val dstMax = dstText(state).length - 1
@@ -173,18 +177,23 @@ class ScrollState {
 		}
 
 		if (beforeIndex < 0) {
+			LOG.trace("$debugTitle: $srcPos -> $srcPos (beforeIndex < 0)")
 			return srcPos
 		}
 
 		if (beforeIndex >= state.blocks.size) {
-			return dstMax - Math.max(0, Math.min(dstMax - (srcMax - srcPos), dstMax))
+			val pos = dstMax - Math.max(0, Math.min(dstMax - (srcMax - srcPos), dstMax))
+			LOG.trace("$debugTitle: $srcPos -> $pos (beforeIndex >= state.blocks.size)")
+			return pos
 		}
 
 		val lowerBlock = state.blocks[beforeIndex]
 		val srcTo = srcTo(lowerBlock)
 		val dstTo = dstTo(lowerBlock)
 		if (srcPos >= srcTo) {
-			return Math.min(dstTo + (srcPos - srcTo), dstMax)
+			val pos = Math.min(dstTo + (srcPos - srcTo), dstMax)
+			LOG.trace("$debugTitle: $srcPos -> $pos (srcPos >= srcTo)")
+			return pos
 		}
 
 		val srcFrom = srcFrom(lowerBlock)
@@ -192,7 +201,9 @@ class ScrollState {
 		require(srcPos >= srcFrom)
 
 		val ratio = (srcPos - srcFrom) / (srcTo - srcFrom).toDouble()
-		return dstFrom + ((dstTo - dstFrom) * ratio).toInt()
+		val pos = dstFrom + ((dstTo - dstFrom) * ratio).toInt()
+		LOG.trace("$debugTitle: $srcPos -> $pos (ratio=$ratio)")
+		return pos
 	}
 
 	data class State(val leftText: String, val leftPos: ScrollPos, val rightText: String, val rightPos: ScrollPos, val blocks: List<DiffBlock>)
@@ -204,6 +215,8 @@ class ScrollState {
 	}
 
 	companion object {
+		private val LOG = Logger.getLogger(this::class)
+
 		val INITIAL = State("", ScrollPos.INITIAL, "", ScrollPos.INITIAL, listOf())
 	}
 }
