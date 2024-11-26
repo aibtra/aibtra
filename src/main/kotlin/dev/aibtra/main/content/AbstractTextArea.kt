@@ -14,6 +14,7 @@ import java.awt.image.*
 import javax.swing.*
 import javax.swing.event.*
 import javax.swing.text.*
+import kotlin.math.*
 
 open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environment: Environment) {
 	private val LOG = Logger.getLogger(this::class)
@@ -48,7 +49,7 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		highlighter.run(chars, highlightStyle)
 	}
 
-	fun scrollTo(pos: ScrollState.ScrollPos) {
+	fun scrollTo(pos: ScrollState.ScrollPos, mode: ScrollState.ScrollMode) {
 		if (pos == createScrollPos()) {
 			return
 		}
@@ -72,7 +73,19 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 
 		val topBounds = top.bounds
 		val bottomBounds = bottom.bounds
-		textArea.scrollRectToVisible(Rectangle(0, topBounds.y, 0, bottomBounds.y + bottomBounds.height - topBounds.y))
+		val scrollTop: Int
+		val scrollBottom: Int
+		val viewportHeight = scrollPane.viewport.height
+		if (mode == ScrollState.ScrollMode.FORCE_TOP) {
+			scrollTop = topBounds.y
+			scrollBottom = min(bottomBounds.y + bottomBounds.height - topBounds.y, scrollTop + viewportHeight)
+		}
+		else {
+			scrollBottom = bottomBounds.y + bottomBounds.height - topBounds.y
+			scrollTop = max(topBounds.y, scrollBottom - viewportHeight)
+		}
+
+		textArea.scrollRectToVisible(Rectangle(0, scrollTop, 0, scrollBottom))
 	}
 
 	fun scrollToLine(line: Int) {
@@ -196,9 +209,20 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		return if (start < end) IntRange(start, end - 1) else null
 	}
 
-	fun addScrollListener(callback: (pos: ScrollState.ScrollPos) -> Unit) {
+	fun addScrollListener(callback: (pos: ScrollState.ScrollPos, mode: ScrollState.ScrollMode?) -> Unit) {
 		scrollPane.viewport.addChangeListener {
-			callback(createScrollPos())
+			callback(createScrollPos(), null)
+		}
+		scrollPane.addMouseWheelListener {
+			val viewport = scrollPane.viewport
+			val viewPosition: Point = viewport.viewPosition
+			val viewportSize = viewport.size
+			if (viewPosition.y <= 0) {
+				callback(createScrollPos(), ScrollState.ScrollMode.FORCE_TOP)
+			}
+			if (viewPosition.y + viewportSize.height >= viewport.view.size.height) {
+				callback(createScrollPos(), ScrollState.ScrollMode.FORCE_BOTTOM)
+			}
 		}
 	}
 

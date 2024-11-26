@@ -10,7 +10,7 @@ import java.util.function.*
 import kotlin.math.*
 
 class ScrollState {
-	private val scrollListeners = ArrayList<(left: ScrollPos, right: ScrollPos) -> Unit>()
+	private val scrollListeners = ArrayList<(left: ScrollPos, right: ScrollPos, mode: ScrollMode) -> Unit>()
 
 	private var inScrollPosUpdate = false
 	private var state: State = INITIAL
@@ -52,11 +52,11 @@ class ScrollState {
 		doSyncRightScrollPos()
 	}
 
-	fun updateLeftPos(leftPos: ScrollPos) {
+	fun updateLeftPos(leftPos: ScrollPos, mode: ScrollMode?) {
 		Ui.assertEdt()
 
 		runUpdateScrollPos(Consumer {
-			if (it.leftPos == leftPos) {
+			if (it.leftPos == leftPos && (mode == null || it.mode == mode)) {
 				return@Consumer
 			}
 
@@ -67,15 +67,15 @@ class ScrollState {
 				{ b -> b.refFrom },
 				{ b -> b.rawTo },
 				{ b -> b.refTo })
-			updateScrollPos(leftPos, rightPos, false)
+			updateScrollPos(leftPos, rightPos, mode, false)
 		})
 	}
 
-	fun updateRightPos(rightPos: ScrollPos, keepLeftPos : Boolean) {
+	fun updateRightPos(rightPos: ScrollPos, mode: ScrollMode?, keepLeftPos : Boolean) {
 		Ui.assertEdt()
 
 		runUpdateScrollPos(Consumer {
-			if (it.rightPos == rightPos) {
+			if (it.rightPos == rightPos && (mode == null || it.mode == mode)) {
 				return@Consumer
 			}
 
@@ -91,7 +91,7 @@ class ScrollState {
 					{ b -> b.refTo },
 					{ b -> b.rawTo })
 			}
-			updateScrollPos(leftScrollPos, rightPos, true)
+			updateScrollPos(leftScrollPos, rightPos, mode, false)
 		})
 	}
 
@@ -101,7 +101,7 @@ class ScrollState {
 		return doSyncRightScrollPos()
 	}
 
-	fun addScrollListener(listener: (left: ScrollPos, right: ScrollPos) -> Unit) {
+	fun addScrollListener(listener: (left: ScrollPos, right: ScrollPos, mode: ScrollMode) -> Unit) {
 		Ui.assertEdt()
 
 		scrollListeners.add(listener)
@@ -133,17 +133,19 @@ class ScrollState {
 		}
 	}
 
-	private fun updateScrollPos(leftPosRaw: ScrollPos, rightPosRaw: ScrollPos, rightToLeft: Boolean) {
+	private fun updateScrollPos(leftPosRaw: ScrollPos, rightPosRaw: ScrollPos, rawMode: ScrollMode?, rightToLeft: Boolean) {
 		val leftPos = if (leftPosRaw.bottom > state.leftText.length) state.leftPos else leftPosRaw
 		val rightPos = if (rightPosRaw.bottom > state.rightText.length) state.rightPos else rightPosRaw
-		if (leftPos == state.leftPos && rightPos == state.rightPos) {
+		if (leftPos == state.leftPos && rightPos == state.rightPos && (rawMode == null || rawMode == state.mode)) {
 			return
 		}
 
-		LOG.debug("SCROLL: $leftPos ${if (rightToLeft) "<--" else "-->"} $rightPos")
+		val mode = rawMode ?: state.mode
 
-		state = state.copy(leftPos = leftPos, rightPos = rightPos)
-		scrollListeners.toList().forEach { it(leftPos, rightPos) }
+		LOG.debug("SCROLL: $leftPos ${if (rightToLeft) "<--" else "-->"} $rightPos (mode=${mode}${rawMode?.let { ", force" } ?: ""})")
+
+		state = state.copy(leftPos = leftPos, rightPos = rightPos, mode = mode)
+		scrollListeners.toList().forEach { it(leftPos, rightPos, mode) }
 	}
 
 	private fun mapScrollPos(
@@ -206,7 +208,7 @@ class ScrollState {
 		return pos
 	}
 
-	data class State(val leftText: String, val leftPos: ScrollPos, val rightText: String, val rightPos: ScrollPos, val blocks: List<DiffBlock>)
+	data class State(val leftText: String, val leftPos: ScrollPos, val rightText: String, val rightPos: ScrollPos, val mode: ScrollMode, val blocks: List<DiffBlock>)
 
 	data class ScrollPos(val top: Int, val bottom: Int) {
 		companion object {
@@ -214,9 +216,13 @@ class ScrollState {
 		}
 	}
 
+	enum class ScrollMode {
+		FORCE_TOP, FORCE_BOTTOM
+	}
+
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
 
-		val INITIAL = State("", ScrollPos.INITIAL, "", ScrollPos.INITIAL, listOf())
+		val INITIAL = State("", ScrollPos.INITIAL, "", ScrollPos.INITIAL, ScrollMode.FORCE_TOP, listOf())
 	}
 }
