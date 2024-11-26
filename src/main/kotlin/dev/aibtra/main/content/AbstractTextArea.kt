@@ -143,8 +143,34 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		})
 	}
 
+	fun addPopupMenu(leftMouseButton: Boolean = false, fill: (pos: Int, popupMenu: JPopupMenu) -> Unit) {
+		textArea.addMouseListener(object : MouseAdapter() {
+			override fun mouseReleased(e: MouseEvent) {
+				if (!(isPopupButton(e))) {
+					return
+				}
+
+				val pos = textArea.viewToModel2D(e.point)
+				JPopupMenu().apply {
+					fill(pos, this)
+					if (componentCount > 0) {
+						show(e.component, e.x, e.y)
+					}
+				}
+			}
+
+			private fun isPopupButton(e: MouseEvent): Boolean {
+				return leftMouseButton && SwingUtilities.isLeftMouseButton(e) || !leftMouseButton && SwingUtilities.isRightMouseButton(e)
+			}
+		})
+	}
+
 	fun getSelectionText(): String {
 		return textArea.selectedText
+	}
+
+	fun getCaretPosition(): Int {
+		return textArea.caretPosition
 	}
 
 	fun getSelectionRange(): IntRange? {
