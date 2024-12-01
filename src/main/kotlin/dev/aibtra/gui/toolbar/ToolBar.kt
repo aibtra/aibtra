@@ -6,7 +6,7 @@ package dev.aibtra.gui.toolbar
 
 import dev.aibtra.gui.*
 import dev.aibtra.gui.action.*
-import dev.aibtra.main.frame.*
+import dev.aibtra.main.content.*
 import java.awt.*
 import javax.swing.*
 

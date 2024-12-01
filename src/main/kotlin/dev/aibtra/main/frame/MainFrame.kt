@@ -8,6 +8,8 @@ import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import dev.aibtra.gui.frames.*
+import dev.aibtra.main.content.*
+import dev.aibtra.main.refiner.*
 import java.awt.*
 import java.awt.event.*
 import java.nio.file.*
@@ -105,19 +107,19 @@ class MainFrame(private val environment: Environment) : FrameManager.Frame {
 	}
 
 	fun openEmpty(profileId: String?) {
-		val tab = MainTextTab(WorkingMode.OPEN, tabbedPane, environment, dialogDisplayer)
+		val tab = RefinerTextTab(WorkingMode.OPEN, tabbedPane, environment, dialogDisplayer)
 		tab.setProfile(profileId)
 		tabbedPane.add(tab)
 	}
 
 	fun openText(text: String, workingMode: WorkingMode, profileId: String?) {
-		val tab = MainTextTab(WorkingMode.CLIPBOARD, tabbedPane, environment, dialogDisplayer)
+		val tab = RefinerTextTab(WorkingMode.CLIPBOARD, tabbedPane, environment, dialogDisplayer)
 		tab.setText(text, workingMode, profileId)
 		tabbedPane.add(tab)
 	}
 
 	fun openFile(fileToOpen: Path, profileId: String?, line: Int?) {
-		val tab = MainFileTab(tabbedPane, environment, dialogDisplayer)
+		val tab = RefinerFileTab(tabbedPane, environment, dialogDisplayer)
 		tab.setFile(fileToOpen, profileId, line)
 		tabbedPane.add(tab)
 	}
