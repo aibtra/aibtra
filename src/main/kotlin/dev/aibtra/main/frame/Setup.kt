@@ -4,6 +4,7 @@ import dev.aibtra.configuration.*
 import dev.aibtra.core.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
+import dev.aibtra.main.content.*
 import javax.swing.*
 
 class Setup {

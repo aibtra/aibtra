@@ -4,7 +4,7 @@
 
 package dev.aibtra.gui
 
-import dev.aibtra.main.frame.*
+import dev.aibtra.main.content.*
 import java.awt.*
 import java.awt.image.*
 import java.net.*

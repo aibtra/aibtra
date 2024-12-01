@@ -1,0 +1,177 @@
+/*
+ * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
+ */
+
+package dev.aibtra.main.refiner
+
+import dev.aibtra.diff.*
+import dev.aibtra.main.content.*
+import dev.aibtra.text.*
+import java.awt.*
+import java.awt.event.*
+import javax.swing.*
+import javax.swing.text.*
+import javax.swing.undo.*
+
+class RefinerRawTextArea(private val textInitializer: TextInitializer, environment: Environment) :
+	AbstractTextArea<RefinerRawTextArea.TextArea>(TextArea(), environment) {
+	private val undoManager: UndoManager
+	private val styleModified: HighlightStyle
+	private val styleAdded: HighlightStyle
+	private val styleRemoved: HighlightStyle
+	private val styleGapLeft: HighlightStyle
+	private val styleGapRight: HighlightStyle
+	private val styleFiltered: HighlightStyle
+	private val styleSelected: HighlightStyle
+
+	private var ignoreUndoableEvents = false
+	private var diffChars: List<DiffChar> = listOf()
+	private var filteredText: FilteredText = FilteredText.asIs(FilteredText.Part.of(""))
+	private var selection: IntRange? = null
+
+	init {
+		(textArea.document as AbstractDocument).let {
+			it.documentFilter = object : DocumentFilter() {
+				override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
+					val normalized: String = if (textArea.pasting && offset == 0 && length == fb.document.length) {
+						textInitializer.initialize(text)
+					}
+					else {
+						text
+					}
+
+					super.replace(fb, offset, length, normalized, attrs)
+				}
+			}
+		}
+
+		textArea.isEditable = true
+		textArea.lineWrap = false
+		textArea.wrapStyleWord = true
+
+		val guiConfiguration = environment.guiConfiguration
+		textArea.font = guiConfiguration.fonts.monospacedFont
+
+		styleModified = HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, GapStyle.NONE)
+		styleAdded = HighlightStyle({ it.rawBackgroundAdded }, { null }, false, false, GapStyle.NONE)
+		styleRemoved = HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, GapStyle.NONE)
+		styleGapLeft = HighlightStyle({ it.rawBackgroundAddedGap }, { it.rawBackgroundAddedShadow }, false, false, GapStyle.LEFT)
+		styleGapRight = HighlightStyle({ it.rawBackgroundAddedGap }, { it.rawBackgroundAddedShadow }, false, false, GapStyle.RIGHT)
+		styleFiltered = HighlightStyle({ Color.gray }, { null }, true, false, GapStyle.NONE)
+		styleSelected = HighlightStyle({ it.selectionColor }, { null }, false, false, GapStyle.NONE)
+
+		undoManager = UndoManager()
+
+		textArea.document.addUndoableEditListener { e ->
+			if (!ignoreUndoableEvents) {
+				undoManager.addEdit(e.edit)
+			}
+		}
+
+		textArea.actionMap.put("Undo", object : AbstractAction("Undo") {
+			override fun actionPerformed(evt: ActionEvent?) {
+				if (undoManager.canUndo()) {
+					undoManager.undo()
+				}
+			}
+		})
+
+		textArea.actionMap.put("Redo", object : AbstractAction("Redo") {
+			override fun actionPerformed(evt: ActionEvent?) {
+				if (undoManager.canRedo()) {
+					undoManager.redo()
+				}
+			}
+		})
+
+		textArea.addPropertyChangeListener { evt ->
+			if (evt.propertyName == "UI") {
+				updateCharacterAttributes()
+			}
+		}
+
+		val inputMap = textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+		inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK), "Redo")
+		inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK), "Undo")
+	}
+
+	fun getText(): String {
+		return textArea.text
+	}
+
+	fun initializeText(text: String) {
+		setText(textInitializer.initialize(text))
+	}
+
+	fun setText(text: String) {
+		textArea.text = text
+		textArea.caretPosition = 0
+
+		undoManager.discardAllEdits()
+	}
+
+	fun replaceText(from: Int, to: Int, text: String) {
+		textArea.document.remove(from, to - from)
+		textArea.document.insertString(from, text, null)
+	}
+
+	fun setDiffCharsAndFilteredText(diffChars: List<DiffChar>, filteredText: FilteredText) {
+		require(textArea.text.length == diffChars.size)
+
+		this.diffChars = diffChars
+		this.filteredText = filteredText
+
+		updateCharacterAttributes()
+	}
+
+	fun setSelection(selection: IntRange?) {
+		this.selection = selection
+
+		updateCharacterAttributes()
+	}
+
+	private fun updateCharacterAttributes() {
+		ignoreUndoableEvents = true
+		try {
+			updateCharacterAttributes(diffChars, ::getHighlighting)
+		} finally {
+			ignoreUndoableEvents = false
+		}
+	}
+
+	private fun getHighlighting(index: Int, char: DiffChar): HighlightStyle? {
+		if (selection?.contains(index) == true) {
+			return styleSelected
+		}
+
+		if (filteredText.isFiltered(index)) {
+			return styleFiltered
+		}
+
+		return when (char.kind) {
+			DiffKind.EQUAL -> null
+			DiffKind.ADDED -> styleAdded
+			DiffKind.MODIFIED -> styleModified
+			DiffKind.REMOVED -> styleRemoved
+			DiffKind.GAP_LEFT -> styleGapLeft
+			DiffKind.GAP_RIGHT -> styleGapRight
+		}
+	}
+
+	fun interface TextInitializer {
+		fun initialize(text: String): String
+	}
+
+	class TextArea : JTextArea() {
+		var pasting = false
+
+		override fun paste() {
+			pasting = true
+			try {
+				super.paste()
+			} finally {
+				pasting = false
+			}
+		}
+	}
+}

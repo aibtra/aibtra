@@ -13,6 +13,7 @@ import dev.aibtra.gui.Ui.createButton
 import dev.aibtra.gui.Ui.toHiDPIPixel
 import dev.aibtra.gui.action.*
 import dev.aibtra.gui.dialogs.*
+import dev.aibtra.main.content.*
 import dev.aibtra.main.frame.*
 import dev.aibtra.main.frame.MainFrame.Companion.frameTitle
 import joptsimple.*

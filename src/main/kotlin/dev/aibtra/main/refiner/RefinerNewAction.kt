@@ -1,0 +1,16 @@
+/*
+ * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
+ */
+
+package dev.aibtra.main.refiner
+
+import dev.aibtra.core.*
+import dev.aibtra.gui.action.*
+import dev.aibtra.gui.dialogs.*
+import dev.aibtra.main.content.*
+
+internal class RefinerNewAction(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainMenuAction("new", "New", "ctrl N", environment.accelerators, ActionRunnable {
+	val tab = RefinerTextTab(WorkingMode.OPEN, tabbedPane, environment, dialogDisplayer)
+	tabbedPane.add(tab)
+	tab.requestFocus()
+})
