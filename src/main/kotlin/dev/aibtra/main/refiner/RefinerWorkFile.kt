@@ -1,10 +1,11 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
+import dev.aibtra.core.StringUtils.Eol
+import dev.aibtra.core.StringUtils.Companion.determineLineEnding
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import kotlinx.coroutines.*
-import org.jetbrains.annotations.*
 import java.io.*
 import java.nio.file.*
 import java.nio.file.StandardWatchEventKinds.*
@@ -251,53 +252,11 @@ class RefinerWorkFile(val mainScope: CoroutineScope, val dialogDisplayer: Dialog
 		stateListeners.toList().forEach { it(state) }
 	}
 
-	enum class Eol(val sequence: String) {
-		UNIX("\n"), WINDOWS("\r\n"), MACOS("\r")
-	}
-
 	data class State(val content: String, val path: Path, val watchKey: WatchKey?, val eol: Eol, val lastModified: Long, val size: Long, val orgContent: String, val modifiedExternally: Boolean, val initial: Boolean, val initialLine: Int?, val failure: Boolean) {
 		val modified: Boolean = content != orgContent
 	}
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
-
-		@TestOnly
-		internal fun determineLineEnding(text: String): Eol? {
-			var lastCh: Char? = null
-			var targetEol: Eol? = null
-			for ((index, ch) in text.withIndex()) {
-				val eol: Eol?
-				if (lastCh == '\r' && ch == '\n') {
-					eol = Eol.WINDOWS
-				}
-				else if (ch == '\r') {
-					if (index < text.length - 1 && text[index + 1] == '\n') {
-						lastCh = ch
-						continue
-					}
-					eol = Eol.MACOS
-				}
-				else if (ch == '\n') {
-					eol = Eol.UNIX
-				}
-				else {
-					eol = null
-				}
-
-				if (eol != null && eol != targetEol) {
-					if (targetEol == null) {
-						targetEol = eol
-					}
-					else {
-						return null
-					}
-				}
-
-				lastCh = ch
-			}
-
-			return targetEol ?: Eol.UNIX // If there is no EOL at all, default to UNIX
-		}
 	}
 }
