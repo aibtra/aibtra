@@ -225,10 +225,12 @@ class DiffManager(
 				callback {
 					Ui.assertEdt()
 
-					val data = Data(input.copy(callback = null), state, this@DiffManager.data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
-					val lastState = this@DiffManager.data.state
+					val latestData = this@DiffManager.data
+					val latestInput = latestData.input
+					val data = Data(latestInput.copy(callback = null), state, latestData.sequenceId + 1, latestData.rawScrollPos, latestData.refScrollPos)
+					val latestState = latestData.state
 					this@DiffManager.data = data
-					input.callback?.run()
+					latestInput.callback?.run()
 
 					if (debugOperationName != null) {
 						writeDebugFile(data.sequenceId, debugOperationName, "state-raw", data.state.diff.raw, data.state.rawChars)
@@ -236,7 +238,7 @@ class DiffManager(
 						writeDebugFile(data.sequenceId, debugOperationName, "state-ref", data.state.refFormatted, data.state.refChars)
 					}
 
-					stateListeners.toList().forEach { it(state, lastState) }
+					stateListeners.toList().forEach { it(state, latestState) }
 				}
 			}
 		}, forceUpdate)
