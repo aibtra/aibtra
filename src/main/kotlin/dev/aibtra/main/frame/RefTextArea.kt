@@ -38,8 +38,8 @@ class RefTextArea(environment: Environment) :
 		styleModified = HighlightStyle({ it.refBackgroundModified }, { null }, false, false, GapStyle.NONE)
 		styleAdded = HighlightStyle({ it.refBackgroundAdded }, { null }, false, false, GapStyle.NONE)
 		styleRemoved = HighlightStyle({ it.refBackgroundRemoved }, { null }, false, true, GapStyle.NONE)
-		styleGapLeft = HighlightStyle({ it.refBackgroundRemoved }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
-		styleGapRight = HighlightStyle({ it.refBackgroundRemoved }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
+		styleGapLeft = HighlightStyle({ it.refBackgroundRemovedGap }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
+		styleGapRight = HighlightStyle({ it.refBackgroundRemovedGap }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
 
 		textArea.addPropertyChangeListener { evt ->
 			if (evt.propertyName == "UI") {

@@ -14,23 +14,25 @@ import java.awt.*
 
 @Serializable
 data class GuiColors(
-	@SerialName("light.5") val light: Colors = Colors.DEFAULTS_LIGHT,
-	@SerialName("dark.5") val dark: Colors = Colors.DEFAULTS_DARK,
+	@SerialName("light.6") val light: Colors = Colors.DEFAULTS_LIGHT,
+	@SerialName("dark.6") val dark: Colors = Colors.DEFAULTS_DARK,
 ) {
 
 	@Serializable
 	data class Colors(
-		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundRemoved: Color, val rawBackgroundRemovedShadow: Color,
-		val refBackgroundModified: Color, val refBackgroundAdded: Color, val refBackgroundRemoved: Color, val refBackgroundRemovedShadow: Color,
+		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundAddedGap: Color, val rawBackgroundAddedShadow: Color, val rawBackgroundRemoved: Color,
+		val refBackgroundModified: Color, val refBackgroundAdded: Color, val refBackgroundRemoved: Color, val refBackgroundRemovedGap: Color, val refBackgroundRemovedShadow: Color,
 		val selectionColor: Color,
 		val foregroundColor: Color,
 		val backgroundColor: Color
 	) {
 		companion object {
-			private val LIGHT_GREEN = Color(0x90, 0xEE, 0x90)
+			private val LIGHT_GREEN = Color(0xB0, 0xEE, 0xB0)
+			private val LIGHT_GREEN_GAP = Color(0x30, 0xEE, 0x30)
 			private val LIGHT_GREEN_SHADOW = Color(0x90, 0xEE, 0x90, SHADOW_ALPHA)
-			private val LIGHT_RED = Color(0xFF, 0x80, 0x80)
-			private val LIGHT_RED_SHADOW = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
+			private val LIGHT_RED = Color(0xFF, 0xA0, 0xA0)
+			private val LIGHT_RED_GAP = Color(0xFF, 0x60, 0x60)
+			private val LIGHT_RED_SHADOW = Color(0xFF, 0xA0, 0xA0, SHADOW_ALPHA)
 			private val LIGHT_SELECTION = Color(0xCC, 0xCC, 0xCC)
 			private val LIGHT_FOREGROUND = Color(0x10, 0x10, 0x10)
 			private val LIGHT_BACKGROUND = Color(0xF7, 0xF8, 0xFA)
@@ -42,8 +44,8 @@ data class GuiColors(
 			private val DARK_FOREGROUND = Color(0xD0, 0xD0, 0xD0)
 			private val DARK_BACKGROUND = Color(0x10, 0x10, 0x20)
 
-			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_SHADOW, LIGHT_SELECTION, LIGHT_FOREGROUND, LIGHT_BACKGROUND)
-			val DEFAULTS_DARK = Colors(DARK_RED, DARK_RED, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED_SHADOW, DARK_SELECTION, DARK_FOREGROUND, DARK_BACKGROUND)
+			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_GAP, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_GAP, LIGHT_RED_SHADOW, LIGHT_SELECTION, LIGHT_FOREGROUND, LIGHT_BACKGROUND)
+			val DEFAULTS_DARK = Colors(DARK_RED, DARK_GREEN, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED, DARK_RED_SHADOW, DARK_SELECTION, DARK_FOREGROUND, DARK_BACKGROUND)
 		}
 	}
 

@@ -52,10 +52,10 @@ class RawTextArea(private val textInitializer: TextInitializer, environment: Env
 		textArea.font = guiConfiguration.fonts.monospacedFont
 
 		styleModified = HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, GapStyle.NONE)
-		styleAdded = HighlightStyle({ it.rawBackgroundAdded }, { null }, false, true, GapStyle.NONE)
+		styleAdded = HighlightStyle({ it.rawBackgroundAdded }, { null }, false, false, GapStyle.NONE)
 		styleRemoved = HighlightStyle({ it.rawBackgroundRemoved }, { null }, false, false, GapStyle.NONE)
-		styleGapLeft = HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
-		styleGapRight = HighlightStyle({ it.rawBackgroundRemoved }, { it.rawBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
+		styleGapLeft = HighlightStyle({ it.rawBackgroundAddedGap }, { it.rawBackgroundAddedShadow }, false, false, GapStyle.LEFT)
+		styleGapRight = HighlightStyle({ it.rawBackgroundAddedGap }, { it.rawBackgroundAddedShadow }, false, false, GapStyle.RIGHT)
 		styleFiltered = HighlightStyle({ Color.gray }, { null }, true, false, GapStyle.NONE)
 		styleSelected = HighlightStyle({ it.selectionColor }, { null }, false, false, GapStyle.NONE)
 
