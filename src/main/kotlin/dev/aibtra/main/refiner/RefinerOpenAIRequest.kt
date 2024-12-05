@@ -3,9 +3,8 @@ package dev.aibtra.main.refiner
 import dev.aibtra.core.*
 import dev.aibtra.openai.*
 import dev.aibtra.text.*
-import java.io.*
 
-class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand: () -> String, val failureCallback: (failure: IOException, mightBeAuthentication: Boolean) -> Unit) : RefinerRequestManager.Request {
+class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand: () -> String, private val failureHandler: OpenAIService.FailureHandler) : RefinerRequestManager.Request {
 	override fun run(filtered: FilteredText, callback: RefinerRequestManager.RequestCallback) {
 		val part = filtered.clean
 		val macroResolver = MacroResolver {
@@ -41,7 +40,7 @@ class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, p
 				callback.callback(res)
 			} ?: kotlin.run {
 				val (failure, mightBeAuthentication) = requireNotNull(result.failure)
-				failureCallback(failure, mightBeAuthentication)
+				failureHandler.process(failure, mightBeAuthentication)
 				false
 			}
 		}
