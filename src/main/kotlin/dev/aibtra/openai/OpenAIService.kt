@@ -24,6 +24,9 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 		val url = URI("https://api.openai.com/v1/chat/completions").toURL()
 		val connection = url.openConnection() as HttpURLConnection
 		val startTime = System.currentTimeMillis()
+
+		val requestId = System.identityHashCode(messages)
+		LOG.info("Sending request '$requestId' (model '$model')")
 		try {
 			connection.doOutput = true
 			connection.requestMethod = "POST"
@@ -63,7 +66,7 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 										}
 									}
 
-									measureRequestTime(startTime)
+									measureRequestTime(startTime, requestId)
 									handler.finish(builder)
 								}
 								is ResultHandler -> {
@@ -80,7 +83,7 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 										val messageOut = objNotNull<JSONObject>(choice, "message")
 										val message = objNotNull<String>(messageOut, "content")
 
-										measureRequestTime(startTime)
+										measureRequestTime(startTime, requestId)
 										handler.process(message)
 									}
 								}
@@ -113,8 +116,8 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 		}
 	}
 
-	private fun measureRequestTime(startTime: Long) {
-		println("REQUEST finished in ${System.currentTimeMillis() - startTime}ms ==============")
+	private fun measureRequestTime(startTime: Long, requestId: Int) {
+		LOG.info("Finished request '$requestId' in ${System.currentTimeMillis() - startTime}ms")
 	}
 
 	private fun parseDataChunk(data: String, builder: StringBuilder, handler: StreamingHandler): Boolean {
@@ -157,6 +160,7 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 	}
 
 	companion object {
+		private val LOG = Logger.getLogger(this::class)
 		private val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
 
 		fun addMessage(content: String, role: OpenAIRole, array: JSONArray) {
