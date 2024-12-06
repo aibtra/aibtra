@@ -33,7 +33,10 @@ class MainStartup {
 	companion object {
 		private const val COMMAND_SHOW = "SHOW"
 
-		fun start(paths: ApplicationPaths, args: Array<String>) {
+		fun start(args: Array<String>) {
+			val arguments = Arguments(args.toList())
+			val paths = ApplicationPaths.initialize("Aibtra", "aibtra", arguments.options.settings)
+
 			configureLogging(paths)
 			ConfigurationFactory.initialize(paths)
 
@@ -51,7 +54,6 @@ class MainStartup {
 				val application = MainApplication(paths, configurationProvider, buildInfo, coroutineDispatcher, systemTrayEnabled)
 				application.theme.update()
 
-				val arguments = Arguments(args.toList())
 				SwingUtilities.invokeAndWait {
 					installTrayIcon(application)
 					val hotkeyConfigured = configureHotkey(application)
@@ -306,9 +308,9 @@ class MainStartup {
 		}
 	}
 
-	private data class Options(val backgroundMode: Boolean, val profile: String?, val line: Int?) {
+	private data class Options(val settings: String?, val backgroundMode: Boolean, val profile: String?, val line: Int?) {
 		companion object {
-			val NONE: Options = Options(false, null, null)
+			val NONE: Options = Options(null, false, null, null)
 		}
 	}
 
@@ -318,12 +320,13 @@ class MainStartup {
 
 		init {
 			val parser = OptionParser()
+			val settingsOption = parser.accepts("settings").withRequiredArg().ofType(String::class.java)
 			val backgroundOption = parser.accepts("background")
 			val profileOption = parser.accepts("profile").withRequiredArg().ofType(String::class.java)
 			val lineOption = parser.accepts("line").withRequiredArg().ofType(Int::class.java)
 			val optionsSet: OptionSet = parser.parse(*args.toTypedArray())
 			params = optionsSet.nonOptionArguments().stream().map { o -> o.toString() }.toList()
-			options = Options(optionsSet.has(backgroundOption), profileOption.value(optionsSet), lineOption.value(optionsSet))
+			options = Options(settingsOption.value(optionsSet), optionsSet.has(backgroundOption), profileOption.value(optionsSet), lineOption.value(optionsSet))
 		}
 	}
 }

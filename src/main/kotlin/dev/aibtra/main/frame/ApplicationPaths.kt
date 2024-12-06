@@ -18,13 +18,18 @@ class ApplicationPaths(
 	}
 
 	companion object {
-		fun initialize(appName: String, propertyPrefix: String): ApplicationPaths {
-			val customSettingsPath = System.getProperty("$propertyPrefix.settings")
+		fun initialize(appName: String, propertyPrefix: String, customSettingsPath: String?): ApplicationPaths {
 			val settingsPath = if (customSettingsPath != null) {
 				Path.of(customSettingsPath)
 			}
 			else {
-				getDefaultSettingsPath(appName)
+				val propertySettingsPath = System.getProperty("$propertyPrefix.settings")
+				if (propertySettingsPath != null) {
+					Path.of(propertySettingsPath)
+				}
+				else {
+					getDefaultSettingsPath(appName)
+				}
 			}
 
 			// Ensure to create the directory if it doesn't exist
