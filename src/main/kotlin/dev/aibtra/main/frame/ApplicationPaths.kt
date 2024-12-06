@@ -19,7 +19,7 @@ class ApplicationPaths(
 
 	companion object {
 		fun initialize(appName: String, propertyPrefix: String): ApplicationPaths {
-			val customSettingsPath = System.getProperty(propertyPrefix + ".settings")
+			val customSettingsPath = System.getProperty("$propertyPrefix.settings")
 			val settingsPath = if (customSettingsPath != null) {
 				Path.of(customSettingsPath)
 			}
