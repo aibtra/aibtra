@@ -203,6 +203,14 @@ class DiffBuilderTest {
 			format(raw, rawBlocksCoreExpected, rawBlocksAdjustedExpected, ref, refBlocksCoreExcepted, refBlocksAdjustedExpected, rawAlignedCoreExpected, refAlignedCoreExpected, rawAlignedAdjustedExcepted, refAlignedAdjustedExcepted),
 			format(raw, rawBlocksCoreActual, rawBlocksAdjustedActual, ref, refBlocksCoreActual, refBlocksAdjustedActual, rawAlignedCoreActual.toString(), refAlignedCoreActual.toString(), rawAlignedAdjustedActual.toString(), refAlignedAdjustedActual.toString())
 		)
+
+		for (fixCommon in listOf(false, true)) {
+			for (joinClose in listOf(false, true)) {
+				for (shift in listOf(false, true)) {
+					DiffBuilder(raw, ref, shift, joinClose, fixCommon).build()
+				}
+			}
+		}
 	}
 
 	companion object {
