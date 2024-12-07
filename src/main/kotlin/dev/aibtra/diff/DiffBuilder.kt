@@ -5,39 +5,42 @@
 package dev.aibtra.diff
 
 import de.regnis.q.sequence.*
-import de.regnis.q.sequence.core.*
 import de.regnis.q.sequence.media.*
 import java.util.stream.*
 
 class DiffBuilder(
-	private val raw: String,
-	private val ref: String,
+	rawString: String,
+	refString: String,
 	private val shift: Boolean,
 	private val joinClose: Boolean,
-	private val fixCommon: Boolean
+	private val fixCommon: Boolean,
+	tokenizingMode: DiffTokenizingMode
 ) {
+	private val tokenizing = DiffTokenizing.create(rawString, refString, tokenizingMode)
+
 	fun build(): List<DiffBlock> {
-		val media = SequenceMedia(raw, ref)
+		val media = tokenizing.createMedia()
 		@Suppress("UNCHECKED_CAST") val sequenceBlocks = QSequenceDifference(media, QSequenceMediaDummyIndexTransformer(media)).blocks as List<QSequenceDifferenceBlock>
 		QSequenceDifferenceBlockShifter.joinBlocks(sequenceBlocks)
 
-		var blocks = sequenceBlocks.stream().map { block ->
+		var tokenBlocks = sequenceBlocks.stream().map { block ->
 			DiffBlock(block.leftFrom, block.leftTo + 1, block.rightFrom, block.rightTo + 1)
 		}.collect(Collectors.toList())
 
 		if (shift) {
-			blocks = mergeBlocks(blocks, ::mergeUp)
-			blocks = shiftBlocks(blocks)
+			tokenBlocks = mergeBlocks(tokenBlocks, ::mergeUp)
+			tokenBlocks = shiftBlocks(tokenBlocks)
 		}
 		if (joinClose) {
-			blocks = mergeBlocks(blocks, ::mergeClose)
+			tokenBlocks = mergeBlocks(tokenBlocks, ::mergeClose)
 		}
 		if (fixCommon) {
 			// This only becomes important when joining close blocks, because these blocks won't be "optimal" anymore
 			// and hence may allow optimizations.
-			blocks = fixCommon(blocks)
+			tokenBlocks = fixCommon(tokenBlocks)
 		}
-		return blocks
+
+		return tokenBlocks.map { tokenizing.toCharBlock(it) }
 	}
 
 	private fun shiftBlocks(orgBlocks: List<DiffBlock>): List<DiffBlock> {
@@ -61,10 +64,10 @@ class DiffBuilder(
 		var refTo = block.refTo
 
 		while (rawFrom > prevRawTo && refFrom > prevRefTo) {
-			if (rawFrom <= rawTo && raw[rawFrom - 1] != raw[rawTo - 1]) {
+			if (rawFrom <= rawTo && !tokenizing.equalsRaw(rawFrom - 1, rawTo - 1)) {
 				break
 			}
-			if (refFrom <= refTo && ref[refFrom - 1] != ref[refTo - 1]) {
+			if (refFrom <= refTo && !tokenizing.equalsRef(refFrom - 1, refTo - 1)) {
 				break
 			}
 
@@ -82,18 +85,18 @@ class DiffBuilder(
 	}
 
 	private fun shiftDownAsMuchAsPossible(block: DiffBlock, next: DiffBlock?): DiffBlock {
-		val nextRawFrom = next?.rawFrom ?: raw.length
-		val nextRefFrom = next?.refFrom ?: ref.length
+		val nextRawFrom = next?.rawFrom ?: tokenizing.getRawLength()
+		val nextRefFrom = next?.refFrom ?: tokenizing.getRefLength()
 		var rawFrom = block.rawFrom
 		var rawTo = block.rawTo
 		var refFrom = block.refFrom
 		var refTo = block.refTo
 
 		while (rawTo < nextRawFrom && refTo < nextRefFrom) {
-			if (rawFrom <= rawTo && raw[rawFrom] != raw[rawTo]) {
+			if (rawFrom <= rawTo && !tokenizing.equalsRaw(rawFrom, rawTo)) {
 				break
 			}
-			if (refFrom <= refTo && ref[refFrom] != ref[refTo]) {
+			if (refFrom <= refTo && !tokenizing.equalsRef(refFrom, refTo)) {
 				break
 			}
 
@@ -118,16 +121,16 @@ class DiffBuilder(
 		var wordStartBoundaryCandidate: DiffBlock? = null
 
 		while (rawFrom > prevRawTo && refFrom > prevRefTo) {
-			if (wordEndBoundaryCandidate == null && isAtEndOfWord(refTo)) {
+			if (wordEndBoundaryCandidate == null && tokenizing.isRefAtEndOfWord(refTo)) {
 				wordEndBoundaryCandidate = DiffBlock(rawFrom, rawTo, refFrom, refTo)
 			}
-			if (wordStartBoundaryCandidate == null && isAtStartOfWord(refFrom)) {
+			if (wordStartBoundaryCandidate == null && tokenizing.isRefAtStartOfWord(refFrom)) {
 				wordStartBoundaryCandidate = DiffBlock(rawFrom, rawTo, refFrom, refTo)
 			}
-			if (rawFrom <= rawTo && raw[rawFrom - 1] != raw[rawTo - 1]) {
+			if (rawFrom <= rawTo && !tokenizing.equalsRaw(rawFrom - 1, rawTo - 1)) {
 				break
 			}
-			if (refFrom <= refTo && ref[refFrom - 1] != ref[refTo - 1]) {
+			if (refFrom <= refTo && !tokenizing.equalsRef(refFrom - 1, refTo - 1)) {
 				break
 			}
 
@@ -140,33 +143,13 @@ class DiffBuilder(
 		return wordEndBoundaryCandidate ?: (wordStartBoundaryCandidate ?: block)
 	}
 
-	private fun isAtEndOfWord(refTo: Int): Boolean {
-		if (refTo < 0) {
-			return false
-		}
-		if (refTo == ref.length || refTo < ref.length && ref[refTo].isWhitespace()) {
-			return !ref[refTo - 1].isWhitespace()
-		}
-		return false
-	}
-
-	private fun isAtStartOfWord(refFrom: Int): Boolean {
-		if (refFrom == ref.length) {
-			return false
-		}
-		if (refFrom == 0 || refFrom > 0 && ref[refFrom - 1].isWhitespace()) {
-			return !ref[refFrom].isWhitespace()
-		}
-		return false
-	}
-
 	private fun mergeClose(block: DiffBlock, prev: DiffBlock): DiffBlock? {
 		if (prev.refTo + CLOSE_DISTANCE < block.refFrom) {
 			return null
 		}
 
 		for (pos in block.refFrom until block.refTo) {
-			if (ref[pos].isWhitespace()) {
+			if (tokenizing.isRefWhitespace(pos)) {
 				return null
 			}
 		}
@@ -206,14 +189,14 @@ class DiffBuilder(
 
 			while (rawFrom < rawTo
 				&& refFrom < refTo
-				&& raw[rawFrom] == ref[refFrom]) {
+				&& tokenizing.equals(rawFrom, refFrom)) {
 				rawFrom++
 				refFrom++
 			}
 
 			while (rawTo > rawFrom
 				&& refTo > refFrom
-				&& raw[rawTo - 1] == ref[refTo - 1]) {
+				&& tokenizing.equals(rawTo - 1, refTo - 1)) {
 				rawTo--
 				refTo--
 			}
@@ -238,11 +221,5 @@ class DiffBuilder(
 
 	companion object {
 		private const val CLOSE_DISTANCE = 3
-	}
-
-	private class SequenceMedia(val raw: String, val ref: String) : QSequenceMedia {
-		override fun equals(leftIndex: Int, rightIndex: Int): Boolean = raw[leftIndex] == ref[rightIndex]
-		override fun getLeftLength(): Int = raw.length
-		override fun getRightLength(): Int = ref.length
 	}
 }

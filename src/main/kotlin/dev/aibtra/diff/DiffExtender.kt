@@ -1,6 +1,6 @@
 package dev.aibtra.diff
 
-class DiffExtender(private val joinCloseBlocks: Boolean = true, private val enabled: Boolean = true) {
+class DiffExtender(private val tokenizingMode: DiffTokenizingMode, private val joinCloseBlocks: Boolean = true, private val enabled: Boolean = true) {
 	fun extend(raw: String, ref: String, diff: Diff, finished: Boolean): Diff {
 		// If ref is empty, this is a new request, hence reset.
 		if (ref.isEmpty() || !enabled) {
@@ -25,7 +25,7 @@ class DiffExtender(private val joinCloseBlocks: Boolean = true, private val enab
 			return listOf()
 		}
 
-		return DiffBuilder(raw, ref, true, joinCloseBlocks, joinCloseBlocks).build()
+		return DiffBuilder(raw, ref, true, joinCloseBlocks, joinCloseBlocks, tokenizingMode).build()
 	}
 
 	private fun extendOrgDiff(ref: String, diff: Diff.OrgDiff): Diff.OrgDiff {

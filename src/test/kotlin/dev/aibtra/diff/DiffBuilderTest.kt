@@ -22,6 +22,19 @@ class DiffBuilderTest {
 			"Ther* is a typo.",
 			"There is a typo."
 		)
+
+		assertTokenizing(
+			"Ther is a typo.",
+			"****           ",
+			"****           ",
+			"There is a typo.",
+			"*****           ",
+			"*****           ",
+			"Ther***** is a typo.",
+			"****There is a typo.",
+			"Ther***** is a typo.",
+			"****There is a typo."
+		)
 	}
 
 	@Test
@@ -184,11 +197,51 @@ class DiffBuilderTest {
 		)
 	}
 
+	@Test
+	fun testTokenizingEmpty() {
+		assertTokenizing(
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		)
+	}
+
+	@Test
+	fun testTokenizingSingleToken() {
+		assertTokenizing(
+			"foo",
+			"***",
+			"***",
+			"quux",
+			"****",
+			"****",
+			"foo****",
+			"***quux",
+			"foo****",
+			"***quux"
+		)
+	}
+
 	private fun assert(raw: String, rawBlocksCoreExpected: String, rawBlocksAdjustedExpected: String, ref: String, refBlocksCoreExcepted: String, refBlocksAdjustedExpected: String, rawAlignedCoreExpected: String, refAlignedCoreExpected: String, rawAlignedAdjustedExcepted: String, refAlignedAdjustedExcepted: String) {
-		val blocksCore = DiffBuilder(raw, ref, false, false, false).build()
+		assert(raw, rawBlocksCoreExpected, rawBlocksAdjustedExpected, ref, refBlocksCoreExcepted, refBlocksAdjustedExpected, rawAlignedCoreExpected, refAlignedCoreExpected, rawAlignedAdjustedExcepted, refAlignedAdjustedExcepted, DiffTokenizingMode.NONE)
+	}
+
+	private fun assertTokenizing(raw: String, rawBlocksCoreExpected: String, rawBlocksAdjustedExpected: String, ref: String, refBlocksCoreExcepted: String, refBlocksAdjustedExpected: String, rawAlignedCoreExpected: String, refAlignedCoreExpected: String, rawAlignedAdjustedExcepted: String, refAlignedAdjustedExcepted: String) {
+		assert(raw, rawBlocksCoreExpected, rawBlocksAdjustedExpected, ref, refBlocksCoreExcepted, refBlocksAdjustedExpected, rawAlignedCoreExpected, refAlignedCoreExpected, rawAlignedAdjustedExcepted, refAlignedAdjustedExcepted, DiffTokenizingMode.ALPHANUMERIC)
+	}
+
+	private fun assert(raw: String, rawBlocksCoreExpected: String, rawBlocksAdjustedExpected: String, ref: String, refBlocksCoreExcepted: String, refBlocksAdjustedExpected: String, rawAlignedCoreExpected: String, refAlignedCoreExpected: String, rawAlignedAdjustedExcepted: String, refAlignedAdjustedExcepted: String, tokenizingMode: DiffTokenizingMode) {
+		val blocksCore = DiffBuilder(raw, ref, false, false, false, tokenizingMode).build()
 		val (rawBlocksCoreActual, refBlocksCoreActual) = formatBlocks(raw, ref, blocksCore)
 
-		val blocksAdjusted = DiffBuilder(raw, ref, true, true, true).build()
+		val blocksAdjusted = DiffBuilder(raw, ref, true, true, true, tokenizingMode).build()
 		val (rawBlocksAdjustedActual, refBlocksAdjustedActual) = formatBlocks(raw, ref, blocksAdjusted)
 
 		val rawAlignedCoreActual = StringBuilder()
@@ -204,10 +257,12 @@ class DiffBuilderTest {
 			format(raw, rawBlocksCoreActual, rawBlocksAdjustedActual, ref, refBlocksCoreActual, refBlocksAdjustedActual, rawAlignedCoreActual.toString(), refAlignedCoreActual.toString(), rawAlignedAdjustedActual.toString(), refAlignedAdjustedActual.toString())
 		)
 
-		for (fixCommon in listOf(false, true)) {
-			for (joinClose in listOf(false, true)) {
-				for (shift in listOf(false, true)) {
-					DiffBuilder(raw, ref, shift, joinClose, fixCommon).build()
+		for (mode in DiffTokenizingMode.entries) {
+			for (fixCommon in listOf(false, true)) {
+				for (joinClose in listOf(false, true)) {
+					for (shift in listOf(false, true)) {
+						DiffBuilder(raw, ref, shift, joinClose, fixCommon, mode).build()
+					}
 				}
 			}
 		}

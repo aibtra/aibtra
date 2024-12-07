@@ -6,13 +6,13 @@ class DiffExtenderTest {
 
 	private var raw = ""
 	private var diff = Diff.INITIAL
-	private var extender = DiffExtender(false)
+	private var extender = DiffExtender(DiffTokenizingMode.NONE, false)
 
 	@BeforeEach
 	fun setup() {
 		raw = ""
 		diff = Diff.INITIAL
-		extender = DiffExtender(false)
+		extender = DiffExtender(DiffTokenizingMode.NONE, false)
 	}
 
 	@Test
