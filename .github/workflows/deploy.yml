@@ -6,6 +6,7 @@ on:
       - main
       - develop
       - sandbox
+      - private
 
 jobs:
   build:
@@ -15,7 +16,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest, macos-13]
 
     env:
-      TAG: ${{ github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || github.ref == 'refs/heads/sandbox' && 'experimental' || 'fail' }}
+      TAG: ${{ github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || github.ref == 'refs/heads/sandbox' && 'experimental' || github.ref == 'refs/heads/private' && 'experimental' || 'fail' }}
       BUNDLE_TYPE: ${{ github.ref == 'refs/heads/main' && 'STABLE' || github.ref == 'refs/heads/develop' && 'LATEST' || github.ref == 'refs/heads/sandbox' && 'EXPERIMENTAL' || 'fail' }}
 
     steps:
@@ -100,6 +101,7 @@ jobs:
     name: "Release"
     runs-on: "ubuntu-latest"
     needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/sandbox'
 
     env:
       TAG: ${{ github.ref == 'refs/heads/main' && 'stable' || github.ref == 'refs/heads/develop' && 'latest' || github.ref == 'refs/heads/sandbox' && 'experimental' || 'fail' }}
