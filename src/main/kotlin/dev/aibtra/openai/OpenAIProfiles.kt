@@ -125,7 +125,7 @@ data class OpenAIProfiles(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false, true),
+			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true,
 			accelerator = "ctrl shift P"
 		)
@@ -146,7 +146,7 @@ data class OpenAIProfiles(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false, true),
+			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true,
 			accelerator = "ctrl shift I"
 		)
@@ -164,7 +164,7 @@ data class OpenAIProfiles(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false, true),
+			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true
 		)
 
@@ -178,7 +178,7 @@ data class OpenAIProfiles(
 				Instruction(Role.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(false, false, true)
+			DiffManager.Config(false, false, DiffTokenizingMode.NONE, true)
 		)
 
 		private val CODE_ADJUSTMENT = Profile(
@@ -227,7 +227,7 @@ data class OpenAIProfiles(
 				)
 			),
 			ResponseType.SELECTION_JSON,
-			DiffManager.Config(false, false, true)
+			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true)
 		)
 
 		private val CODE_REFINEMENT = Profile(
@@ -276,7 +276,7 @@ data class OpenAIProfiles(
 				)
 			),
 			ResponseType.SELECTION_JSON,
-			DiffManager.Config(false, false, true),
+			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true),
 			accelerator = "ctrl shift R"
 		)
 
@@ -290,7 +290,7 @@ data class OpenAIProfiles(
 				Instruction(Role.USER, CONTENT_MACRO)
 			),
 			ResponseType.CONTENT,
-			DiffManager.Config(false, false, false)
+			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, false)
 		)
 
 		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)

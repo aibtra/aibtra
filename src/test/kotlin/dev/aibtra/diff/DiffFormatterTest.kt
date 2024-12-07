@@ -198,8 +198,26 @@ class DiffFormatterTest {
 		)
 	}
 
-	private fun assert(raw: String, rawCharsExpected: String, rawCharsRawPossExpected: String, rawCharsRefPossExpected: String, ref: String, refFullCharsExpected: String, refFullCharsRawPossExpected: String, refFullCharsRefPossExpected: String, refKeptCharsExpected: String, refKeptCharsRawPossExpected: String, refKeptCharsRefPossExpected: String, rawTo: Int = raw.length) {
-		val blocks = DiffBuilder(raw.substring(0, rawTo), ref, true, true, true).build()
+	@Test
+	fun testTokenizingAlphanumeric() {
+		assert(
+			"\t\t\tpublic static final int",
+			"~~~~~~~~~~~~~~~~~~~~~~    ",
+			"01234567890123456789012345",
+			"00000000000000000000005678",
+			"public\t\t\tstatic int",
+			"----------------------+++++++++++++++    ",
+			"01234567890123456789012222222222222222345",
+			"00000000000000000000000123456789012345678",
+			"~~~~~~~~~~~~~~~    ",
+			"0000000000000002345",
+			"0123456789012345678",
+			tokenizingMode = DiffTokenizingMode.ALPHANUMERIC
+		)
+	}
+
+	private fun assert(raw: String, rawCharsExpected: String, rawCharsRawPossExpected: String, rawCharsRefPossExpected: String, ref: String, refFullCharsExpected: String, refFullCharsRawPossExpected: String, refFullCharsRefPossExpected: String, refKeptCharsExpected: String, refKeptCharsRawPossExpected: String, refKeptCharsRefPossExpected: String, rawTo: Int = raw.length, tokenizingMode: DiffTokenizingMode = DiffTokenizingMode.NONE) {
+		val blocks = DiffBuilder(raw.substring(0, rawTo), ref, true, true, true, tokenizingMode).build()
 		val diff = Diff(raw, ref, blocks, Diff.OrgDiff(raw, ref, ref, raw.length, ref.length, blocks), rawTo == raw.length)
 		val rawFormatted = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 		val rawCharsActual = formatChars(raw, ref, rawFormatted.second, DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED)
