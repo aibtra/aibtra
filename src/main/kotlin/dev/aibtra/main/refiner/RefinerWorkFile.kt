@@ -93,14 +93,7 @@ class RefinerWorkFile(val mainScope: CoroutineScope, val dialogDisplayer: Dialog
 						return@launch
 					}
 
-					val contentRaw = if (eol != Eol.UNIX) {
-						content.replace("\n", eol.sequence)
-					}
-					else {
-						content
-					}
-
-					path.writeText(contentRaw)
+					path.writeText(StringUtils.applyLineEndings(content, eol))
 
 					val lastModifiedTime = path.getLastModifiedTime().toMillis()
 					state.copy(lastModified = lastModifiedTime, orgContent = content)

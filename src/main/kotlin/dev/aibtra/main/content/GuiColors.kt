@@ -24,7 +24,9 @@ data class GuiColors(
 		val refBackgroundModified: Color, val refBackgroundAdded: Color, val refBackgroundRemoved: Color, val refBackgroundRemovedGap: Color, val refBackgroundRemovedShadow: Color,
 		val selectionColor: Color,
 		val foregroundColor: Color,
-		val backgroundColor: Color
+		val backgroundColor: Color,
+		val resolverUnresolvedConflictBackgroundColor: Color,
+		val resolverWarningHeaderBackgroundColor: Color
 	) {
 		companion object {
 			private val LIGHT_GREEN = Color(0xB0, 0xEE, 0xB0)
@@ -36,6 +38,8 @@ data class GuiColors(
 			private val LIGHT_SELECTION = Color(0xCC, 0xCC, 0xCC)
 			private val LIGHT_FOREGROUND = Color(0x10, 0x10, 0x10)
 			private val LIGHT_BACKGROUND = Color(0xF7, 0xF8, 0xFA)
+			private val LIGHT_CONFLICT_UNRESOLVED = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
+			private val LIGHT_RESOLVER_HEADER_WARNING = Color(0xFF, 0x60, 0x60)
 			private val DARK_GREEN = Color(0x25, 0xA6, 0x25)
 			private val DARK_GREEN_SHADOW = Color(0x25, 0xA6, 0x25, SHADOW_ALPHA)
 			private val DARK_RED = Color(0xC6, 0x28, 0x28)
@@ -43,9 +47,12 @@ data class GuiColors(
 			private val DARK_SELECTION = Color(0x70, 0x70, 0x70)
 			private val DARK_FOREGROUND = Color(0xD0, 0xD0, 0xD0)
 			private val DARK_BACKGROUND = Color(0x10, 0x10, 0x20)
+			private val DARK_CONFLICT_UNRESOLVED = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
+			private val DARK_RESOLVER_HEADER_WARNING = Color(0xC0, 0x00, 0x00)
 
-			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_GAP, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_GAP, LIGHT_RED_SHADOW, LIGHT_SELECTION, LIGHT_FOREGROUND, LIGHT_BACKGROUND)
-			val DEFAULTS_DARK = Colors(DARK_RED, DARK_GREEN, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED, DARK_RED_SHADOW, DARK_SELECTION, DARK_FOREGROUND, DARK_BACKGROUND)
+
+			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_GAP, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_GAP, LIGHT_RED_SHADOW, LIGHT_SELECTION, LIGHT_FOREGROUND, LIGHT_BACKGROUND, LIGHT_CONFLICT_UNRESOLVED, LIGHT_RESOLVER_HEADER_WARNING)
+			val DEFAULTS_DARK = Colors(DARK_RED, DARK_GREEN, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED, DARK_RED_SHADOW, DARK_SELECTION, DARK_FOREGROUND, DARK_BACKGROUND, DARK_CONFLICT_UNRESOLVED, DARK_RESOLVER_HEADER_WARNING)
 		}
 	}
 

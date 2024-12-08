@@ -38,6 +38,15 @@ class StringUtils {
 
 			return targetEol ?: Eol.UNIX // If there is no EOL at all, default to UNIX
 		}
+
+		fun applyLineEndings(text: String, eol: Eol): String {
+			return if (eol != Eol.UNIX) {
+				text.replace("\n", eol.sequence)
+			}
+			else {
+				text
+			}
+		}
 	}
 
 	enum class Eol(val sequence: String) {

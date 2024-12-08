@@ -8,6 +8,7 @@ import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import dev.aibtra.gui.frames.*
+import dev.aibtra.main.resolver.*
 import dev.aibtra.main.content.*
 import dev.aibtra.main.refiner.*
 import java.awt.*
@@ -121,6 +122,12 @@ class MainFrame(private val environment: Environment) : FrameManager.Frame {
 	fun openFile(fileToOpen: Path, profileId: String?, line: Int?) {
 		val tab = RefinerFileTab(tabbedPane, environment, dialogDisplayer)
 		tab.setFile(fileToOpen, profileId, line)
+		tabbedPane.add(tab)
+	}
+
+	fun openResolver(conflictOverviewFile: Path) {
+		val tab = ResolverTab(tabbedPane, environment, dialogDisplayer)
+		tab.initialize(conflictOverviewFile)
 		tabbedPane.add(tab)
 	}
 

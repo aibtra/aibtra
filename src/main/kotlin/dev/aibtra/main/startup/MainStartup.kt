@@ -82,8 +82,12 @@ class MainStartup {
 
 		private fun invoke(arguments: Arguments, environment: Environment) {
 			val params = arguments.params
+			val conflictOverviewFile = arguments.options.conflictOverviewFile
 			val fileToOpen = if (params.size == 1) (params.first() as? String)?.let { Path.of(it) } else null
-			if (fileToOpen != null) {
+			if (conflictOverviewFile != null) {
+				showMainFrame(WorkingMode.RESOLVER, arguments.options, environment, fileToOpen)
+			}
+			else if (fileToOpen != null) {
 				showMainFrame(WorkingMode.FILE, arguments.options, environment, fileToOpen)
 			}
 			else {
@@ -106,7 +110,7 @@ class MainStartup {
 					frame.show()
 
 					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.mainScope, environment.paths, frame.dialogDisplayer).invoke()
-					Setup.show(environment.configurationProvider, frame, environment) {
+					Setup.show(workingMode, environment.configurationProvider, frame, environment) {
 						setMainFrameContent(workingMode, options, fileToOpen, frame, environment)
 					}
 				}
@@ -114,7 +118,11 @@ class MainStartup {
 		}
 
 		private fun setMainFrameContent(workingMode: WorkingMode, options: Options, fileToOpen: Path?, frame: MainFrame, environment: Environment) {
-			if (fileToOpen != null) {
+			val conflictOverviewFile = options.conflictOverviewFile
+			if (conflictOverviewFile != null) {
+				frame.openResolver(conflictOverviewFile)
+			}
+			else if (fileToOpen != null) {
 				frame.openFile(fileToOpen, options.profile, options.line)
 			}
 			else if (workingMode == WorkingMode.CLIPBOARD) {
@@ -264,7 +272,7 @@ class MainStartup {
 		}
 	}
 
-	private class ConfigurationProviderImpl(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : ConfigurationProvider {
+	public class ConfigurationProviderImpl(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : ConfigurationProvider {
 		private val classToConfiguration = HashMap<Class<ConfigurationFactory<Any>>, ConfigurationFile<Any>>()
 		private val classToListeners = HashMap<Any, ArrayList<Runnable>>()
 
@@ -309,9 +317,9 @@ class MainStartup {
 		}
 	}
 
-	private data class Options(val settings: String?, val backgroundMode: Boolean, val profile: String?, val line: Int?) {
+	private data class Options(val settings: String?, val backgroundMode: Boolean, val profile: String?, val line: Int?, val conflictOverviewFile: Path?) {
 		companion object {
-			val NONE: Options = Options(null, false, null, null)
+			val NONE: Options = Options(null, false, null, null, null)
 		}
 	}
 
@@ -325,9 +333,11 @@ class MainStartup {
 			val backgroundOption = parser.accepts("background")
 			val profileOption = parser.accepts("profile").withRequiredArg().ofType(String::class.java)
 			val lineOption = parser.accepts("line").withRequiredArg().ofType(Int::class.java)
+			val resolverOption = parser.accepts("resolver").withRequiredArg().ofType(String::class.java)
 			val optionsSet: OptionSet = parser.parse(*args.toTypedArray())
 			params = optionsSet.nonOptionArguments().stream().map { o -> o.toString() }.toList()
-			options = Options(settingsOption.value(optionsSet), optionsSet.has(backgroundOption), profileOption.value(optionsSet), lineOption.value(optionsSet))
+			val conflictOverviewFile = resolverOption.value(optionsSet)?.let { Path.of(it) }
+			options = Options(settingsOption.value(optionsSet), optionsSet.has(backgroundOption), profileOption.value(optionsSet), lineOption.value(optionsSet), conflictOverviewFile)
 		}
 	}
 }

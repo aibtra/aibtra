@@ -10,13 +10,17 @@ import java.io.*
 
 object Icons {
 	val ACCEPT = loadIcon("accept")
+	val APPLY_RESOLUTION = loadIcon("apply-resolution")
 	val SUBMIT = loadIcon("submit")
 	val COPY = loadIcon("copy")
 	val PASTE = loadIcon("paste")
 	val LOGO = loadIcon("logo")
 	val SHOW_REMOVED = loadIcon("show-removed")
 	val DARK_MODE = loadIcon("dark-mode")
+	val SAVE = loadIcon("save")
 	val STOP = loadIcon("stop")
+	val REBUILD = loadIcon("rebuild")
+	val RESOLVE_ONLY = loadIcon("resolve-only")
 
 	private fun loadIcon(name: String): Icon {
 		try {
