@@ -53,7 +53,8 @@ jobs:
       shell: powershell
       run: |
         Copy-Item -Path resources/windows/README* -Destination build/jpackage/
-        Copy-Item -Path resources/windows/scripts/update.* -Destination build/jpackage/aibtra
+        Copy-Item -Path resources/windows/scripts/* -Destination build/jpackage/aibtra
+        Copy-Item -Path resources/common/scripts/* -Destination build/jpackage/aibtra/app
         Set-Location -Path build/jpackage
         Get-ChildItem
         "${env:BUNDLE_TYPE}" | Out-File -FilePath aibtra\app\aibtra.bundletype -Encoding ASCII
@@ -64,7 +65,8 @@ jobs:
     - name: Bundle (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cp resources/linux/scripts/update.* build/jpackage/aibtra
+        cp resources/linux/scripts/* build/jpackage/aibtra
+        cp resources/common/scripts/* build/jpackage/aibtra/lib/app
         cd build/jpackage
         ls -al
         echo "${{ env.BUNDLE_TYPE }}" > aibtra/lib/app/aibtra.bundletype

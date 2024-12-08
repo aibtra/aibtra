@@ -118,6 +118,14 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		})
 	}
 
+	fun addCaretListener(listen: (pos: Int) -> Unit) {
+		textArea.addCaretListener { e ->
+			e?.let {
+				listen(textArea.caretPosition)
+			}
+		}
+	}
+
 	fun addSelectionListener(listen: (range: IntRange?) -> Unit) {
 		var currentText = ""
 		textArea.document.addDocumentListener(object : DocumentListener {
@@ -287,77 +295,10 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		private fun addHighlight(from: Int, to: Int, highlightStyle: HighlightStyle?, colors: GuiColors.Colors) {
 			highlightStyle?.let { style ->
 				val tag = textArea.highlighter.addHighlight(from, to, highlightStyleToPainter.computeIfAbsent(style) {
-					Painter(it, it.color(colors), it.shadow(colors), textArea.foreground, textArea.background)
+					HighlightPainter(it, it.color(colors), it.shadow(colors), textArea.foreground, textArea.background)
 				})
 
 				ourHighlightTags.add(tag)
-			}
-		}
-
-		private class Painter(val style: HighlightStyle, highlightColor: Color, val shadowColor: Color?, val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
-			private val texturePaint = if (style.sprinkled) createSprinkledTexturePaint(highlightColor, background) else null
-
-			override fun paintLayer(g: Graphics, offs0: Int, offs1: Int, bounds: Shape, c: JTextComponent, view: View): Shape {
-				val gap = style.gapStyle != GapStyle.NONE
-								&& (offs0 == offs1 || offs0 == offs1 - 1)
-				val shape = if (gap) {
-					view.modelToView(offs0, Position.Bias.Forward, offs1, Position.Bias.Backward, bounds)
-				}
-				else {
-					super.paintLayer(g, offs0, offs1, bounds, c, view)
-				}
-
-				texturePaint?.let { texturePaint ->
-					with(g as Graphics2D) {
-						val lastPaint = paint
-						try {
-							paint = texturePaint
-							fill(shape)
-						} finally {
-							paint = lastPaint
-						}
-					}
-				}
-
-				if (gap) {
-					val r = if (shape is Rectangle) shape else shape.bounds
-					val oldColor = g.color
-
-					shadowColor?.let {
-						g.color = it
-						(g as Graphics2D).fill(shape)
-					}
-
-					g.color = color
-
-					@Suppress("KotlinConstantConditions")
-					when (style.gapStyle) {
-						GapStyle.LEFT -> g.fillRect(r.x + r.width - 1, r.y, 1, r.height)
-						GapStyle.RIGHT -> g.fillRect(r.x, r.y, 1, r.height)
-						GapStyle.NONE -> require(false)
-					}
-					g.color = oldColor
-				}
-
-				if (style.strikethrough) {
-					(shape as? Rectangle)?.let {
-						val yCenter = it.y + it.height / 2
-						g.color = foreground
-						g.drawLine(it.x, yCenter, it.x + it.width, it.y + it.height / 2)
-					}
-				}
-				return shape
-			}
-
-			private fun createSprinkledTexturePaint(color: Color, background: Color): TexturePaint {
-				val textureImage = BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB)
-				val textureGraphics = textureImage.createGraphics()
-				textureGraphics.color = background
-				textureGraphics.fillRect(0, 0, 2, 2)
-				textureGraphics.color = color
-				textureGraphics.fillRect(0, 0, 1, 1)
-				textureGraphics.fillRect(1, 1, 1, 1)
-				return TexturePaint(textureImage, Rectangle2D.Double(0.0, 0.0, 2.0, 2.0))
 			}
 		}
 	}
@@ -409,6 +350,73 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 			} finally {
 				locked = true
 			}
+		}
+	}
+
+	protected class HighlightPainter(val style: HighlightStyle, highlightColor: Color, val shadowColor: Color?, val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
+		private val texturePaint = if (style.sprinkled) createSprinkledTexturePaint(highlightColor, background) else null
+
+		override fun paintLayer(g: Graphics, offs0: Int, offs1: Int, bounds: Shape, c: JTextComponent, view: View): Shape {
+			val gap = style.gapStyle != GapStyle.NONE
+							&& (offs0 == offs1 || offs0 == offs1 - 1)
+			val shape = if (gap) {
+				view.modelToView(offs0, Position.Bias.Forward, offs1, Position.Bias.Backward, bounds)
+			}
+			else {
+				super.paintLayer(g, offs0, offs1, bounds, c, view)
+			}
+
+			texturePaint?.let { texturePaint ->
+				with(g as Graphics2D) {
+					val lastPaint = paint
+					try {
+						paint = texturePaint
+						fill(shape)
+					} finally {
+						paint = lastPaint
+					}
+				}
+			}
+
+			if (gap) {
+				val r = if (shape is Rectangle) shape else shape.bounds
+				val oldColor = g.color
+
+				shadowColor?.let {
+					g.color = it
+					(g as Graphics2D).fill(shape)
+				}
+
+				g.color = color
+
+				@Suppress("KotlinConstantConditions")
+				when (style.gapStyle) {
+					GapStyle.LEFT -> g.fillRect(r.x + r.width - 1, r.y, 1, r.height)
+					GapStyle.RIGHT -> g.fillRect(r.x, r.y, 1, r.height)
+					GapStyle.NONE -> require(false)
+				}
+				g.color = oldColor
+			}
+
+			if (style.strikethrough) {
+				(shape as? Rectangle)?.let {
+					val yCenter = it.y + it.height / 2
+					g.color = foreground
+					g.drawLine(it.x, yCenter, it.x + it.width, it.y + it.height / 2)
+				}
+			}
+			return shape
+		}
+
+		private fun createSprinkledTexturePaint(color: Color, background: Color): TexturePaint {
+			val textureImage = BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB)
+			val textureGraphics = textureImage.createGraphics()
+			textureGraphics.color = background
+			textureGraphics.fillRect(0, 0, 2, 2)
+			textureGraphics.color = color
+			textureGraphics.fillRect(0, 0, 1, 1)
+			textureGraphics.fillRect(1, 1, 1, 1)
+			return TexturePaint(textureImage, Rectangle2D.Double(0.0, 0.0, 2.0, 2.0))
 		}
 	}
 }

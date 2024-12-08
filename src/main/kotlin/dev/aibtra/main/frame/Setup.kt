@@ -9,9 +9,9 @@ import javax.swing.*
 
 class Setup {
 	companion object {
-		fun show(configurationProvider: ConfigurationProvider, frame: MainFrame, environment: Environment, defaultRunnable: Runnable) {
+		fun show(workingMode: WorkingMode, configurationProvider: ConfigurationProvider, frame: MainFrame, environment: Environment, defaultRunnable: Runnable) {
 			val guiConfiguration = configurationProvider.get(GuiConfiguration)
-			if (guiConfiguration.setup) {
+			if (guiConfiguration.setup || workingMode == WorkingMode.RESOLVER) {
 				defaultRunnable.run()
 				return
 			}
