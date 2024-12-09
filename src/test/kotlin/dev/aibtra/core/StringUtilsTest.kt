@@ -5,141 +5,230 @@ import org.junit.jupiter.api.*
 class StringUtilsTest {
 
 	@Test
-	fun testLineEndingNone() {
+	fun testLineEndingsNone() {
 		assertLineEnding(StringUtils.Eol.UNIX, "")
 	}
 
 	@Test
-	fun testLineEndingUnix1() {
+	fun testLineEndingsUnix1() {
 		assertLineEnding(StringUtils.Eol.UNIX, "\n")
 	}
 
 	@Test
-	fun testLineEndingUnix2() {
+	fun testLineEndingsUnix2() {
 		assertLineEnding(StringUtils.Eol.UNIX, "a\n")
 	}
 
 	@Test
-	fun testLineEndingUnix3() {
+	fun testLineEndingsUnix3() {
 		assertLineEnding(StringUtils.Eol.UNIX, "a\nb")
 	}
 
 	@Test
-	fun testLineEndingUnix4() {
+	fun testLineEndingsUnix4() {
 		assertLineEnding(StringUtils.Eol.UNIX, "a\nb\n")
 	}
 
 	@Test
-	fun testLineEndingUnix5() {
+	fun testLineEndingsUnix5() {
 		assertLineEnding(StringUtils.Eol.UNIX, "\n\n")
 	}
 
 	@Test
-	fun testLineEndingUnix6() {
+	fun testLineEndingsUnix6() {
 		assertLineEnding(StringUtils.Eol.UNIX, "a\nb\nc\n")
 	}
 
 	@Test
-	fun testLineEndingUnix7() {
+	fun testLineEndingsUnix7() {
 		assertLineEnding(StringUtils.Eol.UNIX, "\n\n\n")
 	}
 
 	@Test
-	fun testLineEndingMacos1() {
+	fun testLineEndingsMacos1() {
 		assertLineEnding(StringUtils.Eol.MACOS, "\r")
 	}
 
 	@Test
-	fun testLineEndingMacos2() {
+	fun testLineEndingsMacos2() {
 		assertLineEnding(StringUtils.Eol.MACOS, "a\r")
 	}
 
 	@Test
-	fun testLineEndingMacos3() {
+	fun testLineEndingsMacos3() {
 		assertLineEnding(StringUtils.Eol.MACOS, "a\rb")
 	}
 
 	@Test
-	fun testLineEndingMacos4() {
+	fun testLineEndingsMacos4() {
 		assertLineEnding(StringUtils.Eol.MACOS, "a\rb\r")
 	}
 
 	@Test
-	fun testLineEndingMacos5() {
+	fun testLineEndingsMacos5() {
 		assertLineEnding(StringUtils.Eol.MACOS, "\r\r")
 	}
 
 	@Test
-	fun testLineEndingMacos6() {
+	fun testLineEndingsMacos6() {
 		assertLineEnding(StringUtils.Eol.MACOS, "a\rb\rc\r")
 	}
 
 	@Test
-	fun testLineEndingMacos7() {
+	fun testLineEndingsMacos7() {
 		assertLineEnding(StringUtils.Eol.MACOS, "\r\r\r")
 	}
 
 	@Test
-	fun testLineEndingWindows1() {
+	fun testLineEndingsWindows1() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "\r\n")
 	}
 
 	@Test
-	fun testLineEndingWindows2() {
+	fun testLineEndingsWindows2() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "a\r\n")
 	}
 
 	@Test
-	fun testLineEndingWindows3() {
+	fun testLineEndingsWindows3() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "a\r\nb")
 	}
 
 	@Test
-	fun testLineEndingWindows4() {
+	fun testLineEndingsWindows4() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "a\r\nb\r\n")
 	}
 
 	@Test
-	fun testLineEndingWindows5() {
+	fun testLineEndingsWindows5() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "\r\n\r\n")
 	}
 
 	@Test
-	fun testLineEndingWindows6() {
+	fun testLineEndingsWindows6() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "a\r\nb\r\nc\r\n")
 	}
 
 	@Test
-	fun testLineEndingWindows7() {
+	fun testLineEndingsWindows7() {
 		assertLineEnding(StringUtils.Eol.WINDOWS, "\r\n\r\n\r\n")
 	}
 
 	@Test
-	fun testInvalid1() {
+	fun testEndingsInvalid1() {
 		assertLineEnding(null, "\n\r")
 	}
 
 	@Test
-	fun testInvalid2() {
+	fun testEndingsInvalid2() {
 		assertLineEnding(null, "a\nb\r")
 	}
 
 	@Test
-	fun testInvalid3() {
+	fun testEndingsInvalid3() {
 		assertLineEnding(null, "a\nb\r\n")
 	}
 
 	@Test
-	fun testInvalid4() {
+	fun testEndingsInvalid4() {
 		assertLineEnding(null, "a\rb\n")
 	}
 
 	@Test
-	fun testInvalid5() {
+	fun testEndingsInvalid5() {
 		assertLineEnding(null, "a\r\nb\n")
+	}
+
+	@Test
+	fun testFixIndentationNone() {
+		assertFixIndentation(
+			"""
+				|1
+				|2
+				|3
+			""".trimMargin(),
+			"""
+				|A
+				|B
+				|C
+			""".trimMargin(),
+			"""
+				|A
+				|B
+				|C
+			""".trimMargin()
+		)
+	}
+
+	@Test
+	fun testFixIndentationSpaces() {
+		assertFixIndentation(
+			"""
+				| 1
+				|  2
+				|   3
+			""".trimMargin(),
+			"""
+				|A
+				|  B
+				| C
+			""".trimMargin(),
+			"""
+				| A
+				|   B
+				|  C
+			""".trimMargin()
+		)
+	}
+
+	@Test
+	fun testFixIndentationTabs() {
+		assertFixIndentation(
+			"""
+				| 1
+				|   2
+				|     3
+			""".trimMargin(),
+			"""
+				|   A
+				|  B
+				| C
+			""".trimMargin(),
+			"""
+				|   A
+				|  B
+				| C
+			""".trimMargin()
+		)
+	}
+
+	@Test
+	fun testFixIndentationMixed() {
+		assertFixIndentation(
+			"""
+				|         1
+				|         2
+				|         3
+			""".trimMargin(),
+			"""
+				|A
+				| B
+				| C
+			""".trimMargin(),
+			"""
+				|         A
+				|          B
+				|          C
+			""".trimMargin()
+		)
 	}
 
 	private fun assertLineEnding(expected: StringUtils.Eol?, text: String) {
 		Assertions.assertEquals(expected, StringUtils.determineLineEnding(text))
+	}
+
+	private fun assertFixIndentation(template: String, input: String, expected: String) {
+		val actual = StringUtils.fixIndentation(input, template)
+		Assertions.assertEquals(expected, actual)
 	}
 }
