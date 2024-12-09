@@ -112,50 +112,7 @@ class ResolverPatcher {
 
 		private fun fixIndentation(tokenizing: LineTokenizing, conflict: ResolverConflict): String {
 			val rawLines = tokenizing.indices().map { tokenizing.string(it, false, false) }
-			val commonExpected = computeCommonIndentation(conflict.ours + conflict.theirs)
-			val commonActual = computeCommonIndentation(rawLines)
-			return joinLines(rawLines.map {
-				if (it.isNotBlank()) {
-					commonExpected + it.substring(commonActual.length)
-				}
-				else {
-					it
-				}
-			})
-		}
-
-		private fun computeCommonIndentation(lines: List<String>): String {
-			val indentations = lines
-				.filter { it.isNotBlank() }
-				.map { getIndentation(it) }
-			if (indentations.isEmpty()) {
-				return ""
-			}
-
-			var common = indentations[0]
-			for (indent in indentations.drop(1)) {
-				val minLength: Int = min(common.length, indent.length)
-				var to = 0
-				while (to < minLength && common[to] == indent[to]) {
-					to++
-				}
-				common = common.substring(0, to)
-				if (common.isEmpty()) {
-					break
-				}
-			}
-
-			return common
-		}
-
-		private fun getIndentation(line: String): String {
-			for ((i: Int, ch: Char) in line.withIndex()) {
-				if (ch != ' ' && ch != '\t') {
-					return line.substring(0, i)
-				}
-			}
-
-			return line
+			return joinLines(StringUtils.fixIndentation(rawLines, conflict.ours + conflict.theirs))
 		}
 
 		private fun splitLines(patch: String): LineTokenizing {
