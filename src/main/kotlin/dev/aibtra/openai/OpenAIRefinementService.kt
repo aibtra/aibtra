@@ -34,9 +34,9 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 		if (streaming && isPatchResponseType(responseType)) {
 			throw IOException("Can't combine response type '$responseType' with 'streaming'.")
 		}
-		
+
 		val messages = JSONArray()
-		var contentVar : String? = null
+		var contentVar: String? = null
 		for (instruction in profile.instructions) {
 			if (!instruction.mode.matches(selectionMode)) {
 				continue
@@ -59,25 +59,22 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 				}
 
 				override fun finish(builder: StringBuilder) {
-					if (applyFixes(content, builder, responseType)) {
-						callback(Result(builder.toString(), true))
-					}
+					val response = applyFixes(content, builder.toString())
+					callback(Result(response, true))
 				}
 			}
 		}
 		else {
 			object : ResultHandler {
 				override fun process(message: String) {
-					val res = if (responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION_JSON) {
-						applyJson(message, content, selection?.from ?: 0)
+					if (responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION_JSON) {
+						val response = applyJson(message, content, selection?.from ?: 0)
+						callback(Result(response, true))
 					}
 					else {
-						val builder = StringBuilder(message)
-						applyFixes(content, builder, responseType)
-						builder.toString()
+						val response = applyFixes(content, message)
+						callback(Result(response, true))
 					}
-
-					callback(Result(res, true))
 				}
 			}
 		}
@@ -89,48 +86,28 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 		})
 	}
 
-	private fun applyFixes(content: String, result: StringBuilder, responseType: OpenAIRefinementConfiguration.ResponseType): Boolean {
-		if (dropMarkdownPrefix(content, result)) {
-			return true
-		}
-
-		if (isPatchResponseType(responseType)) {
-			return false
-		}
-
-		return ensureLeadingAndTrailingWhitespaces(content, result)
+	private fun applyFixes(content: String, result: String): String {
+		return dropMarkdownPrefix(content, result)
+			?: ensureLeadingAndTrailingWhitespaces(content, result)
 	}
 
-	private fun ensureLeadingAndTrailingWhitespaces(content: String, result: StringBuilder): Boolean {
+	private fun ensureLeadingAndTrailingWhitespaces(content: String, result: String): String {
 		val leadingWhitespaces = content.takeWhile { it.isWhitespace() }
 		val trailingWhitespaces = content.takeLastWhile { it.isWhitespace() }
-		val trimmedResult = result.toString().trim()
-
-		result.clear()
-		result.append(leadingWhitespaces)
-		result.append(trimmedResult)
-		result.append(trailingWhitespaces)
-		return true
+		val trimmedResult = result.trim()
+		return leadingWhitespaces +
+						trimmedResult +
+						trailingWhitespaces
 	}
 
-	private fun dropMarkdownPrefix(content: String, result: StringBuilder): Boolean {
-		if (MARKDOWN_PREFIX_PATTERN.containsMatchIn(content)) {
-			return false
+	private fun dropMarkdownPrefix(content: String, result: String): String? {
+		if (!MARKDOWN_PREFIX_PATTERN.containsMatchIn(content)) {
+			return null
 		}
 
-		if (!MARKDOWN_PREFIX_PATTERN.containsMatchIn(result) || !MARKDOWN_SUFFIX_PATTERN.containsMatchIn(result)) {
-			return false
-		}
-
-		MARKDOWN_SUFFIX_PATTERN.find(result)?.let {
-			result.delete(it.range.first, result.length)
-		}
-
-		MARKDOWN_PREFIX_PATTERN.find(result)?.let {
-			result.delete(0, it.range.last + 1)
-		}
-
-		return true
+		return result
+			.replace(MARKDOWN_PREFIX_PATTERN, "")
+			.replace(MARKDOWN_SUFFIX_PATTERN, "")
 	}
 
 	class Result(val content: String?, val finished: Boolean, val failure: Pair<IOException, Boolean>? = null)
@@ -143,13 +120,12 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 		val MARKDOWN_PREFIX_PATTERN = Regex("^\\s*```(\\w+)?\n")
 		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
 
-		fun isPatchResponseType(type: OpenAIRefinementConfiguration.ResponseType) : Boolean {
+		fun isPatchResponseType(type: OpenAIRefinementConfiguration.ResponseType): Boolean {
 			return type == OpenAIRefinementConfiguration.ResponseType.SELECTION_JSON
 		}
 
 		internal fun applyJson(input: String, content: String, focusStart: Int): String {
-			val obj = parseJson(input)
-			return when (obj) {
+			return when (val obj = parseJson(input)) {
 				is JSONObject -> applyJsonPatch(obj, content, focusStart)
 				is JSONArray -> applyJsonPatch(obj, content, focusStart)
 				else -> throw IOException("Invalid JSON response: root object missing")
@@ -165,8 +141,10 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 			val parser: Parser = Parser.builder(options).build()
 			val document = parser.parse(input)
 			for (child in document.children) {
-				(child as? FencedCodeBlock)?.let {
-					parseRawJson(it.contentChars.toString())?.let { return it }
+				(child as? FencedCodeBlock)?.let { block ->
+					parseRawJson(block.contentChars.toString())?.let {
+						return it
+					}
 				}
 			}
 
