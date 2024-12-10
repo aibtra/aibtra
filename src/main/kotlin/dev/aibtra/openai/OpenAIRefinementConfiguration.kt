@@ -9,6 +9,7 @@ package dev.aibtra.openai
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
+import dev.aibtra.refiner.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
@@ -31,7 +32,7 @@ data class OpenAIRefinementConfiguration(
 		val supportsSchemes: Boolean = false,
 		val instructions: List<Instruction>,
 		val responseType: ResponseType,
-		val diffConfig: DiffManager.Config,
+		val diffConfig: RefinerDiffManager.Config,
 		val submitOnInvocation: Boolean = false,
 		val submitOnProfileChange: Boolean = false,
 		val wordWrap: Boolean = false,
@@ -113,7 +114,7 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
+			RefinerDiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true,
 			accelerator = "ctrl shift P"
 		)
@@ -134,7 +135,7 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
+			RefinerDiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true,
 			accelerator = "ctrl shift I"
 		)
@@ -152,7 +153,7 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
+			RefinerDiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true
 		)
 
@@ -166,7 +167,7 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
 			ResponseType.SELECTION,
-			DiffManager.Config(false, false, DiffTokenizingMode.NONE, true)
+			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, true)
 		)
 
 		private val CODE_ADJUSTMENT = Profile(
@@ -215,7 +216,7 @@ data class OpenAIRefinementConfiguration(
 				)
 			),
 			ResponseType.SELECTION_JSON,
-			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true)
+			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true)
 		)
 
 		private val CODE_REFINEMENT = Profile(
@@ -264,7 +265,7 @@ data class OpenAIRefinementConfiguration(
 				)
 			),
 			ResponseType.SELECTION_JSON,
-			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true),
+			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true),
 			accelerator = "ctrl shift R"
 		)
 
@@ -278,7 +279,7 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, CONTENT_MACRO)
 			),
 			ResponseType.CONTENT,
-			DiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, false)
+			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, false)
 		)
 
 		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)

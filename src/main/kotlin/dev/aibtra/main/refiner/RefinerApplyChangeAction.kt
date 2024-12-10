@@ -8,12 +8,13 @@ import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
+import dev.aibtra.refiner.*
 import java.util.stream.*
 
 class RefinerApplyChangeAction(
 	refTextArea: RefinerRefTextArea,
 	rawTextArea: RefinerRawTextArea,
-	diffManager: DiffManager,
+	diffManager: RefinerDiffManager,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("applyChange", "Apply", Icons.ACCEPT, "Apply", "alt LEFT", accelerators, ActionRunnable {
@@ -23,7 +24,7 @@ class RefinerApplyChangeAction(
 		require(rawTextArea.getText() == rawText) { "RAW TEXT AREA\n${rawTextArea.getText()}\nRAW TEXT\n$rawText" }
 
 		refTextArea.getSelectionRange()?.let {
-			val blocks = DiffManager.getSelectedBlocksFromRef(state, it).reversed()
+			val blocks = RefinerDiffManager.getSelectedBlocksFromRef(state, it).reversed()
 			LOG.info("Apply " + blocks.stream().map {
 				"(${it.rawFrom}-${it.rawTo} '${rawText.substring(it.rawFrom, it.rawTo).replace("\n", "\\n")}')" +
 								"->" +
@@ -39,7 +40,7 @@ class RefinerApplyChangeAction(
 		val listen: (range: IntRange?) -> Unit = { range ->
 			val state = diffManager.state
 			isEnabled = range?.let {
-				DiffManager.getSelectedBlocksFromRef(state, it).isNotEmpty()
+				RefinerDiffManager.getSelectedBlocksFromRef(state, it).isNotEmpty()
 			} ?: false
 		}
 

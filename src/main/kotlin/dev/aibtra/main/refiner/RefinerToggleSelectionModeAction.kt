@@ -6,9 +6,10 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
+import dev.aibtra.refiner.*
 
 class RefinerToggleSelectionModeAction(
-	private val diffManager: DiffManager,
+	private val diffManager: RefinerDiffManager,
 	private val profileManager: RefinerProfileManager,
 	rawTextArea: RefinerRawTextArea,
 	accelerators: Accelerators
