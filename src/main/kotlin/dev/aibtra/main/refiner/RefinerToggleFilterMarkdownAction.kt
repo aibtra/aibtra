@@ -6,9 +6,10 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
+import dev.aibtra.refiner.*
 
 class RefinerToggleFilterMarkdownAction(
-	diffManager: DiffManager,
+	diffManager: RefinerDiffManager,
 	profileManager: RefinerProfileManager,
 	accelerators: Accelerators
 ) :

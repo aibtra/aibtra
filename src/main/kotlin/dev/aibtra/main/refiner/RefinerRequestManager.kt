@@ -7,13 +7,14 @@ package dev.aibtra.main.refiner
 import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
+import dev.aibtra.refiner.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
 import java.io.*
 import java.util.concurrent.atomic.*
 
 class RefinerRequestManager(
-	private val diffManager: DiffManager,
+	private val diffManager: RefinerDiffManager,
 	coroutineDispatcher: CoroutineDispatcher,
 	mainScope: CoroutineScope,
 	private val dialogDisplayer: DialogDisplayer

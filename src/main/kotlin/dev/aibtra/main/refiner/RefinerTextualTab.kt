@@ -6,12 +6,13 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
-import dev.aibtra.diff.DiffManager.*
+import dev.aibtra.refiner.RefinerDiffManager.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
 import dev.aibtra.openai.*
+import dev.aibtra.refiner.*
 import java.awt.*
 import java.awt.event.*
 import java.nio.file.*
@@ -21,7 +22,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	private val commandControl: RefinerCommandControl
 	protected val rawTextArea: RefinerRawTextArea
 	private val refTextArea: RefinerRefTextArea
-	protected val diffManager: DiffManager
+	protected val diffManager: RefinerDiffManager
 	protected val profileManager: RefinerProfileManager
 	protected val requestManager: RefinerRequestManager
 	private val bottomToolBar: ToolBar
@@ -36,7 +37,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	init {
 		val coroutineDispatcher = environment.coroutineDispatcher
 		val mainScope = environment.mainScope
-		diffManager = DiffManager(::normalizeText, coroutineDispatcher, mainScope, environment.debugLog)
+		diffManager = RefinerDiffManager(::normalizeText, coroutineDispatcher, mainScope, environment.debugLog)
 
 		profileManager = RefinerProfileManager(initialWorkingMode, environment.configurationProvider)
 
@@ -157,7 +158,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		val control = refTextArea.getControl()
 		refTextArea.addPopupMenu { _, popupMenu ->
 			refTextArea.getSelectionRange()?.let {
-				val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
+				val blocks = RefinerDiffManager.getSelectedBlocksFromRef(diffManager.state, it)
 				popupMenu.apply {
 					if (blocks.isNotEmpty()) {
 						add(JMenuItem(applyChangeAction))
@@ -172,7 +173,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 		refTextArea.addPopupMenu(leftMouseButton = true) { _, popupMenu ->
 			refTextArea.getSelectionRange()?.let {
-				val blocks = DiffManager.getSelectedBlocksFromRef(diffManager.state, it)
+				val blocks = RefinerDiffManager.getSelectedBlocksFromRef(diffManager.state, it)
 				popupMenu.apply {
 					if (blocks.isNotEmpty()) {
 						add(JMenuItem(applyChangeAction))

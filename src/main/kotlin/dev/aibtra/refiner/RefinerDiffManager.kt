@@ -1,16 +1,14 @@
-/*
- * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
- */
-
-package dev.aibtra.diff
+package dev.aibtra.refiner
 
 import dev.aibtra.core.*
+import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.*
+import kotlinx.coroutines.Runnable
+import kotlinx.serialization.Serializable
 
-class DiffManager(
+class RefinerDiffManager(
 	private val rawNormalizer: RawNormalizer,
 	coroutineDispatcher: CoroutineDispatcher,
 	mainScope: CoroutineScope,
@@ -161,11 +159,11 @@ class DiffManager(
 				callback {
 					Ui.assertEdt()
 
-					val latestData = this@DiffManager.data
+					val latestData = this@RefinerDiffManager.data
 					val latestInput = latestData.input
 					val data = Data(latestInput.copy(callback = null), state, latestData.sequenceId + 1)
 					val latestState = latestData.state
-					this@DiffManager.data = data
+					this@RefinerDiffManager.data = data
 					latestInput.callback?.run()
 
 					if (debugOperationName != null) {

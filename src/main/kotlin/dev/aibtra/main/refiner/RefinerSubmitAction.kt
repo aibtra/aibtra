@@ -7,11 +7,12 @@ package dev.aibtra.main.refiner
 import dev.aibtra.diff.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
+import dev.aibtra.refiner.*
 import java.util.concurrent.atomic.*
 
 class RefinerSubmitAction(
 	environment: Environment,
-	diffManager: DiffManager,
+	diffManager: RefinerDiffManager,
 	requestManager: RefinerRequestManager,
 	submitter: RefinerSubmitter
 ) :
@@ -22,7 +23,7 @@ class RefinerSubmitAction(
 	class Worker(
 		private val action: RefinerSubmitAction,
 		private val submitter: RefinerSubmitter,
-		diffManager: DiffManager,
+		diffManager: RefinerDiffManager,
 		private val requestManager: RefinerRequestManager
 	) {
 		private val stopMode = AtomicBoolean(false)
@@ -49,7 +50,7 @@ class RefinerSubmitAction(
 			updateState(diffManager.state)
 		}
 
-		private fun updateState(state: DiffManager.State) {
+		private fun updateState(state: RefinerDiffManager.State) {
 			action.isEnabled = state.diff.raw.isNotEmpty()
 		}
 	}

@@ -9,6 +9,7 @@ import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.content.*
+import dev.aibtra.refiner.*
 import java.nio.file.*
 import javax.swing.*
 
@@ -22,7 +23,7 @@ internal class RefinerFileTab(tabbedPane: MainTabbedPane, environment: Environme
 			if (state != null && state.initial) {
 				val text = state.content
 				rawTextArea.setText(text)
-				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
+				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, RefinerDiffManager.Normalization.STOP, null)
 
 				state.initialLine?.let {
 					// Needs to be postponed to function correctly

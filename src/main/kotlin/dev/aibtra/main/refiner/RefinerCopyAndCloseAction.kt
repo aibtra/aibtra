@@ -7,6 +7,7 @@ package dev.aibtra.main.refiner
 import dev.aibtra.configuration.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
+import dev.aibtra.refiner.*
 import java.awt.*
 import java.awt.datatransfer.*
 import java.awt.event.*
@@ -15,7 +16,7 @@ internal class RefinerCopyAndCloseAction(
 	tab: RefinerTextTab,
 	environment: Environment,
 	requestManager: RefinerRequestManager,
-	diffManager: DiffManager,
+	diffManager: RefinerDiffManager,
 	rawTextArea: RefinerRawTextArea,
 	configurationProvider: ConfigurationProvider
 ) :
