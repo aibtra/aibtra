@@ -73,7 +73,7 @@ class ApplicationPaths(
 					path.inputStream().use { load(it) }
 				}
 
-				properties.forEach { (key, value) ->
+				for ((key, value) in properties) {
 					System.setProperty(key as String, value as String)
 				}
 			}
