@@ -78,11 +78,11 @@ class RefinerCommandControl(val configurationProvider: ConfigurationProvider) {
 			return ""
 		}
 
-		configurationProvider.change(OpenAIRefinementConfiguration) {
-			val newCommands = it.lastCommands.stream().filter { it != command && it.isNotBlank() }.collect(Collectors.toList())
+		configurationProvider.change(OpenAIRefinementConfiguration) { configuration ->
+			val newCommands = configuration.lastCommands.stream().filter { it != command && it.isNotBlank() }.collect(Collectors.toList())
 			newCommands.addFirst(command)
 
-			it.copy(lastCommands = newCommands)
+			configuration.copy(lastCommands = newCommands)
 		}
 
 		return command
