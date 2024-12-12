@@ -220,6 +220,11 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		return false
 	}
 
+	override fun addViewActions(viewMenu: JMenu): Boolean {
+		addAction(viewMenu, RefinerShowFullResponseAction(diffManager, environment.guiConfiguration, dialogDisplayer, environment.accelerators))
+		return true
+	}
+
 	protected open fun addTextualEditActions(menu: JMenu): Boolean {
 		return false
 	}

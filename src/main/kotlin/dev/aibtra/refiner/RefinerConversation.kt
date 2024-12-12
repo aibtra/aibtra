@@ -11,5 +11,6 @@ class RefinerConversation(val entries: List<Entry>) {
 
 	interface Entry {
 		val title: String
+		val rawResponse: String
 	}
 }

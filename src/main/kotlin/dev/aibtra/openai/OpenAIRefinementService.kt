@@ -122,7 +122,7 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 
 	class Result(val content: String?, val conversation: RefinerConversation?, val failure: Pair<IOException, Boolean>? = null)
 
-	class ConversationEntry(override val title: String, val messages: List<JSONObject>) : RefinerConversation.Entry
+	class ConversationEntry(override val title: String, override val rawResponse: String, val messages: List<JSONObject>) : RefinerConversation.Entry
 
 	companion object {
 		private const val TITLE_MAX_LENGTH = 128
@@ -145,7 +145,7 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 			val title = if (firstMessage.length > TITLE_MAX_LENGTH) "$substring..." else substring
 			val priorEntries: List<ConversationEntry> = priorConversation?.entries?.map { it as ConversationEntry } ?: listOf()
 			val assistantMessage = createMessage(message, OpenAIRole.ASSISTANT)
-			return RefinerConversation(priorEntries + listOf(ConversationEntry(title, newMessages + assistantMessage)))
+			return RefinerConversation(priorEntries + listOf(ConversationEntry(title, message, newMessages + assistantMessage)))
 		}
 
 		private fun extractLastFencedCodeBlock(raw: String): String {
