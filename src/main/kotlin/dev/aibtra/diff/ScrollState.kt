@@ -145,7 +145,7 @@ class ScrollState {
 		LOG.debug("SCROLL: $leftPos ${if (rightToLeft) "<--" else "-->"} $rightPos (mode=${mode}${rawMode?.let { ", force" } ?: ""})")
 
 		state = state.copy(leftPos = leftPos, rightPos = rightPos, mode = mode)
-		scrollListeners.toList().forEach { it(leftPos, rightPos, mode) }
+		scrollListeners.forEach { it(leftPos, rightPos, mode) }
 	}
 
 	private fun mapScrollPos(

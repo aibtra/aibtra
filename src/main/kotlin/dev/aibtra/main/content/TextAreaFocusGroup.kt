@@ -11,9 +11,7 @@ class TextAreaFocusGroup {
 			override fun focusGained(e: FocusEvent?) {
 				if (focused != textArea) {
 					focused = textArea
-					listeners.forEach {
-						it()
-					}
+					listeners.forEach { it() }
 				}
 			}
 

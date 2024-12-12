@@ -143,7 +143,7 @@ class FilteredText(
 		private fun append(chars: CharSequence, cleaned: Boolean, startOffset: Int, endOffset: Int) {
 			val from = builder.length
 			val to = from + chars.length
-			indexToMapped.forEach { entry ->
+			for (entry in indexToMapped) {
 				val index = entry.key
 				val pos = index.pos
 				val type = index.type
