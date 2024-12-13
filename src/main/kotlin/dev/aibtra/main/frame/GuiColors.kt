@@ -39,7 +39,7 @@ data class GuiColors(
 			private val LIGHT_RED_SHADOW = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
 			private val LIGHT_SELECTION = Color(0xCC, 0xCC, 0xCC)
 			private val LIGHT_FOREGROUND = Color(0x10, 0x10, 0x10)
-			private val LIGHT_BACKGROUND = Color(0xFF, 0xFF, 0xFF)
+			private val LIGHT_BACKGROUND = Color(0xF7, 0xF8, 0xFA)
 			private val DARK_GREEN = Color(0x25, 0xA6, 0x25)
 			private val DARK_GREEN_SHADOW = Color(0x25, 0xA6, 0x25, SHADOW_ALPHA)
 			private val DARK_RED = Color(0xC6, 0x28, 0x28)
