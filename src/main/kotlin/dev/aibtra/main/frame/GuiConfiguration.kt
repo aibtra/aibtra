@@ -18,7 +18,7 @@ import javax.swing.*
 
 @Serializable
 data class GuiConfiguration(
-	@SerialName("fonts.2") val fonts: Fonts = Fonts(),
+	val fonts: Fonts = Fonts(),
 	val darkTheme: Boolean = true, // Dark mode is in general preferred by programmers: https://css-tricks.com/poll-results-light-on-dark-is-preferred/
 	val systemTray: Boolean = true,
 	val hotkeyEnabled: Boolean = false,
