@@ -52,7 +52,7 @@ internal class ConfigurationFile<D>(
 				ConfigurationFile(path, true, serializer, content)
 			} catch (e: Exception) {
 				when (e) {
-					is java.nio.file.NoSuchFileException -> {
+					is NoSuchFileException -> {
 						LOG.warn("Configuration file not found: " + e.message)
 
 						try {
