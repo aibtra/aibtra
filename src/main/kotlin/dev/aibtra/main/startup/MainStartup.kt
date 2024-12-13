@@ -298,7 +298,7 @@ class MainStartup {
 				ConfigurationFile.load(path, factory.createSerializer(), factory.default()) {
 					val backup = Files.createTempFile(path.parent, name, "")
 					Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING)
-					Dialogs.showError("Configuration", "A serialization error occurred while processing '$name'. The associated configuration will be restored to its defaults.\n\nA backup of the original file has been created at $backup", dialogDisplayer)
+					Dialogs.showWarning("Configuration", "Failed read configuration file '$name'.\n\nThe associated configuration will be restored to its defaults. A backup of the original file has been created at:\n\n$backup", dialogDisplayer)
 					true
 				} as ConfigurationFile<Any>
 			} as ConfigurationFile<D>
