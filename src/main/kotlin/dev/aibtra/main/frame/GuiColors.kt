@@ -14,8 +14,8 @@ import java.awt.*
 
 @Serializable
 data class GuiColors(
-	@SerialName("light.6") val light: Colors = Colors.DEFAULTS_LIGHT,
-	@SerialName("dark.6") val dark: Colors = Colors.DEFAULTS_DARK,
+	val light: Colors = Colors.DEFAULTS_LIGHT,
+	val dark: Colors = Colors.DEFAULTS_DARK,
 ) {
 
 	@Serializable
