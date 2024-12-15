@@ -30,7 +30,8 @@ data class OpenAIRefinementConfiguration(
 		val model: String,
 		val streaming: Boolean,
 		val supportsSchemes: Boolean = false,
-		val instructions: List<Instruction>,
+		val mainInstructions: List<Instruction>,
+		val followUpInstructions: List<Instruction>?,
 		val responseType: ResponseType,
 		val diffConfig: RefinerDiffManager.Config,
 		val submitOnInvocation: Boolean = false,
@@ -40,7 +41,7 @@ data class OpenAIRefinementConfiguration(
 	) : OpenAIProfile {
 
 		fun supportsSelection(): Boolean {
-			for (instruction in instructions) {
+			for (instruction in mainInstructions) {
 				if (instruction.text.contains(SELECTION_MACRO)) {
 					return true
 				}
@@ -66,9 +67,8 @@ data class OpenAIRefinementConfiguration(
 	@Serializable
 	data class Instruction(val role: OpenAIRole, val text: String, val mode: InstructionMode = InstructionMode.ANY)
 
-	@Serializable
 	enum class ResponseType {
-		CONTENT, SELECTION, SELECTION_JSON
+		CONTENT_AS_IS, CONTENT_FENCED;
 	}
 
 	fun profile(id: String): Profile? {
@@ -113,7 +113,8 @@ data class OpenAIRefinementConfiguration(
 				),
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
-			ResponseType.SELECTION,
+			null,
+			ResponseType.CONTENT_AS_IS,
 			RefinerDiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true,
 			accelerator = "ctrl shift P"
@@ -134,7 +135,8 @@ data class OpenAIRefinementConfiguration(
 				),
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
-			ResponseType.SELECTION,
+			null,
+			ResponseType.CONTENT_AS_IS,
 			RefinerDiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true,
 			accelerator = "ctrl shift I"
@@ -152,7 +154,8 @@ data class OpenAIRefinementConfiguration(
 				),
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
-			ResponseType.SELECTION,
+			null,
+			ResponseType.CONTENT_AS_IS,
 			RefinerDiffManager.Config(true, false, DiffTokenizingMode.NONE, true),
 			wordWrap = true
 		)
@@ -166,56 +169,88 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, COMMAND_MACRO),
 				Instruction(OpenAIRole.USER, SELECTION_MACRO)
 			),
-			ResponseType.SELECTION,
+			null,
+			ResponseType.CONTENT_AS_IS,
 			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, true)
 		)
 
 		private val CODE_ADJUSTMENT = Profile(
 			OpenAIProfile.Name(CODE_ADJUSTMENT_ID, "Code adjustment (GPT-4o)"),
 			MODEL_4O,
-			true,
+			false,
 			false,
 			listOf(
 				Instruction(
 					OpenAIRole.USER,
-					"I have following file:"
+					"""
+						|Your objective is to apply the specified changes to a source code file:
+						|
+						|1. Begin by providing a detailed reasoning process about the planned modifications, explaining why and how each change will be implemented.
+						|2. Conclude your response with the updated file content enclosed in triple backticks (```).
+						|2.1 Be sure to preserve the indentation of every line exactly as is.
+						|
+						|The changes to be applied are described below:
+						|$COMMAND_MACRO
+					""".trimMargin()
 				),
 				Instruction(
 					OpenAIRole.USER,
-					CONTENT_MACRO
+					"""
+						|This is the file content:
+						|
+						|```
+						|$CONTENT_MACRO
+						|```
+					""".trimMargin()
 				),
 				Instruction(
 					OpenAIRole.USER,
-					"Focus only on this part of the file and apply changes only to this part:",
+					"""
+						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
+						|Do not touch other parts of the file.
+						|
+						|```
+						|$SELECTION_MACRO
+						|```
+					""".trimMargin(),
 					InstructionMode.SELECTION_ONLY
+				)
+			),
+			listOf(
+				Instruction(
+					OpenAIRole.USER,
+					"""
+						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
+						|
+						|$COMMAND_MACRO
+					""".trimMargin()
 				),
 				Instruction(
 					OpenAIRole.USER,
-					SELECTION_MACRO,
-					InstructionMode.SELECTION_ONLY
-				),
-				Instruction(
-					OpenAIRole.USER,
-					"Apply these changes:\n\n$COMMAND_MACRO"
-				),
-				Instruction(
-					OpenAIRole.USER,
-					"Send back only the entire modified file. Do not include any additional comments.",
+					// When switching back and forth between selecting and entire file, it's important to ensure that we will get sent back the entire file.
+					"""
+						|The following is the complete content of the file. Make the requested modifications and ensure the response includes the entire updated file content.
+						|
+						|```
+						|$CONTENT_MACRO
+						|```
+					""".trimMargin(),
 					InstructionMode.FULL_ONLY
 				),
 				Instruction(
 					OpenAIRole.USER,
 					"""
-						|Send back only the changed part of the file ("new") and which exact part to replace ("old", including the line number where the old block starts). Preserve the indentation of every line exactly as is. Use following JSON format for your result:
-						|{
-						|  old: "..."
-						|  oldLineStart: ...
-						|  new: "..."
-						|}""".trimMargin(),
+						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
+						|Do not touch other parts of the file.
+						|
+						|```
+						|$SELECTION_MACRO
+						|```
+					""".trimMargin(),
 					InstructionMode.SELECTION_ONLY
 				)
 			),
-			ResponseType.SELECTION_JSON,
+			ResponseType.CONTENT_FENCED,
 			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true)
 		)
 
@@ -227,44 +262,61 @@ data class OpenAIRefinementConfiguration(
 			listOf(
 				Instruction(
 					OpenAIRole.USER,
-					"I have following file:"
-				),
-				Instruction(
-					OpenAIRole.USER,
-					CONTENT_MACRO
-				),
-				Instruction(
-					OpenAIRole.USER,
-					"Focus only on this part of the file and apply changes only to this part:",
-					InstructionMode.SELECTION_ONLY
-				),
-				Instruction(
-					OpenAIRole.USER,
-					SELECTION_MACRO,
-					InstructionMode.SELECTION_ONLY
-				),
-				Instruction(
-					OpenAIRole.USER,
-					"Apply these changes:\n\n$COMMAND_MACRO"
-				),
-				Instruction(
-					OpenAIRole.USER,
-					"Send back only the entire modified file. Do not include any additional comments.",
-					InstructionMode.FULL_ONLY
+					"""
+						|Your objective is to apply the specified changes to a source code file:
+						|
+						|1. Begin by providing a detailed reasoning process about the planned modifications, explaining why and how each change will be implemented.
+						|2. Conclude your response with the updated file content enclosed in triple backticks (```).
+						|2.1 Be sure to preserve the indentation of every line exactly as is.
+						|
+						|The changes to be applied are described below:
+						|$COMMAND_MACRO
+					""".trimMargin()
 				),
 				Instruction(
 					OpenAIRole.USER,
 					"""
-						|Send back only the changed part of the file ("new") and which exact part to replace ("old", including the line number where the old block starts). Preserve the indentation of every line exactly as is. Use following JSON format for your result:
-						|{
-						|  old: "..."
-						|  oldLineStart: ...
-						|  new: "..."
-						|}""".trimMargin(),
+						|This is the file content:
+						|
+						|```
+						|$CONTENT_MACRO
+						|```
+					""".trimMargin()
+				),
+				Instruction(
+					OpenAIRole.USER,
+					"""
+						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
+						|Do not touch other parts of the file.
+						|
+						|```
+						|$SELECTION_MACRO
+						|```
+					""".trimMargin(),
 					InstructionMode.SELECTION_ONLY
 				)
 			),
-			ResponseType.SELECTION_JSON,
+			listOf(
+				Instruction(
+					OpenAIRole.USER,
+					"""
+						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
+						|
+						|$COMMAND_MACRO
+					""".trimMargin()
+				),
+				Instruction(
+					OpenAIRole.USER,
+					"""
+						|This is the file content:
+						|
+						|```
+						|$CONTENT_MACRO
+						|```
+					""".trimMargin()
+				),
+			),
+			ResponseType.CONTENT_FENCED,
 			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true),
 			accelerator = "ctrl shift R"
 		)
@@ -278,7 +330,8 @@ data class OpenAIRefinementConfiguration(
 				Instruction(OpenAIRole.USER, COMMAND_MACRO),
 				Instruction(OpenAIRole.USER, CONTENT_MACRO)
 			),
-			ResponseType.CONTENT,
+			null,
+			ResponseType.CONTENT_AS_IS,
 			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, false)
 		)
 
@@ -293,7 +346,7 @@ data class OpenAIRefinementConfiguration(
 		}
 
 		fun getCommandInstructions(profile: Profile): List<String>? {
-			val instructions = profile.instructions.stream().filter { i -> i.text.contains(COMMAND_MACRO) }.findAny().getOrNull()
+			val instructions = profile.mainInstructions.stream().filter { i -> i.text.contains(COMMAND_MACRO) }.findAny().getOrNull()
 			return instructions?.text?.split(COMMAND_MACRO)
 		}
 
