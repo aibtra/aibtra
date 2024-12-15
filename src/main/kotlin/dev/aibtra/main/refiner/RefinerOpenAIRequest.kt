@@ -18,11 +18,9 @@ class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, p
 
 		// Whether the user opts to process the entire file or just a selection,
 		// the responseType dictates whether we receive the whole file or just the selected portion.
-		val responseType = profile.responseType
-		val selection = if (part.isPart()) OpenAIRefinementService.Selection(part.from) else null
-		service.request(profile, selection, macroResolver) { result ->
+		service.request(profile, part, macroResolver) { result ->
 			result.content?.let { builder ->
-				val recreateMode = if (responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION) {
+				val recreateMode = if (part.isPart()) {
 					// If the user chooses to process the entire file, we will have passed the complete file to the model.
 					// Therefore, our selection encompasses the whole file, making RecreateMode.PART identical to FULL.
 					if (result.finished) {

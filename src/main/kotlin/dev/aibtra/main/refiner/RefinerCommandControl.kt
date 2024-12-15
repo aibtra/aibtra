@@ -16,7 +16,7 @@ class RefinerCommandControl(val configurationProvider: ConfigurationProvider) {
 	private val panel = JPanel()
 	private val enterListeners = ArrayList<(ev: KeyEvent) -> Unit>()
 
-	private var profile : OpenAIRefinementConfiguration.Profile? = null
+	private var profile: OpenAIRefinementConfiguration.Profile? = null
 
 	init {
 		panel.layout = BorderLayout()
@@ -42,6 +42,7 @@ class RefinerCommandControl(val configurationProvider: ConfigurationProvider) {
 						commandArea.insert("\n", commandArea.caretPosition)
 						e.consume()
 					}
+
 					e.keyCode == KeyEvent.VK_ENTER -> {
 						enterListeners.forEach(Consumer { it(e) })
 					}
@@ -60,8 +61,8 @@ class RefinerCommandControl(val configurationProvider: ConfigurationProvider) {
 		}
 
 		val wasVisible = panel.isVisible
-		setConstantText(split[0].trim(), beforeArea)
-		setConstantText(split[1].trim(), afterArea)
+		setConstantText(split[0], beforeArea)
+		setConstantText(split[1], afterArea)
 		panel.isVisible = true
 
 		if (!wasVisible) {
@@ -72,7 +73,7 @@ class RefinerCommandControl(val configurationProvider: ConfigurationProvider) {
 		}
 	}
 
-	fun retrieveCommand() : String {
+	fun retrieveCommand(): String {
 		val command = commandArea.text
 		if (command.isBlank()) {
 			return ""
@@ -98,11 +99,33 @@ class RefinerCommandControl(val configurationProvider: ConfigurationProvider) {
 
 	private fun setConstantText(text: String, textArea: JTextArea) {
 		if (text.isNotEmpty()) {
-			textArea.text = text
+			textArea.text = text.trim().let {
+				val lines = it.split("\n")
+				if (lines.size > 2) {
+					shortenConstantText(lines[0], false) + ELLIPSES
+				}
+				else {
+					shortenConstantText(it, true)
+				}
+			}
+
 			textArea.isVisible = true
 		}
 		else {
 			textArea.isVisible = false
+		}
+	}
+
+	companion object {
+		private const val CONSTANT_TEXT_LIMIT = 128
+		private const val ELLIPSES = " ..."
+
+		fun shortenConstantText(text: String, addEllipsis: Boolean): String {
+			if (text.length <= CONSTANT_TEXT_LIMIT) {
+				return text
+			}
+
+			return text.substring(0, CONSTANT_TEXT_LIMIT) + (if (addEllipsis) ELLIPSES else "")
 		}
 	}
 }

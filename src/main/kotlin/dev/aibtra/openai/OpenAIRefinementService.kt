@@ -6,52 +6,33 @@ package dev.aibtra.openai
 
 import com.vladsch.flexmark.ast.*
 import com.vladsch.flexmark.parser.*
+import com.vladsch.flexmark.util.ast.*
 import com.vladsch.flexmark.util.data.*
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
+import dev.aibtra.text.*
 import org.json.simple.*
 import org.json.simple.parser.*
 import java.io.*
+import java.util.function.*
 
 class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIService(apiToken, debugLog) {
-	fun request(profile: OpenAIRefinementConfiguration.Profile, selection: Selection?, macroResolver: MacroResolver, callback: (result: Result) -> Boolean) {
+	fun request(profile: OpenAIRefinementConfiguration.Profile, part: FilteredText.Part, macroResolver: MacroResolver, callback: (result: Result) -> Boolean) {
 		val streaming = profile.streaming
-		val contentMacro = when {
-			profile.responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION -> OpenAIRefinementConfiguration.SELECTION_MACRO
-			profile.responseType == OpenAIRefinementConfiguration.ResponseType.CONTENT -> OpenAIRefinementConfiguration.CONTENT_MACRO
-			isPatchResponseType(profile.responseType) -> OpenAIRefinementConfiguration.CONTENT_MACRO
-			else -> throw NoWhenBranchMatchedException()
-		}
-
-		val selectionMode = selection != null
-		val responseType = if (selectionMode) {
-			profile.responseType
-		}
-		else {
-			OpenAIRefinementConfiguration.ResponseType.CONTENT
-		}
-
-		if (streaming && isPatchResponseType(responseType)) {
-			throw IOException("Can't combine response type '$responseType' with 'streaming'.")
-		}
-
+		val selectionMode = part.isPart()
+		val responseType = profile.responseType
 		val messages = JSONArray()
-		var contentVar: String? = null
-		for (instruction in profile.instructions) {
+		for (instruction in profile.mainInstructions) {
 			if (!instruction.mode.matches(selectionMode)) {
 				continue
 			}
 
 			val resolution = HashMap<String, String>()
 			val content = macroResolver.replace(instruction.text, resolution)
-			resolution[contentMacro]?.let {
-				contentVar = it
-			}
-
 			messages.add(createMessage(content, instruction.role))
 		}
 
-		val content = contentVar ?: throw IOException("Profile instructions don't extract any content to send. Are you missing the \${CONTENT} keyword?")
+		val content = part.extract
 		val handler = if (streaming) {
 			object : StreamingHandler {
 				override fun process(builder: StringBuilder): Boolean {
@@ -59,22 +40,14 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 				}
 
 				override fun finish(builder: StringBuilder) {
-					val response = applyFixes(content, builder.toString())
-					callback(Result(response, true))
+					processResponse(builder.toString(), content, responseType, callback)
 				}
 			}
 		}
 		else {
 			object : ResultHandler {
 				override fun process(message: String) {
-					if (responseType == OpenAIRefinementConfiguration.ResponseType.SELECTION_JSON) {
-						val response = applyJson(message, content, selection?.from ?: 0)
-						callback(Result(response, true))
-					}
-					else {
-						val response = applyFixes(content, message)
-						callback(Result(response, true))
-					}
+					processResponse(message, content, responseType, callback)
 				}
 			}
 		}
@@ -84,6 +57,19 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 				callback(Result(null, false, Pair(failure, mightBeAuthentication)))
 			}
 		})
+	}
+
+	private fun processResponse(message: String, content: String, responseType: OpenAIRefinementConfiguration.ResponseType, callback: (result: Result) -> Boolean) {
+		if (responseType == OpenAIRefinementConfiguration.ResponseType.CONTENT_FENCED) {
+			val response = extractLastFencedCodeBlock(message).let {
+				StringUtils.fixIndentation(it, content)
+			}
+			callback(Result(response, true))
+		}
+		else {
+			val response = applyFixes(content, message)
+			callback(Result(response, true))
+		}
 	}
 
 	private fun applyFixes(content: String, result: String): String {
@@ -112,17 +98,11 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 
 	class Result(val content: String?, val finished: Boolean, val failure: Pair<IOException, Boolean>? = null)
 
-	class Selection(val from: Int)
-
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
 
 		val MARKDOWN_PREFIX_PATTERN = Regex("^\\s*```(\\w+)?\n")
 		val MARKDOWN_SUFFIX_PATTERN = Regex("```\\s*$")
-
-		fun isPatchResponseType(type: OpenAIRefinementConfiguration.ResponseType): Boolean {
-			return type == OpenAIRefinementConfiguration.ResponseType.SELECTION_JSON
-		}
 
 		internal fun applyJson(input: String, content: String, focusStart: Int): String {
 			return when (val obj = parseJson(input)) {
@@ -130,6 +110,26 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 				is JSONArray -> applyJsonPatch(obj, content, focusStart)
 				else -> throw IOException("Invalid JSON response: root object missing")
 			}
+		}
+
+		private fun extractLastFencedCodeBlock(raw: String): String {
+			val options = MutableDataSet()
+			options.set(Parser.BLANK_LINES_IN_AST, true)
+
+			val parser: Parser = Parser.builder(options).build()
+			val node = parser.parse(raw)
+			var lastFencedCodeBlock: String? = null
+			object : NodeVisitor() {
+				override fun processNode(node: Node, withChildren: Boolean, processor: BiConsumer<Node, Visitor<Node>>) {
+					super.processNode(node, withChildren, processor)
+
+					if (node is FencedCodeBlock) {
+						val content = node.contentChars.toString()
+						lastFencedCodeBlock = content
+					}
+				}
+			}.visit(node)
+			return lastFencedCodeBlock ?: throw IOException("Could not detect fenced code block")
 		}
 
 		private fun parseJson(input: String): Any {
