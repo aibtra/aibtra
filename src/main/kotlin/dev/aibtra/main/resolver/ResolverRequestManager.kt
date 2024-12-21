@@ -45,7 +45,7 @@ class ResolverRequestManager(
 		inProgressListeners.add(listener)
 	}
 
-	private fun schedule(request: Request, apiToken: String, failureHandler: OpenAIService.FailureHandler) {
+	private fun schedule(request: Request, apiToken: String, failureHandler: RequestManagerFailureHandler) {
 		val run = object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
 				notifyInProgress(true)
@@ -80,7 +80,7 @@ class ResolverRequestManager(
 		sequentialRunner.schedule(run, true)
 	}
 
-	private fun query(apiToken: String, request: Request, failureHandler: OpenAIService.FailureHandler, shallContinue: () -> Boolean): ResolverResolutions? {
+	private fun query(apiToken: String, request: Request, failureHandler: RequestManagerFailureHandler, shallContinue: () -> Boolean): ResolverResolutions? {
 		val resolverFiles = ResolverFiles.parseOverviewFile(request.overviewFile)
 		val snippets = ResolverSnippets.compute(resolverFiles, CONTEXT_SIZE)
 		if (snippets.size() == 0) {
@@ -106,7 +106,11 @@ class ResolverRequestManager(
 		require(approaches.size == 1)
 
 		var result: ResolverResolutions? = null
-		service.request(approaches[0], snippets, request.resolverPacket, failureHandler, object : OpenAIResolverService.Callback {
+		service.request(approaches[0], snippets, request.resolverPacket, object : OpenAIService.FailureHandler {
+			override fun process(failure: IOException, mightBeAuthentication: Boolean) {
+				failureHandler.process(failure, mightBeAuthentication)
+			}
+		}, object : OpenAIResolverService.Callback {
 			override fun startSummaries() {
 				progressTexter("summarizing")
 			}

@@ -1,12 +1,13 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
+import dev.aibtra.main.content.*
 import dev.aibtra.openai.*
 import dev.aibtra.refiner.*
 import dev.aibtra.text.*
 
-class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand: () -> String, private val failureHandler: OpenAIService.FailureHandler) : RefinerRequestManager.Request {
-	override fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RefinerRequestManager.RequestCallback) {
+class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand: () -> String) : RefinerRequestManager.Request {
+	override fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RefinerRequestManager.RequestCallback, failureHandler: RequestManagerFailureHandler) {
 		val part = filtered.clean
 		val macroResolver = MacroResolver {
 			when (it) {

@@ -20,8 +20,8 @@ class RefinerSubmitter(private val environment: Environment, private val request
 		Submitter(environment, dialogDisplayer) { apiToken, failureHandler ->
 			val profile = profile()
 			val service = OpenAIRefinementService(apiToken, environment.debugLog)
-			val request = RefinerOpenAIRequest(profile, service, { commandControl.retrieveCommand() }, failureHandler)
-			requestManager.schedule(request)
+			val request = RefinerOpenAIRequest(profile, service) { commandControl.retrieveCommand() }
+			requestManager.schedule(request, failureHandler)
 		}.submit()
 	}
 }
