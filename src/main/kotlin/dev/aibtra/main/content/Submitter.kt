@@ -9,11 +9,10 @@ import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.dialogs.Panel
 import dev.aibtra.openai.*
 import java.awt.*
-import java.io.*
 import javax.swing.*
 import javax.swing.event.*
 
-class Submitter(private val environment: Environment, private val dialogDisplayer: DialogDisplayer, private val submit: (apiToken: String, failureHandler: OpenAIService.FailureHandler) -> Unit) {
+class Submitter(private val environment: Environment, private val dialogDisplayer: DialogDisplayer, private val submit: (apiToken: String, failureHandler: RequestManagerFailureHandler) -> Unit) {
 	fun submit() {
 		val configurationProvider = environment.configurationProvider
 		val credentials = configurationProvider.get(OpenAICredentials)
@@ -61,17 +60,13 @@ class Submitter(private val environment: Environment, private val dialogDisplaye
 		val apiToken = configurationProvider.get(OpenAICredentials).apiToken
 		require(apiToken != null) { "API token must not be null" }
 
-		val failureHandler = object : OpenAIService.FailureHandler {
-			override fun process(failure: IOException, mightBeAuthentication: Boolean) {
-				if (mightBeAuthentication) {
-					configurationProvider.change(OpenAICredentials) {
-						it.copy(apiToken = null)
-					}
+		submit(apiToken) { failure, mightBeAuthentication ->
+			if (mightBeAuthentication) {
+				configurationProvider.change(OpenAICredentials) {
+					it.copy(apiToken = null)
 				}
-				Dialogs.showIOError(failure, dialogDisplayer)
 			}
+			Dialogs.showIOError(failure, dialogDisplayer)
 		}
-
-		submit(apiToken, failureHandler)
 	}
 }

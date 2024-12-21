@@ -6,6 +6,7 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
+import dev.aibtra.main.content.*
 import dev.aibtra.refiner.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
@@ -24,7 +25,7 @@ class RefinerRequestManager(
 	var inProgress = false
 		private set
 
-	fun schedule(request: Request) {
+	fun schedule(request: Request, failureHandler: RequestManagerFailureHandler) {
 		val run = object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
 				notifyInProgress(true)
@@ -39,7 +40,7 @@ class RefinerRequestManager(
 				var lastRef: String? = null
 				var lastConversation: RefinerConversation? = null
 				try {
-					request.run(filteredText, priorConversation) { ref, conversation ->
+					request.run(filteredText, priorConversation, { ref, conversation ->
 						lastRef = ref
 						lastConversation = conversation
 
@@ -51,7 +52,11 @@ class RefinerRequestManager(
 						}
 
 						current
-					}
+					}, { failure, mightBeAuthentication ->
+						if (this == currentRun.get()) {
+							failureHandler.process(failure, mightBeAuthentication)
+						}
+					})
 				} catch (ioe: IOException) {
 					Dialogs.showIOError(ioe, dialogDisplayer)
 				} finally {
@@ -104,6 +109,6 @@ class RefinerRequestManager(
 	}
 
 	fun interface Request {
-		fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RequestCallback)
+		fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RequestCallback, failureHandler: RequestManagerFailureHandler)
 	}
 }
