@@ -43,11 +43,14 @@ class RefinerRequestManager(
 						lastRef = ref
 						lastConversation = conversation
 
-						callback {
-							diffManager.updateRefText(ref, null)
+						val current = this == currentRun.get()
+						if (current) {
+							callback {
+								diffManager.updateRefText(ref, null)
+							}
 						}
 
-						this == currentRun.get()
+						current
 					}
 				} catch (ioe: IOException) {
 					Dialogs.showIOError(ioe, dialogDisplayer)
