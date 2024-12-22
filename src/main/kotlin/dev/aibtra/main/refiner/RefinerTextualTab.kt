@@ -16,7 +16,6 @@ import java.awt.*
 import java.awt.event.*
 import java.nio.file.*
 import javax.swing.*
-import kotlin.reflect.*
 
 internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, private val tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(tabbedPane, environment, dialogDisplayer) {
 	private val commandControl: RefinerCommandControl
@@ -32,8 +31,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	protected val profileComboBox: JComboBox<Any>
 	private val toggleSelectionMode: RefinerToggleSelectionModeAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
-
-	private var inScrollPosUpdate = false
+	private val scrollListener: ScrollListener
 
 	init {
 		val coroutineDispatcher = environment.coroutineDispatcher
@@ -54,9 +52,6 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		rawTextArea.addSelectionListener { _ ->
 			textRefresher.refresh()
 		}
-
-		configureScrolling(rawTextArea, DiffManager::updateRawScrollPos)
-		configureScrolling(refTextArea, DiffManager::updateRefScrollPos)
 
 		diffManager.addStateListener { state, lastState ->
 			Ui.assertEdt()
@@ -80,20 +75,13 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 			Ui.runInEdt {
 				if (state.diff.refFinished && !lastState.diff.refFinished) {
 					if (!state.selection) {
-						rawTextArea.scrollTo(ScrollPos(1, 10))
+						rawTextArea.scrollTo(ScrollState.ScrollPos(1, 10))
 					}
 					else {
-						refTextArea.scrollTo(diffManager.syncRefScrollPos())
+						refTextArea.scrollTo(diffManager.scrollState.syncRightScrollPos())
 					}
 				}
 			}
-		}
-
-		diffManager.addScrollListener { raw, ref ->
-			Ui.assertEdt()
-
-			rawTextArea.scrollTo(raw)
-			refTextArea.scrollTo(ref)
 		}
 
 		profileManager.addListener { _, name ->
@@ -101,6 +89,9 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		}
 
 		requestManager = RefinerRequestManager(diffManager, coroutineDispatcher, mainScope, dialogDisplayer)
+
+		scrollListener = ScrollListener(diffManager.scrollState) { diffManager.state.selection }
+		scrollListener.install(rawTextArea, refTextArea)
 
 		profileComboBox = createProfileComboBox()
 
@@ -285,21 +276,6 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 	override fun closed() {
 		commandControl.retrieveCommand()
-	}
-
-	private fun configureScrolling(textArea: AbstractTextArea<*>, update: KFunction2<DiffManager, ScrollPos, Unit>) {
-		textArea.addScrollListener { pos ->
-			if (inScrollPosUpdate) {
-				return@addScrollListener
-			}
-
-			inScrollPosUpdate = true
-			try {
-				update(diffManager, pos)
-			} finally {
-				inScrollPosUpdate = false
-			}
-		}
 	}
 
 	private fun createProfileComboBox(): ComboBoxWithPreferredSize<Any> {

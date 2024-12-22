@@ -48,7 +48,7 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		highlighter.run(chars, highlightStyle)
 	}
 
-	fun scrollTo(pos: DiffManager.ScrollPos) {
+	fun scrollTo(pos: ScrollState.ScrollPos) {
 		if (pos == createScrollPos()) {
 			return
 		}
@@ -169,7 +169,7 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		return if (start < end) IntRange(start, end - 1) else null
 	}
 
-	fun addScrollListener(callback: (pos: DiffManager.ScrollPos) -> Unit) {
+	fun addScrollListener(callback: (pos: ScrollState.ScrollPos) -> Unit) {
 		scrollPane.viewport.addChangeListener {
 			callback(createScrollPos())
 		}
@@ -179,15 +179,15 @@ open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environmen
 		textArea.lineWrap = wordWrap
 	}
 
-	private fun createScrollPos(): DiffManager.ScrollPos {
+	private fun createScrollPos(): ScrollState.ScrollPos {
 		val rect = scrollPane.viewport.viewRect
 		val topModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), rect.y.toDouble()))
 		val bottomModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), (rect.y + rect.height).toDouble()))
 		if (topModel < 0 || bottomModel < 0) {
-			return DiffManager.ScrollPos(0, 0)
+			return ScrollState.ScrollPos(0, 0)
 		}
 
-		return DiffManager.ScrollPos(topModel, bottomModel)
+		return ScrollState.ScrollPos(topModel, bottomModel)
 	}
 
 	private class Highlighter(private val textArea: JTextArea, private val configurationProvider: ConfigurationProvider) {

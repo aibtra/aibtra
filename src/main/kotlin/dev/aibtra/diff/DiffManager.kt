@@ -9,7 +9,6 @@ import dev.aibtra.gui.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
-import java.util.function.*
 
 class DiffManager(
 	private val rawNormalizer: RawNormalizer,
@@ -19,10 +18,10 @@ class DiffManager(
 ) {
 	private val sequentialRunner = SequentialRunner.createGuiThreadRunner(coroutineDispatcher, mainScope)
 	private val stateListeners = ArrayList<(State, State) -> Unit>()
-	private val scrollListeners = ArrayList<(raw: ScrollPos, ref: ScrollPos) -> Unit>()
+	val scrollState = ScrollState()
 
-	private var data: Data = Data(Input(FilteredText.Part.of(""), "", ScrollPos(0, 0), "", ScrollPos.INITIAL, INITIAL_CONFIG, true, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), Diff.INITIAL, false), 0, ScrollPos.INITIAL, ScrollPos.INITIAL)
-	private var inScrollPosUpdate = false
+	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", INITIAL_CONFIG, true, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), Diff.INITIAL, false), 0)
+
 	val state: State
 		get() = data.state
 
@@ -63,6 +62,7 @@ class DiffManager(
 			}
 
 			updateState(input.copy(raw = part, rawOrg = rawOrgNew, config = config, callback = callback), true, "updateRaw")
+			scrollState.updateLeftText(raw)
 			return rawNew
 		}
 	}
@@ -78,64 +78,6 @@ class DiffManager(
 			// Once starting the refinement, this will be no more the "initial" state, hence reset rawOrg
 			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRef" else null)
 		}
-	}
-
-	fun updateRawScrollPos(rawScrollPos: ScrollPos) {
-		Ui.assertEdt()
-
-		runUpdateScrollPos(Consumer {
-			if (it.rawScrollPos == rawScrollPos) {
-				return@Consumer
-			}
-
-			val refScrollPos = mapScrollPos(rawScrollPos,
-				{ s -> s.diff.raw },
-				{ s -> s.diff.ref },
-				{ b -> b.rawFrom },
-				{ b -> b.refFrom },
-				{ b -> b.rawTo },
-				{ b -> b.refTo })
-			updateScrollPos(rawScrollPos, refScrollPos)
-		})
-	}
-
-	fun updateRefScrollPos(refScrollPos: ScrollPos) {
-		Ui.assertEdt()
-
-		runUpdateScrollPos(Consumer {
-			if (it.refScrollPos == refScrollPos) {
-				return@Consumer
-			}
-
-			val rawScrollPos = if (data.state.selection) {
-				data.rawScrollPos
-			}
-			else {
-				mapScrollPos(refScrollPos,
-					{ s -> s.diff.ref },
-					{ s -> s.diff.raw },
-					{ b -> b.refFrom },
-					{ b -> b.rawFrom },
-					{ b -> b.refTo },
-					{ b -> b.rawTo })
-			}
-			updateScrollPos(rawScrollPos, refScrollPos)
-		})
-	}
-
-	fun syncRefScrollPos() : ScrollPos {
-		Ui.assertEdt()
-
-		val rawScrollPos = data.rawScrollPos
-		val refScrollPos = mapScrollPos(rawScrollPos,
-			{ s -> s.diff.raw },
-			{ s -> s.diff.ref },
-			{ b -> b.rawFrom },
-			{ b -> b.refFrom },
-			{ b -> b.rawTo },
-			{ b -> b.refTo })
-		data = Data(data.input, data.state, data.sequenceId, data.rawScrollPos, refScrollPos)
-		return refScrollPos
 	}
 
 	fun updateInitial(): String? {
@@ -174,17 +116,11 @@ class DiffManager(
 		stateListeners.remove(listener)
 	}
 
-	fun addScrollListener(listener: (raw: ScrollPos, ref: ScrollPos) -> Unit) {
-		Ui.assertEdt()
-
-		scrollListeners.add(listener)
-	}
-
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
 		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.all.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
 
 		val dataState = data.state
-		data = Data(input, dataState, data.sequenceId + 1, data.rawScrollPos, data.refScrollPos)
+		data = Data(input, dataState, data.sequenceId + 1)
 
 		if (debugOperationName != null) {
 			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", input.raw.all, null)
@@ -227,7 +163,7 @@ class DiffManager(
 
 					val latestData = this@DiffManager.data
 					val latestInput = latestData.input
-					val data = Data(latestInput.copy(callback = null), state, latestData.sequenceId + 1, latestData.rawScrollPos, latestData.refScrollPos)
+					val data = Data(latestInput.copy(callback = null), state, latestData.sequenceId + 1)
 					val latestState = latestData.state
 					this@DiffManager.data = data
 					latestInput.callback?.run()
@@ -239,34 +175,14 @@ class DiffManager(
 					}
 
 					stateListeners.toList().forEach { it(state, latestState) }
+
+					scrollState.updateDiffBlocks(state.diff.blocks)
+					if (latestState.refFormatted != state.refFormatted) {
+						scrollState.updateRightText(refFormatted)
+					}
 				}
 			}
 		}, forceUpdate)
-	}
-
-	private fun runUpdateScrollPos(consumer: Consumer<Data>) {
-		require(!inScrollPosUpdate)
-
-		inScrollPosUpdate = true
-		try {
-			data.let {
-				consumer.accept(it)
-			}
-		} finally {
-			inScrollPosUpdate = false
-		}
-	}
-
-	private fun updateScrollPos(rawScrollPosRaw: ScrollPos, refScrollPosRaw: ScrollPos) {
-		val rawScrollPos = if (rawScrollPosRaw.bottom > data.state.diff.raw.length) data.rawScrollPos else rawScrollPosRaw
-		val refScrollPos = if (refScrollPosRaw.bottom > data.state.diff.ref.length) data.refScrollPos else refScrollPosRaw
-		if (rawScrollPos == data.rawScrollPos && refScrollPos == data.refScrollPos) {
-			return
-		}
-
-		data = Data(data.input, data.state, data.sequenceId, rawScrollPos, refScrollPos)
-
-		scrollListeners.toList().forEach { it(rawScrollPos, refScrollPos) }
 	}
 
 	private fun writeDebugFile(sequenceId: Int, operationName: String, type: String, text: String, diffChars: List<DiffChar>?) {
@@ -299,62 +215,11 @@ class DiffManager(
 		}
 	}
 
-	private fun mapScrollPos(
-		pos: ScrollPos,
-		srcText: (state: State) -> String, dstText: (state: State) -> String,
-		srcFrom: (block: DiffBlock) -> Int, dstFrom: (block: DiffBlock) -> Int,
-		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int
-	): ScrollPos {
-		return ScrollPos(
-			mapScrollPos(pos.top, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo),
-			mapScrollPos(pos.bottom, srcText, dstText, srcFrom, dstFrom, srcTo, dstTo)
-		)
-	}
-
-	@Suppress("NAME_SHADOWING")
-	private fun mapScrollPos(
-		srcPos: Int,
-		srcText: (state: State) -> String, dstText: (state: State) -> String,
-		srcFrom: (block: DiffBlock) -> Int, dstFrom: (block: DiffBlock) -> Int,
-		srcTo: (block: DiffBlock) -> Int, dstTo: (block: DiffBlock) -> Int
-	): Int {
-		val state = data.state
-		val srcMax = srcText(state).length - 1
-		val dstMax = dstText(state).length - 1
-		val beforeIndex = state.diff.blocks.binarySearch {
-			srcFrom(it).compareTo(srcPos)
-		}.let {
-			if (it < 0) -it - 2 else it
-		}
-
-		if (beforeIndex < 0) {
-			return srcPos
-		}
-
-		if (beforeIndex >= state.diff.blocks.size) {
-			return dstMax - Math.max(0, Math.min(dstMax - (srcMax - srcPos), dstMax))
-		}
-
-		val lowerBlock = state.diff.blocks[beforeIndex]
-		val srcTo = srcTo(lowerBlock)
-		val dstTo = dstTo(lowerBlock)
-		if (srcPos >= srcTo) {
-			return Math.min(dstTo + (srcPos - srcTo), dstMax)
-		}
-
-		val srcFrom = srcFrom(lowerBlock)
-		val dstFrom = dstFrom(lowerBlock)
-		require(srcPos >= srcFrom)
-
-		val ratio = (srcPos - srcFrom) / (srcTo - srcFrom).toDouble()
-		return dstFrom + ((dstTo - dstFrom) * ratio).toInt()
-	}
-
 	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff, val selection: Boolean)
 
-	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val rawScrollPos: ScrollPos, val ref: String, val refScrollPos: ScrollPos, val config: Config, val finished: Boolean, val callback: Runnable?)
+	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val config: Config, val finished: Boolean, val callback: Runnable?)
 
-	private class Data(val input: Input, val state: State, val sequenceId: Int, val rawScrollPos: ScrollPos, val refScrollPos: ScrollPos)
+	private class Data(val input: Input, val state: State, val sequenceId: Int)
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
@@ -394,12 +259,6 @@ class DiffManager(
 
 	fun interface RawNormalizer {
 		fun normalize(text: String): String
-	}
-
-	data class ScrollPos(val top: Int, val bottom: Int) {
-		companion object {
-			val INITIAL = ScrollPos(0, 0)
-		}
 	}
 
 	enum class Normalization {
