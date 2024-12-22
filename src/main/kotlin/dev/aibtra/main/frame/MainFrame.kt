@@ -120,9 +120,15 @@ class MainFrame(private val environment: Environment) : FrameManager.Frame {
 	}
 
 	fun openFile(fileToOpen: Path, profileId: String?, line: Int?) {
-		val tab = RefinerFileTab(tabbedPane, environment, dialogDisplayer)
-		tab.setFile(fileToOpen, profileId, line)
-		tabbedPane.add(tab)
+		tabbedPane
+			.filterIsInstance<RefinerFileTab>()
+			.firstOrNull { it.getFile() == fileToOpen }
+			?.toFront()
+			?: run {
+				val tab = RefinerFileTab(tabbedPane, environment, dialogDisplayer)
+				tab.setFile(fileToOpen, profileId, line)
+				tabbedPane.add(tab)
+			}
 	}
 
 	fun openResolver(conflictOverviewFile: Path) {
