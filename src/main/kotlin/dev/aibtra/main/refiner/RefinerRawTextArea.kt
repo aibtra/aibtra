@@ -113,6 +113,7 @@ class RefinerRawTextArea(private val textInitializer: TextInitializer, environme
 	fun replaceText(from: Int, to: Int, text: String) {
 		textArea.document.remove(from, to - from)
 		textArea.document.insertString(from, text, null)
+		textArea.caretPosition = from
 	}
 
 	fun setDiffCharsAndFilteredText(diffChars: List<DiffChar>, filteredText: FilteredText) {
