@@ -9,6 +9,7 @@ import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 import javax.swing.*
 import javax.swing.text.*
+import kotlin.math.*
 
 class RefinerRefTextArea(environment: Environment) :
 	AbstractTextArea<JTextArea>(JTextArea(), environment) {
@@ -48,7 +49,7 @@ class RefinerRefTextArea(environment: Environment) :
 		configurationProvider = environment.configurationProvider
 	}
 
-	fun setText(text: String, chars: List<DiffChar>) {
+	fun setText(text: String, chars: List<DiffChar>, preserveCaretPosition: Boolean) {
 		require(text.length == chars.size)
 
 		val doc = textArea.document
@@ -58,7 +59,8 @@ class RefinerRefTextArea(environment: Environment) :
 			start++
 		}
 
-		if (textArea.selectionStart <= start && start < textArea.selectionEnd) { // preserve caret when applying a change
+		val caretPosition = textArea.caretPosition
+		if (!preserveCaretPosition && textArea.selectionStart <= start && start < textArea.selectionEnd) { // preserve caret when applying a change
 			textArea.caretPosition = start
 		}
 
@@ -70,6 +72,10 @@ class RefinerRefTextArea(environment: Environment) :
 		state = State(chars)
 
 		require(text == textArea.text)
+
+		if (preserveCaretPosition) {
+			textArea.caretPosition = max(0, min(text.length - 1, caretPosition))
+		}
 
 		updateCharacterAttributes()
 	}
