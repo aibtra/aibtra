@@ -14,6 +14,11 @@ class ProfileManager(val configurationProvider: ConfigurationProvider) {
 		return configuration.profile(name.id) ?: configuration.currentProfile()
 	}
 
+	fun getProfile(name: OpenAIConfiguration.Profile.Name): OpenAIConfiguration.Profile? {
+		val configuration = configurationProvider.get(OpenAIConfiguration)
+		return configuration.profile(name.id)
+	}
+
 	fun setProfile(name: OpenAIConfiguration.Profile.Name) {
 		if (name.id == this.name.id) {
 			return

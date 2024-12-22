@@ -240,8 +240,10 @@ class MainFrame(private val environment: Environment) {
 		}
 
 		fun updateEnabledState() {
-			(profileComboBox.selectedItem as? OpenAIConfiguration.Profile)?.let { profile ->
-				comboBox.isEnabled = profile.supportsSchemes
+			(profileComboBox.selectedItem as? OpenAIConfiguration.Profile.Name)?.let { name ->
+				profileManager.getProfile(name)?.let { profile ->
+					comboBox.isEnabled = profile.supportsSchemes
+				}
 			}
 		}
 
