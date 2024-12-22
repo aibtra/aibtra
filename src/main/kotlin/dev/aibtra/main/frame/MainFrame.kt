@@ -8,9 +8,9 @@ import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.dialogs.DialogDisplayer.Companion.create
 import dev.aibtra.gui.frames.*
-import dev.aibtra.main.resolver.*
 import dev.aibtra.main.content.*
 import dev.aibtra.main.refiner.*
+import dev.aibtra.main.resolver.*
 import java.awt.*
 import java.awt.event.*
 import java.nio.file.*
@@ -138,7 +138,7 @@ class MainFrame(private val environment: Environment) : FrameManager.Frame {
 	companion object {
 		private const val VERSION = "1.0 Alpha"
 
-		fun frameTitle(paths: ApplicationPaths) : String {
+		fun frameTitle(paths: ApplicationPaths): String {
 			return paths.appName + " " + (paths.getProperty("debug.displayVersion") ?: VERSION)
 		}
 	}
