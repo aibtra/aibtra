@@ -251,7 +251,7 @@ class RefinerDiffManager(
 
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
-		val INITIAL_CONFIG = Config(false, false, DiffTokenizingMode.NONE, true)
+		private val INITIAL_CONFIG = Config(false, false, DiffTokenizingMode.NONE, true)
 
 		fun getSelectedBlocksFromRef(state: State, range: IntRange): List<DiffBlock> {
 			require(range.first >= 0 && range.last < state.refFormatted.length)
