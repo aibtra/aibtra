@@ -19,6 +19,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 	private val toggleFilterMarkdownAction: MainMenuAction
 
 	private var skipCloseCheck = false
+	private var initialText = ""
 
 	init {
 		schemeComboBox = createSchemeComboBox()
@@ -39,16 +40,20 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 	}
 
 	override fun checkClose(runnable: Runnable) {
-		if (!skipCloseCheck && rawTextArea.getText().isNotEmpty()) {
-			toFront()
+		if (!skipCloseCheck) {
+			val text = rawTextArea.getText()
+			if (text.isNotEmpty() && text != initialText) {
+				toFront()
 
-			Dialogs.showConfirmationDialog("Close", "Do you want to discard this text?", "Discard", dialogDisplayer) {
-				runnable.run()
+				Dialogs.showConfirmationDialog("Close", "Do you want to discard this text?", "Discard", dialogDisplayer) {
+					runnable.run()
+				}
+
+				return
 			}
 		}
-		else {
-			runnable.run()
-		}
+
+		runnable.run()
 	}
 
 	override fun addTextualEditActions(menu: JMenu) : Boolean {
@@ -86,6 +91,8 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 
 	fun setText(text: String, workingMode: WorkingMode, profileId: String?) {
 		require(workingMode == WorkingMode.CLIPBOARD)
+
+		initialText = text
 
 		updateProfile(profileId)
 
