@@ -33,6 +33,10 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 	}
 
 	override fun normalizeText(raw: String): String {
+		if (!profileManager.profile().supportsSchemes) {
+			return raw
+		}
+
 		val scheme = schemeComboBox.selectedItem as? Schemes.Scheme
 		return scheme?.let {
 			TextNormalizer(it.textNormalizerConfig).normalize(raw)
@@ -56,7 +60,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 		runnable.run()
 	}
 
-	override fun addTextualEditActions(menu: JMenu) : Boolean {
+	override fun addTextualEditActions(menu: JMenu): Boolean {
 		addAction(menu, copyAndCloseAction)
 		return true
 	}
@@ -65,7 +69,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 		addAction(menu, toggleFilterMarkdownAction)
 	}
 
-	override fun addSchemeActions(menu: JMenu) : Boolean {
+	override fun addSchemeActions(menu: JMenu): Boolean {
 		val onPasteMenu = JMenu("On Paste")
 		addAction(onPasteMenu, RefinerTextNormalizerAction.createJoinLines(environment.configurationProvider, environment.accelerators))
 		onPasteMenu.addSeparator()
@@ -144,9 +148,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 				configurationProvider.change(Schemes) {
 					it.copy(currentName = profile.name)
 				}
-				diffManager.updateInitial()?.let {
-					rawTextArea.initializeText(it)
-				}
+				updateInitialText()
 			}
 		}
 
@@ -160,8 +162,15 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 
 		profileManager.addListener { _, _ ->
 			updateEnabledState()
+			updateInitialText()
 		}
 		updateEnabledState()
 		return comboBox
+	}
+
+	private fun updateInitialText() {
+		diffManager.updateInitial()?.let {
+			rawTextArea.initializeText(it)
+		}
 	}
 }
