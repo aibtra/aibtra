@@ -26,19 +26,13 @@ internal class RefinerOpenAction(tabbedPane: MainTabbedPane, environment: Enviro
 		it.copy(lastOpenPath = selectedPath.toString())
 	}
 
-	if (tabbedPane.iterate { tab ->
-			(tab as? RefinerFileTab)?.let {
-				if (it.getFile() == selectedPath) {
-					it.toFront()
-					true
-				}
-				else {
-					null
-				}
-			}
-		} == true) {
-		return@ActionRunnable
-	}
+	tabbedPane
+		.filterIsInstance<RefinerFileTab>()
+		.firstOrNull { it.getFile() == selectedPath }
+		?.let {
+			it.toFront()
+			return@ActionRunnable
+		}
 
 	RefinerFileTab(tabbedPane, environment, dialogDisplayer).apply {
 		setFile(selectedPath, null, null)

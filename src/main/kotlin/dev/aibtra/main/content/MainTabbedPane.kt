@@ -5,7 +5,7 @@ import java.awt.*
 import java.util.function.*
 import javax.swing.*
 
-internal class MainTabbedPane(private val centerPane: Container, private val frame: JFrame, private val frameManager: FrameManager) {
+internal class MainTabbedPane(private val centerPane: Container, private val frame: JFrame, private val frameManager: FrameManager) : Sequence<MainTab> {
 
 	private val tabs: MutableList<MainTab> = mutableListOf()
 	private val tabbedPane = JTabbedPane()
@@ -29,6 +29,10 @@ internal class MainTabbedPane(private val centerPane: Container, private val fra
 				}
 			}
 		}
+	}
+
+	override fun iterator(): Iterator<MainTab> {
+		return tabs.iterator()
 	}
 
 	fun add(tab: MainTab) {
@@ -97,16 +101,6 @@ internal class MainTabbedPane(private val centerPane: Container, private val fra
 		tabs[0].checkClose {
 			checkClose(tabs.subList(1, tabs.size), runnable)
 		}
-	}
-
-	fun <O> iterate(callback: (MainTab) -> O) : O? {
-		for (tab in tabs) {
-			callback(tab)?.let {
-				return it
-			}
-		}
-
-		return null
 	}
 
 	fun focusGained() {
