@@ -16,14 +16,18 @@ import javax.swing.event.*
 import javax.swing.text.*
 import kotlin.math.*
 
-open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environment: Environment) {
+open class AbstractTextEditor(editable: Boolean, environment: Environment) {
 	private val LOG = Logger.getLogger(this::class)
 
-	private val scrollPane = JScrollPane(textArea)
+	protected val textArea = TextArea(editable)
+	private val scrollPane = textArea.createScrollPane()
 	private val configurationProvider = environment.configurationProvider
 	private val highlighter = Highlighter(textArea, configurationProvider)
 
 	init {
+		val guiConfiguration = environment.guiConfiguration
+		textArea.setFont(guiConfiguration.fonts.monospacedFont)
+
 		textArea.addPropertyChangeListener { evt ->
 			if (evt.propertyName == "UI") {
 				highlighter.resetPainters()
@@ -37,12 +41,6 @@ open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environm
 
 	fun requestFocusInWindow() {
 		textArea.requestFocusInWindow()
-	}
-
-	protected fun disableEditing(): NonEditableDocumentFilter {
-		val filter = NonEditableDocumentFilter()
-		(textArea.document as AbstractDocument).documentFilter = filter
-		return filter
 	}
 
 	protected fun updateCharacterAttributes(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
@@ -235,7 +233,7 @@ open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environm
 	}
 
 	fun setWordWrap(wordWrap: Boolean) {
-		textArea.lineWrap = wordWrap
+		textArea.setLineWrap(wordWrap)
 	}
 
 	fun addFocusListener(focusListener: FocusListener) {
@@ -253,7 +251,7 @@ open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environm
 		return ScrollState.ScrollPos(topModel, bottomModel)
 	}
 
-	private class Highlighter(private val textArea: JTextArea, private val configurationProvider: ConfigurationProvider) {
+	private class Highlighter(private val textArea: TextArea, private val configurationProvider: ConfigurationProvider) {
 		private val highlightStyleToPainter = mutableMapOf<HighlightStyle, DefaultHighlighter.DefaultHighlightPainter>()
 		private val ourHighlightTags = HashSet<Any>()
 
@@ -268,7 +266,7 @@ open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environm
 			}
 
 			for (tag in ourHighlightTags) {
-				textArea.highlighter.removeHighlight(tag)
+				textArea.removeHighlight(tag)
 			}
 			ourHighlightTags.clear()
 
@@ -294,10 +292,10 @@ open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environm
 
 		private fun addHighlight(from: Int, to: Int, highlightStyle: HighlightStyle?, colors: GuiColors.Colors) {
 			highlightStyle?.let { style ->
-				val tag = textArea.highlighter.addHighlight(from, to, highlightStyleToPainter.computeIfAbsent(style) {
+				val highlight: DefaultHighlighter.DefaultHighlightPainter = highlightStyleToPainter.computeIfAbsent(style) {
 					HighlightPainter(it, it.color(colors), it.shadow(colors), textArea.foreground, textArea.background)
-				})
-
+				}
+				val tag = textArea.addHighlight(from, to, highlight)
 				ourHighlightTags.add(tag)
 			}
 		}
@@ -308,50 +306,6 @@ open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environm
 	}
 
 	class HighlightStyle(val color: (GuiColors.Colors) -> Color, val shadow: (GuiColors.Colors) -> Color?, val sprinkled: Boolean, val strikethrough: Boolean, val gapStyle: GapStyle)
-
-	protected class NonEditableDocumentFilter : DocumentFilter() {
-		private var locked = true
-
-		override fun insertString(fb: FilterBypass?, offset: Int, string: String?, attr: AttributeSet?) {
-			if (locked) {
-				beep()
-				return
-			}
-
-			super.insertString(fb, offset, string, attr)
-		}
-
-		override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
-			if (locked) {
-				beep()
-				return
-			}
-
-			super.replace(fb, offset, length, text, attrs)
-		}
-
-		override fun remove(fb: FilterBypass?, offset: Int, length: Int) {
-			if (locked) {
-				beep()
-				return
-			}
-
-			super.remove(fb, offset, length)
-		}
-
-		private fun beep() {
-			Toolkit.getDefaultToolkit().beep()
-		}
-
-		fun update(runnable: Runnable) {
-			locked = false
-			try {
-				runnable.run()
-			} finally {
-				locked = true
-			}
-		}
-	}
 
 	protected class HighlightPainter(val style: HighlightStyle, highlightColor: Color, val shadowColor: Color?, val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
 		private val texturePaint = if (style.sprinkled) createSprinkledTexturePaint(highlightColor, background) else null

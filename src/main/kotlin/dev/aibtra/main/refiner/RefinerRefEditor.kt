@@ -7,32 +7,23 @@ package dev.aibtra.main.refiner
 import dev.aibtra.configuration.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
-import javax.swing.*
 import javax.swing.text.*
-import kotlin.math.*
 
 class RefinerRefEditor(environment: Environment) :
-	AbstractTextEditor<JTextArea>(JTextArea(), environment) {
+	AbstractTextEditor(false, environment) {
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle
 	private val styleGapLeft: HighlightStyle
 	private val styleGapRight: HighlightStyle
 	private val configurationProvider: ConfigurationProvider
-	private val documentFilter : NonEditableDocumentFilter
 
 	private var state: State = State(listOf())
 
 	init {
-		documentFilter = disableEditing()
-
 		// We are using a JTextArea and Highlighters instead of a JEditorPane/JTextPane, because these have some bugs related to layouting, especially wrapping of lines which are critical for us.
-		textArea.lineWrap = false
-		textArea.wrapStyleWord = true
+		textArea.setLineWrap(false)
 		textArea.document.putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n")
-
-		val guiConfiguration = environment.guiConfiguration
-		textArea.font = guiConfiguration.fonts.monospacedFont
 
 		styleModified = HighlightStyle({ it.refBackgroundModified }, { null }, false, false, GapStyle.NONE)
 		styleAdded = HighlightStyle({ it.refBackgroundAdded }, { null }, false, false, GapStyle.NONE)
@@ -59,23 +50,11 @@ class RefinerRefEditor(environment: Environment) :
 			start++
 		}
 
-		val caretPosition = textArea.caretPosition
-		if (!preserveCaretPosition && textArea.selectionStart <= start && start < textArea.selectionEnd) { // preserve caret when applying a change
-			textArea.caretPosition = start
-		}
-
-		documentFilter.update {
-			doc.remove(start, existing.length - start)
-			doc.insertString(start, text.substring(start), SimpleAttributeSet.EMPTY)
-		}
+		textArea.setText(text, if (preserveCaretPosition) textArea.caretPosition else start)
 
 		state = State(chars)
 
 		require(text == textArea.text)
-
-		if (preserveCaretPosition) {
-			textArea.caretPosition = max(0, min(text.length - 1, caretPosition))
-		}
 
 		updateCharacterAttributes()
 	}

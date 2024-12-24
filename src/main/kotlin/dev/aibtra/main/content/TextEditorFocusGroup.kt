@@ -4,9 +4,9 @@ import java.awt.event.*
 
 class TextEditorFocusGroup {
 	private val listeners = mutableListOf<() -> Unit>()
-	private var focused: AbstractTextEditor<*>? = null
+	private var focused: AbstractTextEditor? = null
 
-	fun register(editor: AbstractTextEditor<*>) {
+	fun register(editor: AbstractTextEditor) {
 		editor.addFocusListener(object : FocusListener {
 			override fun focusGained(e: FocusEvent?) {
 				if (focused != editor) {
@@ -24,7 +24,7 @@ class TextEditorFocusGroup {
 		listeners.add(listen)
 	}
 
-	fun hasFocus(editor: AbstractTextEditor<*>): Boolean {
+	fun hasFocus(editor: AbstractTextEditor): Boolean {
 		return editor == focused
 	}
 }

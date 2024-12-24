@@ -8,13 +8,13 @@ import dev.aibtra.configuration.*
 import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 import dev.aibtra.main.content.*
+import dev.aibtra.main.content.TextArea
 import dev.aibtra.resolver.*
 import java.awt.*
-import javax.swing.*
 import javax.swing.text.*
 
-abstract class ResolverEditor(private val focusGroup: TextEditorFocusGroup, private val environment: Environment) :
-	AbstractTextEditor<JTextArea>(JTextArea(), environment) {
+abstract class ResolverEditor(editable: Boolean, private val focusGroup: TextEditorFocusGroup, private val environment: Environment) :
+	AbstractTextEditor(editable, environment) {
 	protected val texter: Texter
 
 	protected abstract fun getHighlighting(char: DiffChar): HighlightStyle?
@@ -22,11 +22,8 @@ abstract class ResolverEditor(private val focusGroup: TextEditorFocusGroup, priv
 	private var summary: ResolveSummary? = null
 
 	init {
-		textArea.isEditable = true
-		textArea.lineWrap = false
-
-		val guiConfiguration = environment.guiConfiguration
-		textArea.font = guiConfiguration.fonts.monospacedFont
+		textArea.setEditable(true)
+		textArea.setLineWrap(false)
 
 		texter = Texter(textArea, environment)
 		textArea.addPropertyChangeListener { evt ->
@@ -57,17 +54,16 @@ abstract class ResolverEditor(private val focusGroup: TextEditorFocusGroup, priv
 	}
 
 	private fun updateConflictBackgrounds() {
-		val highlighter = textArea.highlighter
-		for (highlight in highlighter.highlights) {
+		for (highlight in textArea.highlights) {
 			if (highlight.painter is ConflictBackgroundPainter) {
-				highlighter.removeHighlight(highlight)
+				textArea.removeHighlight(highlight)
 			}
 		}
 
 		summary?.let { summary ->
 			for (header in summary.content.headers) {
 				header.conflictRange?.let {
-					highlighter.addHighlight(it.first, it.last, ConflictBackgroundPainter(environment.configurationProvider))
+					textArea.addHighlight(it.first, it.last, ConflictBackgroundPainter(environment.configurationProvider))
 				}
 			}
 		}
@@ -79,10 +75,10 @@ abstract class ResolverEditor(private val focusGroup: TextEditorFocusGroup, priv
 		}
 	}
 
-	class Texter(private val textArea: JTextArea, private val environment: Environment) {
+	class Texter(private val textArea: TextArea, private val environment: Environment) {
 		private var snippetToPosition: Map<ResolverSnippet, Position> = mapOf()
 
-		fun initialize(summary: ResolveSummary, overwriteText: Boolean, setText: (text: String, textArea: JTextArea) -> Unit): Boolean {
+		fun initialize(summary: ResolveSummary, overwriteText: Boolean, setText: (text: String, textArea: TextArea) -> Unit): Boolean {
 			val content = summary.content
 			val snippetsChanged = content.headers.map { it.snippet }.toSet() != snippetToPosition.keys.map { it }.toSet()
 			val initialize = snippetsChanged || overwriteText && textArea.text != content.text
@@ -101,16 +97,15 @@ abstract class ResolverEditor(private val focusGroup: TextEditorFocusGroup, priv
 		}
 
 		fun updateHighlights() {
-			val highlighter = textArea.highlighter
-			for (highlight in highlighter.highlights) {
+			for (highlight in textArea.highlights) {
 				if (highlight.painter is FileHeaderPainter) {
-					highlighter.removeHighlight(highlight)
+					textArea.removeHighlight(highlight)
 				}
 			}
 
 			for ((snippet, position) in snippetToPosition) {
 				val offset = position.offset
-				highlighter.addHighlight(offset, offset + 1, FileHeaderPainter(snippet, environment.configurationProvider))
+				textArea.addHighlight(offset, offset + 1, FileHeaderPainter(snippet, environment.configurationProvider))
 			}
 		}
 
