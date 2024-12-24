@@ -1,5 +1,9 @@
 package dev.aibtra.main.content
 
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.*
@@ -9,13 +13,20 @@ import javax.swing.event.*
 import javax.swing.text.*
 import kotlin.math.*
 
-class TextArea(private val editable: Boolean) {
+class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean, configurationProvider: ConfigurationProvider) {
 
 	var pasting = false
-		get
 		private set
 
-	private val textArea = object : JTextArea() {
+	private val textArea = object : RSyntaxTextArea() {
+		init {
+			highlightCurrentLine = false
+			animateBracketMatching = false
+			isBracketMatchingEnabled = false
+
+			Theme.applyRSyntaxTextTheme(this, configurationProvider)
+		}
+
 		override fun paste() {
 			pasting = true
 			try {
@@ -70,7 +81,13 @@ class TextArea(private val editable: Boolean) {
 		(textArea.document as AbstractDocument).documentFilter = documentFilter
 	}
 
-	fun setText(text: String, caretPosition: Int = 0) {
+	fun createScrollPane(): JScrollPane {
+		return RTextScrollPane(textArea)
+	}
+
+	fun setText(text: String, syntaxType: SyntaxType, caretPosition: Int = 0) {
+		require(syntaxSupport || syntaxType == SyntaxType.NONE)
+
 		if (editable) {
 			textArea.text = text
 			textArea.caretPosition = caretPosition
@@ -94,20 +111,14 @@ class TextArea(private val editable: Boolean) {
 
 			textArea.setCaretPosition(max(0, min(text.length - 1, caretPosition)))
 		}
+
+		textArea.syntaxEditingStyle = syntaxType.internal
 	}
 
 	fun replaceText(from: Int, to: Int, text: String) {
 		textArea.document.remove(from, to - from)
 		textArea.document.insertString(from, text, null)
 		textArea.caretPosition = from
-	}
-
-	fun setCaretPosition(caretPosition: Int) {
-		textArea.caretPosition = caretPosition
-	}
-
-	fun createScrollPane(): JScrollPane {
-		return JScrollPane(textArea)
 	}
 
 	fun addHighlight(p0: Int, p1: Int, p: Highlighter.HighlightPainter): Any {

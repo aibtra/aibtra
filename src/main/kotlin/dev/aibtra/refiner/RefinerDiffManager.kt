@@ -18,7 +18,7 @@ class RefinerDiffManager(
 	private val stateListeners = ArrayList<(State, State) -> Unit>()
 	val scrollState = ScrollState()
 
-	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", INITIAL_CONFIG, true, null, null, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), Diff.INITIAL, false, null, null), 0)
+	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", SyntaxType.NONE, INITIAL_CONFIG, true, null, null, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), SyntaxType.NONE, Diff.INITIAL, false, null, null), 0)
 
 	val state: State
 		get() = data.state
@@ -117,6 +117,14 @@ class RefinerDiffManager(
 		}
 	}
 
+	fun updateSyntaxType(syntaxType: SyntaxType) {
+		Ui.assertEdt()
+
+		data.let {
+			updateState(it.input.copy(syntaxType = syntaxType), true, "updateSyntaxType")
+		}
+	}
+
 	fun setConfig(config: Config) {
 		Ui.assertEdt()
 
@@ -160,6 +168,7 @@ class RefinerDiffManager(
 
 				val raw = input.raw
 				val ref = input.ref
+				val syntaxType = input.syntaxType
 				val conversation = input.conversation
 				val profileName = input.profileName
 				val config = input.config
@@ -184,7 +193,7 @@ class RefinerDiffManager(
 					DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED
 				}
 				val (refFormatted, refChars) = DiffFormatter(mode).format(diff)
-				val state = State(raw, rawChars, filtered, refFormatted, refChars, diff, selection, conversation, profileName)
+				val state = State(raw, rawChars, filtered, refFormatted, refChars, syntaxType, diff, selection, conversation, profileName)
 				callback {
 					Ui.assertEdt()
 
@@ -242,9 +251,9 @@ class RefinerDiffManager(
 		}
 	}
 
-	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?)
+	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?)
 
-	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?, val callback: Runnable?)
+	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val syntaxType: SyntaxType, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?, val callback: Runnable?)
 
 	private class Data(val input: Input, val state: State, val sequenceId: Int)
 

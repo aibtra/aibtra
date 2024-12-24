@@ -41,6 +41,7 @@ dependencies {
     implementation("com.miglayout:miglayout:3.7.4")
     implementation("com.github.kwhat:jnativehook:2.2.2")
     implementation("net.sf.jopt-simple:jopt-simple:5.0.4")
+    implementation("com.fifesoft:rsyntaxtextarea:3.5.3")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.0")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.0")
 }

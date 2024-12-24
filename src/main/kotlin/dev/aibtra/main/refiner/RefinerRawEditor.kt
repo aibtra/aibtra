@@ -4,6 +4,7 @@
 
 package dev.aibtra.main.refiner
 
+import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 import dev.aibtra.text.*
@@ -14,7 +15,7 @@ import javax.swing.text.*
 import javax.swing.undo.*
 
 class RefinerRawEditor(private val textInitializer: TextInitializer, environment: Environment) :
-	AbstractTextEditor(true, environment) {
+	AbstractTextEditor(true, true, environment) {
 	private val undoManager: UndoManager
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
@@ -89,12 +90,12 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 		return textArea.text
 	}
 
-	fun initializeText(text: String) {
-		setText(textInitializer.initialize(text))
+	fun initializeText(text: String, syntaxType: SyntaxType) {
+		setText(textInitializer.initialize(text), syntaxType)
 	}
 
-	fun setText(text: String) {
-		textArea.setText(text)
+	fun setText(text: String, syntaxType: SyntaxType) {
+		textArea.setText(text, syntaxType)
 
 		undoManager.discardAllEdits()
 	}

@@ -71,7 +71,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 				}
 			}
 
-			refEditor.setText(state.refFormatted, state.refChars, lastState.diff.ref == state.diff.ref )
+			refEditor.setText(state.refFormatted, state.refChars, state.syntaxType, lastState.diff.ref == state.diff.ref)
 
 			Ui.runInEdt {
 				if (state.diff.refFinished && !lastState.diff.refFinished) {

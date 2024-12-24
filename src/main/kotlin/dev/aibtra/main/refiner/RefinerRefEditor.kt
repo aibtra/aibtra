@@ -5,12 +5,13 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.configuration.*
+import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 import javax.swing.text.*
 
 class RefinerRefEditor(environment: Environment) :
-	AbstractTextEditor(false, environment) {
+	AbstractTextEditor(false, true, environment) {
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle
@@ -40,7 +41,7 @@ class RefinerRefEditor(environment: Environment) :
 		configurationProvider = environment.configurationProvider
 	}
 
-	fun setText(text: String, chars: List<DiffChar>, preserveCaretPosition: Boolean) {
+	fun setText(text: String, chars: List<DiffChar>, syntaxType: SyntaxType, preserveCaretPosition: Boolean) {
 		require(text.length == chars.size)
 
 		val doc = textArea.document
@@ -50,7 +51,7 @@ class RefinerRefEditor(environment: Environment) :
 			start++
 		}
 
-		textArea.setText(text, if (preserveCaretPosition) textArea.caretPosition else start)
+		textArea.setText(text, syntaxType, if (preserveCaretPosition) textArea.caretPosition else start)
 
 		state = State(chars)
 
