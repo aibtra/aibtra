@@ -6,13 +6,13 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
-import dev.aibtra.refiner.RefinerDiffManager.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
 import dev.aibtra.openai.*
 import dev.aibtra.refiner.*
+import dev.aibtra.refiner.RefinerDiffManager.*
 import java.awt.*
 import java.awt.event.*
 import java.nio.file.*

@@ -4,7 +4,6 @@
 
 package dev.aibtra.main.content
 
-import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import java.awt.*

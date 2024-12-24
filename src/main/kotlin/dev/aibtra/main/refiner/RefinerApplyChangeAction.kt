@@ -5,7 +5,6 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
-import dev.aibtra.diff.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
 import dev.aibtra.refiner.*

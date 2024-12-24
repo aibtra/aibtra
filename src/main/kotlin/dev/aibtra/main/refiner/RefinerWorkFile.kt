@@ -1,7 +1,7 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
-import dev.aibtra.core.StringUtils.Eol
+import dev.aibtra.core.StringUtils.*
 import dev.aibtra.core.StringUtils.Companion.determineLineEnding
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*

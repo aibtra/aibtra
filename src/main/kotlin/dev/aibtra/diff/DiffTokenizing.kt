@@ -1,6 +1,6 @@
 package dev.aibtra.diff
 
-import de.regnis.q.sequence.core.QSequenceMedia
+import de.regnis.q.sequence.core.*
 import dev.aibtra.core.*
 
 sealed interface DiffTokenizing {
