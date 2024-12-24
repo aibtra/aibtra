@@ -11,7 +11,7 @@ import javax.swing.*
 import javax.swing.text.*
 import javax.swing.undo.*
 
-class ResolverDraftTextArea(focusGroup: TextAreaFocusGroup, environment: Environment) : ResolverTextArea(focusGroup, environment) {
+class ResolverDraftEditor(focusGroup: TextEditorFocusGroup, environment: Environment) : ResolverEditor(focusGroup, environment) {
 	private val undoManager: UndoManager
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle

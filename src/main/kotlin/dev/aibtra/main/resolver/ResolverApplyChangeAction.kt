@@ -8,23 +8,23 @@ import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
 
 class ResolverApplyChangeAction(
-	private val draftTextArea: ResolverDraftTextArea,
-	private val resolutionTextArea: ResolverResolutionTextArea,
+	private val draftEditor: ResolverDraftEditor,
+	private val resolutionEditor: ResolverResolutionEditor,
 	private val resolverManager: ResolverManager,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("applyChange", "Apply", Icons.ACCEPT, "Apply", "alt LEFT", accelerators, ActionRunnable {
-		resolutionTextArea.getSelectionRange()?.let { selectionRange ->
+		resolutionEditor.getSelectionRange()?.let { selectionRange ->
 			createApply(selectionRange, resolverManager)?.let {
-				it(draftTextArea)
+				it(draftEditor)
 			}
 		}
 	}) {
 	init {
-		resolutionTextArea.addFocusListener {
+		resolutionEditor.addFocusListener {
 			updateEnabledState()
 		}
-		resolutionTextArea.addCaretListener {
+		resolutionEditor.addCaretListener {
 			updateEnabledState()
 		}
 
@@ -32,13 +32,13 @@ class ResolverApplyChangeAction(
 	}
 
 	private fun updateEnabledState() {
-		isEnabled = resolutionTextArea.hasFocus() && resolutionTextArea.getSelectionRange()?.let {
+		isEnabled = resolutionEditor.hasFocus() && resolutionEditor.getSelectionRange()?.let {
 			selectionRange -> createApply(selectionRange, resolverManager)
 		} != null
 	}
 
 	companion object {
-		fun createPopupAction(resolverManager: ResolverManager, resolutionTextArea: ResolverResolutionTextArea, draftTextArea: ResolverDraftTextArea): DefaultAction? {
+		fun createPopupAction(resolverManager: ResolverManager, resolutionTextArea: ResolverResolutionEditor, draftTextArea: ResolverDraftEditor): DefaultAction? {
 			return resolutionTextArea.getSelectionRange()?.let { range ->
 				createApply(range, resolverManager)?.let { apply ->
 					object : DefaultAction("Apply", ActionRunnable {
@@ -49,7 +49,7 @@ class ResolverApplyChangeAction(
 			}
 		}
 
-		private fun createApply(range: IntRange, resolverManager: ResolverManager): ((ResolverDraftTextArea) -> Unit)? {
+		private fun createApply(range: IntRange, resolverManager: ResolverManager): ((ResolverDraftEditor) -> Unit)? {
 			val state = resolverManager.state
 			val summaries = requireNotNull(state.summaries)
 			val resolutionsContent = summaries.resolutions.content

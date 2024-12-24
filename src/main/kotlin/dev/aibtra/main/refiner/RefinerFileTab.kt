@@ -21,13 +21,13 @@ internal class RefinerFileTab(tabbedPane: MainTabbedPane, environment: Environme
 		workFile.addStateListener { state ->
 			if (state != null && state.initial) {
 				val text = state.content
-				rawTextArea.setText(text)
+				rawEditor.setText(text)
 				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, RefinerDiffManager.Normalization.STOP, null)
 
 				state.initialLine?.let {
 					// Needs to be postponed to function correctly
 					Ui.runInEdt {
-						rawTextArea.scrollToLine(it)
+						rawEditor.scrollToLine(it)
 					}
 				}
 			}
@@ -45,7 +45,7 @@ internal class RefinerFileTab(tabbedPane: MainTabbedPane, environment: Environme
 
 	override fun updateContent() {
 		super.updateContent()
-		workFile.setContent(rawTextArea.getText())
+		workFile.setContent(rawEditor.getText())
 	}
 
 	override fun checkClose(runnable: Runnable) {

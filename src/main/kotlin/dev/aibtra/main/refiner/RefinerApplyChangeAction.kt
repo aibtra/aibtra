@@ -11,8 +11,8 @@ import dev.aibtra.refiner.*
 import java.util.stream.*
 
 class RefinerApplyChangeAction(
-	refTextArea: RefinerRefTextArea,
-	rawTextArea: RefinerRawTextArea,
+	refEditor: RefinerRefEditor,
+	rawEditor: RefinerRawEditor,
 	diffManager: RefinerDiffManager,
 	accelerators: Accelerators
 ) :
@@ -20,9 +20,9 @@ class RefinerApplyChangeAction(
 		val state = diffManager.state
 		val rawText = state.diff.raw
 		val refText = state.diff.ref
-		require(rawTextArea.getText() == rawText) { "RAW TEXT AREA\n${rawTextArea.getText()}\nRAW TEXT\n$rawText" }
+		require(rawEditor.getText() == rawText) { "RAW TEXT AREA\n${rawEditor.getText()}\nRAW TEXT\n$rawText" }
 
-		refTextArea.getSelectionRange()?.let {
+		refEditor.getSelectionRange()?.let {
 			val blocks = RefinerDiffManager.getSelectedBlocksFromRef(state, it).reversed()
 			LOG.info("Apply " + blocks.stream().map {
 				"(${it.rawFrom}-${it.rawTo} '${rawText.substring(it.rawFrom, it.rawTo).replace("\n", "\\n")}')" +
@@ -31,7 +31,7 @@ class RefinerApplyChangeAction(
 			}.collect(Collectors.joining(",")))
 
 			for (block in blocks) {
-				rawTextArea.replaceText(block.rawFrom, block.rawTo, state.diff.ref.substring(block.refFrom, block.refTo))
+				rawEditor.replaceText(block.rawFrom, block.rawTo, state.diff.ref.substring(block.refFrom, block.refTo))
 			}
 		}
 	}) {
@@ -43,9 +43,9 @@ class RefinerApplyChangeAction(
 			} ?: false
 		}
 
-		refTextArea.addSelectionListener(listen)
-		refTextArea.addContentListener {
-			listen(refTextArea.getSelectionRange())
+		refEditor.addSelectionListener(listen)
+		refEditor.addContentListener {
+			listen(refEditor.getSelectionRange())
 		}
 
 		isEnabled = false

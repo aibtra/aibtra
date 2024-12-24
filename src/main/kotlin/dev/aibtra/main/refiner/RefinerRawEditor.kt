@@ -13,8 +13,8 @@ import javax.swing.*
 import javax.swing.text.*
 import javax.swing.undo.*
 
-class RefinerRawTextArea(private val textInitializer: TextInitializer, environment: Environment) :
-	AbstractTextArea<RefinerRawTextArea.TextArea>(TextArea(), environment) {
+class RefinerRawEditor(private val textInitializer: TextInitializer, environment: Environment) :
+	AbstractTextEditor<RefinerRawEditor.TextArea>(TextArea(), environment) {
 	private val undoManager: UndoManager
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle

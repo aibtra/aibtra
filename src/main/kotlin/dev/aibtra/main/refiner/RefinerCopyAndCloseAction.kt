@@ -16,11 +16,11 @@ internal class RefinerCopyAndCloseAction(
 	environment: Environment,
 	requestManager: RefinerRequestManager,
 	diffManager: RefinerDiffManager,
-	rawTextArea: RefinerRawTextArea,
+	rawEditor: RefinerRawEditor,
 	configurationProvider: ConfigurationProvider
 ) :
 	MainMenuAction("copyAndClose", "Copy and Close", Icons.COPY, "Copy and Close", null, environment.accelerators, {
-		val text = rawTextArea.getText()
+		val text = rawEditor.getText()
 		val selection = StringSelection(text)
 		val clipboard = Toolkit.getDefaultToolkit().systemClipboard
 		clipboard.setContents(selection, selection)

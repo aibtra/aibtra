@@ -12,17 +12,17 @@ import java.awt.*
 import javax.swing.*
 
 class ResolverShowDebugDetailsAction(
-	private val draftTextArea: ResolverDraftTextArea,
+	private val draftEditor: ResolverDraftEditor,
 	private val resolverManager: ResolverManager,
 	private val guiConfiguration: GuiConfiguration,
 	private val dialogDisplayer: DialogDisplayer,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("showDebugDetails", TITLE, null, accelerators, ActionRunnable {
-		createShow(draftTextArea.getCaretPosition(), resolverManager, guiConfiguration, dialogDisplayer)?.run()
+		createShow(draftEditor.getCaretPosition(), resolverManager, guiConfiguration, dialogDisplayer)?.run()
 	}) {
 	init {
-		draftTextArea.addCaretListener {
+		draftEditor.addCaretListener {
 			updateEnabledState()
 		}
 
@@ -30,7 +30,7 @@ class ResolverShowDebugDetailsAction(
 	}
 
 	private fun updateEnabledState() {
-		isEnabled = createShow(draftTextArea.getCaretPosition(), resolverManager, guiConfiguration, dialogDisplayer) != null
+		isEnabled = createShow(draftEditor.getCaretPosition(), resolverManager, guiConfiguration, dialogDisplayer) != null
 	}
 
 	companion object {
