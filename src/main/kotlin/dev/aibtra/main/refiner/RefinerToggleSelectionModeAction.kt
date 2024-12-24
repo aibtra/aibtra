@@ -10,17 +10,17 @@ import dev.aibtra.refiner.*
 class RefinerToggleSelectionModeAction(
 	private val diffManager: RefinerDiffManager,
 	private val profileManager: RefinerProfileManager,
-	rawTextArea: RefinerRawTextArea,
+	rawEditor: RefinerRawEditor,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("toggleSelectionMode", "Transfer only Selection", null, "Selection Mode", null, accelerators,
 		{ action ->
-			val raw = rawTextArea.getText()
+			val raw = rawEditor.getText()
 			if (action.isSelected()) {
 				diffManager.updateRawText(raw, null)
 			}
 			else {
-				diffManager.updateRawText(raw, rawTextArea.getSelectionRange())
+				diffManager.updateRawText(raw, rawEditor.getSelectionRange())
 			}
 		}
 	) {

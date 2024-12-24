@@ -20,8 +20,8 @@ import javax.swing.*
 
 internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, private val tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(tabbedPane, environment, dialogDisplayer) {
 	private val commandControl: RefinerCommandControl
-	protected val rawTextArea: RefinerRawTextArea
-	private val refTextArea: RefinerRefTextArea
+	protected val rawEditor: RefinerRawEditor
+	private val refEditor: RefinerRefEditor
 	protected val diffManager: RefinerDiffManager
 	protected val profileManager: RefinerProfileManager
 	protected val requestManager: RefinerRequestManager
@@ -41,45 +41,45 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 		profileManager = RefinerProfileManager(initialWorkingMode, environment.configurationProvider)
 
-		rawTextArea = RefinerRawTextArea({ text -> diffManager.updateRawText(text, null, profileManager.profile().diffConfig, normalization = Normalization.INITIALIZE) }, environment)
-		refTextArea = RefinerRefTextArea(environment)
+		rawEditor = RefinerRawEditor({ text -> diffManager.updateRawText(text, null, profileManager.profile().diffConfig, normalization = Normalization.INITIALIZE) }, environment)
+		refEditor = RefinerRefEditor(environment)
 
 		val textRefresher = DelayedUiRefresher(100) {
 			updateContent()
 		}
-		rawTextArea.addContentListener {
+		rawEditor.addContentListener {
 			textRefresher.refresh()
 		}
-		rawTextArea.addSelectionListener { _ ->
+		rawEditor.addSelectionListener { _ ->
 			textRefresher.refresh()
 		}
 
 		diffManager.addStateListener { state, lastState ->
 			Ui.assertEdt()
 
-			val rawText = rawTextArea.getText()
+			val rawText = rawEditor.getText()
 			if (rawText == state.diff.raw) {
-				rawTextArea.setDiffCharsAndFilteredText(state.rawChars, state.filtered)
+				rawEditor.setDiffCharsAndFilteredText(state.rawChars, state.filtered)
 			}
 
 			state.rawText.let {
 				if (it.isPart()) {
-					rawTextArea.setSelection(IntRange(it.from, it.to - 1))
+					rawEditor.setSelection(IntRange(it.from, it.to - 1))
 				}
 				else {
-					rawTextArea.setSelection(null)
+					rawEditor.setSelection(null)
 				}
 			}
 
-			refTextArea.setText(state.refFormatted, state.refChars, lastState.diff.ref == state.diff.ref )
+			refEditor.setText(state.refFormatted, state.refChars, lastState.diff.ref == state.diff.ref )
 
 			Ui.runInEdt {
 				if (state.diff.refFinished && !lastState.diff.refFinished) {
 					if (!state.selection) {
-						rawTextArea.scrollTo(ScrollState.ScrollPos(1, 10), ScrollState.ScrollMode.FORCE_TOP)
+						rawEditor.scrollTo(ScrollState.ScrollPos(1, 10), ScrollState.ScrollMode.FORCE_TOP)
 					}
 					else {
-						refTextArea.scrollTo(diffManager.scrollState.syncRightScrollPos(), ScrollState.ScrollMode.FORCE_TOP)
+						refEditor.scrollTo(diffManager.scrollState.syncRightScrollPos(), ScrollState.ScrollMode.FORCE_TOP)
 					}
 				}
 			}
@@ -93,7 +93,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		requestManager = RefinerRequestManager(diffManager, coroutineDispatcher, mainScope, dialogDisplayer)
 
 		scrollListener = ScrollListener(diffManager.scrollState) { diffManager.state.selection }
-		scrollListener.install(rawTextArea, refTextArea)
+		scrollListener.install(rawEditor, refEditor)
 
 		profileComboBox = createProfileComboBox()
 
@@ -104,8 +104,8 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		submitter = createSubmitter()
 
 		submitAction = RefinerSubmitAction(environment, diffManager, requestManager, submitter)
-		applyChangeAction = RefinerApplyChangeAction(refTextArea, rawTextArea, diffManager, environment.accelerators)
-		toggleSelectionMode = RefinerToggleSelectionModeAction(diffManager, profileManager, rawTextArea, environment.accelerators)
+		applyChangeAction = RefinerApplyChangeAction(refEditor, rawEditor, diffManager, environment.accelerators)
+		toggleSelectionMode = RefinerToggleSelectionModeAction(diffManager, profileManager, rawEditor, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = RefinerToggleShowRefBeforeAndAfterAction(diffManager, profileManager, environment.accelerators)
 	}
 
@@ -144,7 +144,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	}
 
 	protected open fun updateContent() {
-		diffManager.updateRawText(rawTextArea.getText(), rawTextArea.getSelectionRange(), profileManager.profile().diffConfig)
+		diffManager.updateRawText(rawEditor.getText(), rawEditor.getSelectionRange(), profileManager.profile().diffConfig)
 	}
 
 	protected open fun normalizeText(raw: String): String {
@@ -152,13 +152,13 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	}
 
 	private fun createRawControl(): Component {
-		return rawTextArea.getControl()
+		return rawEditor.getControl()
 	}
 
 	private fun createRefControl(): Component {
-		val control = refTextArea.getControl()
-		refTextArea.addPopupMenu { _, popupMenu ->
-			refTextArea.getSelectionRange()?.let {
+		val control = refEditor.getControl()
+		refEditor.addPopupMenu { _, popupMenu ->
+			refEditor.getSelectionRange()?.let {
 				val blocks = RefinerDiffManager.getSelectedBlocksFromRef(diffManager.state, it)
 				popupMenu.apply {
 					if (blocks.isNotEmpty()) {
@@ -167,13 +167,13 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 					if (componentCount > 0) {
 						add(JSeparator())
 					}
-					add(JMenuItem(RefinerCopyRefSelectionAction(refTextArea)))
+					add(JMenuItem(RefinerCopyRefSelectionAction(refEditor)))
 				}
 			}
 		}
 
-		refTextArea.addPopupMenu(leftMouseButton = true) { _, popupMenu ->
-			refTextArea.getSelectionRange()?.let {
+		refEditor.addPopupMenu(leftMouseButton = true) { _, popupMenu ->
+			refEditor.getSelectionRange()?.let {
 				val blocks = RefinerDiffManager.getSelectedBlocksFromRef(diffManager.state, it)
 				popupMenu.apply {
 					if (blocks.isNotEmpty()) {
@@ -182,7 +182,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 					if (componentCount > 0) {
 						add(JSeparator())
 					}
-					add(JMenuItem(RefinerCopyRefSelectionAction(refTextArea)))
+					add(JMenuItem(RefinerCopyRefSelectionAction(refEditor)))
 				}
 			}
 		}
@@ -191,7 +191,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	}
 
 	fun requestFocus() {
-		rawTextArea.requestFocusInWindow()
+		rawEditor.requestFocusInWindow()
 	}
 
 	override fun addFileActions(fileMenu: JMenu) : Boolean {
@@ -244,7 +244,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		profileMenu.addSeparator()
 		addToggleActions(profileMenu)
 		addAction(profileMenu, toggleShowDiffBeforeAfterAction)
-		addAction(profileMenu, RefinerToggleWordWrapAction(rawTextArea, refTextArea, profileManager, environment.accelerators))
+		addAction(profileMenu, RefinerToggleWordWrapAction(rawEditor, refEditor, profileManager, environment.accelerators))
 		profileMenu.addSeparator()
 		addAction(profileMenu, RefinerToggleSubmitOnInvocationAction(profileManager, environment.accelerators))
 		addAction(profileMenu, RefinerToggleSubmitOnProfileChangeAction(profileManager, environment.accelerators))
@@ -276,8 +276,8 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	}
 
 	private fun updateWordWrap() {
-		rawTextArea.setWordWrap(profileManager.profile().wordWrap)
-		refTextArea.setWordWrap(profileManager.profile().wordWrap)
+		rawEditor.setWordWrap(profileManager.profile().wordWrap)
+		refEditor.setWordWrap(profileManager.profile().wordWrap)
 	}
 
 	protected fun updateProfile(profileId: String?) {
@@ -395,7 +395,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 			if (state.diff.raw.isNotEmpty() && last.diff.raw.isEmpty()) {
 				diffManager.removeStateListener(listener!!)
 
-				if (profileManager.profile().submitOnInvocation && rawTextArea.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
+				if (profileManager.profile().submitOnInvocation && rawEditor.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
 					submitter.run()
 				}
 			}

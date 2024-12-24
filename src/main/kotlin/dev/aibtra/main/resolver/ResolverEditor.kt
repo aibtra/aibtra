@@ -13,8 +13,8 @@ import java.awt.*
 import javax.swing.*
 import javax.swing.text.*
 
-abstract class ResolverTextArea(private val focusGroup: TextAreaFocusGroup, private val environment: Environment) :
-	AbstractTextArea<JTextArea>(JTextArea(), environment) {
+abstract class ResolverEditor(private val focusGroup: TextEditorFocusGroup, private val environment: Environment) :
+	AbstractTextEditor<JTextArea>(JTextArea(), environment) {
 	protected val texter: Texter
 
 	protected abstract fun getHighlighting(char: DiffChar): HighlightStyle?

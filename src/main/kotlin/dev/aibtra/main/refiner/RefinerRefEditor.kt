@@ -11,8 +11,8 @@ import javax.swing.*
 import javax.swing.text.*
 import kotlin.math.*
 
-class RefinerRefTextArea(environment: Environment) :
-	AbstractTextArea<JTextArea>(JTextArea(), environment) {
+class RefinerRefEditor(environment: Environment) :
+	AbstractTextEditor<JTextArea>(JTextArea(), environment) {
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle

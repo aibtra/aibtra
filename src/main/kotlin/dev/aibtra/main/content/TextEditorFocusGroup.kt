@@ -2,15 +2,15 @@ package dev.aibtra.main.content
 
 import java.awt.event.*
 
-class TextAreaFocusGroup {
+class TextEditorFocusGroup {
 	private val listeners = mutableListOf<() -> Unit>()
-	private var focused: AbstractTextArea<*>? = null
+	private var focused: AbstractTextEditor<*>? = null
 
-	fun register(textArea: AbstractTextArea<*>) {
-		textArea.addFocusListener(object : FocusListener {
+	fun register(editor: AbstractTextEditor<*>) {
+		editor.addFocusListener(object : FocusListener {
 			override fun focusGained(e: FocusEvent?) {
-				if (focused != textArea) {
-					focused = textArea
+				if (focused != editor) {
+					focused = editor
 					listeners.forEach { it() }
 				}
 			}
@@ -24,7 +24,7 @@ class TextAreaFocusGroup {
 		listeners.add(listen)
 	}
 
-	fun hasFocus(textArea: AbstractTextArea<*>): Boolean {
-		return textArea == focused
+	fun hasFocus(editor: AbstractTextEditor<*>): Boolean {
+		return editor == focused
 	}
 }

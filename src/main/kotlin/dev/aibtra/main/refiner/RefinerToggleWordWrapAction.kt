@@ -7,8 +7,8 @@ package dev.aibtra.main.refiner
 import dev.aibtra.main.content.*
 
 class RefinerToggleWordWrapAction(
-	rawTextArea: RefinerRawTextArea,
-	refTextArea: RefinerRefTextArea,
+	rawEditor: RefinerRawEditor,
+	refEditor: RefinerRefEditor,
 	profileManager: RefinerProfileManager,
 	accelerators: Accelerators
 ) :
@@ -20,8 +20,8 @@ class RefinerToggleWordWrapAction(
 		},
 		{ profile ->
 			val wordWrap = profile.wordWrap
-			rawTextArea.setWordWrap(wordWrap)
-			refTextArea.setWordWrap(wordWrap)
+			rawEditor.setWordWrap(wordWrap)
+			refEditor.setWordWrap(wordWrap)
 		}
 	) {
 	init {

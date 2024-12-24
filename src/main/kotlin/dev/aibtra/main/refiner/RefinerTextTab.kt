@@ -24,7 +24,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 	init {
 		schemeComboBox = createSchemeComboBox()
 
-		copyAndCloseAction = RefinerCopyAndCloseAction(this, environment, requestManager, diffManager, rawTextArea, environment.configurationProvider)
+		copyAndCloseAction = RefinerCopyAndCloseAction(this, environment, requestManager, diffManager, rawEditor, environment.configurationProvider)
 		toggleFilterMarkdownAction = RefinerToggleFilterMarkdownAction(diffManager, profileManager, environment.accelerators)
 	}
 
@@ -45,7 +45,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 
 	override fun checkClose(runnable: Runnable) {
 		if (!skipCloseCheck) {
-			val text = rawTextArea.getText()
+			val text = rawEditor.getText()
 			if (text.isNotEmpty() && text != initialText) {
 				toFront()
 
@@ -108,7 +108,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 			schemeComboBox.selectedItem = it
 		}
 
-		rawTextArea.initializeText(text)
+		rawEditor.initializeText(text)
 	}
 
 	fun initiateClose(runnable: Runnable) {
@@ -170,7 +170,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 
 	private fun updateInitialText() {
 		diffManager.updateInitial()?.let {
-			rawTextArea.initializeText(it)
+			rawEditor.initializeText(it)
 		}
 	}
 }

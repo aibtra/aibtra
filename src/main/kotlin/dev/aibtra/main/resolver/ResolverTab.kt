@@ -15,8 +15,8 @@ import javax.swing.*
 internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(tabbedPane, environment, dialogDisplayer) {
 	private val resolverManager: ResolverManager
 	private val resolverSaver: ResolverSaver
-	private val draftTextArea: ResolverDraftTextArea
-	private val resolutionTextArea: ResolverResolutionTextArea
+	private val draftEditor: ResolverDraftEditor
+	private val resolutionEditor: ResolverResolutionEditor
 	private val scrollListener: ScrollListener
 	private val requestManager: ResolverRequestManager
 
@@ -32,11 +32,11 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 	init {
 		resolverManager = ResolverManager(environment.coroutineDispatcher, environment.mainScope)
 		resolverSaver = ResolverSaver(resolverManager, environment, dialogDisplayer)
-		val focusGroup = TextAreaFocusGroup()
-		draftTextArea = ResolverDraftTextArea(focusGroup, environment)
-		resolutionTextArea = ResolverResolutionTextArea(focusGroup, environment)
+		val focusGroup = TextEditorFocusGroup()
+		draftEditor = ResolverDraftEditor(focusGroup, environment)
+		resolutionEditor = ResolverResolutionEditor(focusGroup, environment)
 		scrollListener = ScrollListener(resolverManager.summaryScrollState) { false }
-		scrollListener.install(draftTextArea, resolutionTextArea)
+		scrollListener.install(draftEditor, resolutionEditor)
 
 		requestManager = ResolverRequestManager(resolverManager, environment, dialogDisplayer) { text ->
 			Ui.runInEdt {
@@ -48,9 +48,9 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 		saveAction = ResolverSaveAction(resolverSaver, environment)
 		rebuildAction = ResolverRebuildAction(resolverManager, resolverSaver, requestManager, environment.accelerators)
 		resolveOnlyAction = ResolverResolveOnlyAction(resolverManager, requestManager, environment.accelerators)
-		applyResolutionAction = ResolverApplyResolutionAction(draftTextArea, resolutionTextArea, resolverManager, environment.accelerators)
-		applyChangeAction = ResolverApplyChangeAction(draftTextArea, resolutionTextArea, resolverManager, environment.accelerators)
-		showDebugDetails = ResolverShowDebugDetailsAction(draftTextArea, resolverManager, environment.guiConfiguration, dialogDisplayer, environment.accelerators)
+		applyResolutionAction = ResolverApplyResolutionAction(draftEditor, resolutionEditor, resolverManager, environment.accelerators)
+		applyChangeAction = ResolverApplyChangeAction(draftEditor, resolutionEditor, resolverManager, environment.accelerators)
+		showDebugDetails = ResolverShowDebugDetailsAction(draftEditor, resolverManager, environment.guiConfiguration, dialogDisplayer, environment.accelerators)
 	}
 
 	override fun init(mainPanel: JPanel, overlayPanel: JPanel) {
@@ -69,41 +69,41 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 
 		val textRefresher = DelayedUiRefresher(100) {
 			resolverManager.state.snippets?.let {
-				resolverManager.updateDraftSummaryContent(draftTextArea.createSummaryContentWithoutConflicts())
+				resolverManager.updateDraftSummaryContent(draftEditor.createSummaryContentWithoutConflicts())
 			}
 		}
 
 		resolverManager.addStateListener { state, lastState ->
 			if (state.summaries != lastState.summaries) {
 				state.summaries?.let {
-					draftTextArea.update(it.drafts)
-					resolutionTextArea.update(it.resolutions)
+					draftEditor.update(it.drafts)
+					resolutionEditor.update(it.resolutions)
 				}
 			}
 		}
 
-		draftTextArea.addContentListener {
+		draftEditor.addContentListener {
 			textRefresher.refresh()
 		}
 
-		draftTextArea.addPopupMenu { pos, popupMenu ->
+		draftEditor.addPopupMenu { pos, popupMenu ->
 			ResolverShowDebugDetailsAction.createPopupAction(pos, resolverManager, environment.guiConfiguration, dialogDisplayer)?.let {
 				popupMenu.add(it)
 			}
 		}
 
-		resolutionTextArea.addPopupMenu { pos, popupMenu ->
-			ResolverApplyResolutionAction.createPopupAction(pos, resolverManager, draftTextArea)?.let {
+		resolutionEditor.addPopupMenu { pos, popupMenu ->
+			ResolverApplyResolutionAction.createPopupAction(pos, resolverManager, draftEditor)?.let {
 				popupMenu.add(it)
 			} ?: run {
-				ResolverApplyChangeAction.createPopupAction(resolverManager, resolutionTextArea, draftTextArea)?.let {
+				ResolverApplyChangeAction.createPopupAction(resolverManager, resolutionEditor, draftEditor)?.let {
 					popupMenu.add(it)
 				}
 			}
 		}
 
-		resolutionTextArea.addPopupMenu(leftMouseButton = true) { _, popupMenu ->
-			ResolverApplyChangeAction.createPopupAction(resolverManager, resolutionTextArea, draftTextArea)?.let {
+		resolutionEditor.addPopupMenu(leftMouseButton = true) { _, popupMenu ->
+			ResolverApplyChangeAction.createPopupAction(resolverManager, resolutionEditor, draftEditor)?.let {
 				popupMenu.add(it)
 			}
 		}
@@ -163,10 +163,10 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 	}
 
 	private fun createDraftControl(): Component {
-		return draftTextArea.getControl()
+		return draftEditor.getControl()
 	}
 
 	private fun createResolutionControl(): Component {
-		return resolutionTextArea.getControl()
+		return resolutionEditor.getControl()
 	}
 }

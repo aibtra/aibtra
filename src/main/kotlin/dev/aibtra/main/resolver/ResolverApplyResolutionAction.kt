@@ -8,21 +8,21 @@ import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
 
 class ResolverApplyResolutionAction(
-	draftTextArea: ResolverDraftTextArea,
-	private val resolutionTextArea: ResolverResolutionTextArea,
+	draftEditor: ResolverDraftEditor,
+	private val resolutionEditor: ResolverResolutionEditor,
 	private val resolverManager: ResolverManager,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("applyResolution", "Apply Resolution", Icons.APPLY_RESOLUTION, "Apply Resolution", "alt ENTER", accelerators, ActionRunnable {
-		createApply(resolutionTextArea.getCaretPosition(), resolverManager)?.let {
-			it(draftTextArea)
+		createApply(resolutionEditor.getCaretPosition(), resolverManager)?.let {
+			it(draftEditor)
 		}
 	}) {
 	init {
-		resolutionTextArea.addFocusListener {
+		resolutionEditor.addFocusListener {
 			updateEnabledState()
 		}
-		resolutionTextArea.addCaretListener {
+		resolutionEditor.addCaretListener {
 			updateEnabledState()
 		}
 
@@ -30,11 +30,11 @@ class ResolverApplyResolutionAction(
 	}
 
 	private fun updateEnabledState() {
-		isEnabled = resolutionTextArea.hasFocus() && createApply(resolutionTextArea.getCaretPosition(), resolverManager) != null
+		isEnabled = resolutionEditor.hasFocus() && createApply(resolutionEditor.getCaretPosition(), resolverManager) != null
 	}
 
 	companion object {
-		private fun createApply(position: Int, resolverManager: ResolverManager): ((ResolverDraftTextArea) -> Unit)? {
+		private fun createApply(position: Int, resolverManager: ResolverManager): ((ResolverDraftEditor) -> Unit)? {
 			val state = resolverManager.state
 			val summaries = requireNotNull(state.summaries)
 			return state.resolutions?.let { resolutions ->
@@ -63,7 +63,7 @@ class ResolverApplyResolutionAction(
 			}
 		}
 
-		fun createPopupAction(position: Int, resolverManager: ResolverManager, draftTextArea: ResolverDraftTextArea): DefaultAction? {
+		fun createPopupAction(position: Int, resolverManager: ResolverManager, draftTextArea: ResolverDraftEditor): DefaultAction? {
 			return createApply(position, resolverManager)?.let { apply ->
 				object : DefaultAction("Apply Resolution", ActionRunnable {
 					apply(draftTextArea)

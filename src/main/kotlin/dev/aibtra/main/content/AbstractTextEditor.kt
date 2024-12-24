@@ -16,7 +16,7 @@ import javax.swing.event.*
 import javax.swing.text.*
 import kotlin.math.*
 
-open class AbstractTextArea<T : JTextArea>(protected val textArea: T, environment: Environment) {
+open class AbstractTextEditor<T : JTextArea>(protected val textArea: T, environment: Environment) {
 	private val LOG = Logger.getLogger(this::class)
 
 	private val scrollPane = JScrollPane(textArea)

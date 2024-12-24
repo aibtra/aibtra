@@ -9,10 +9,10 @@ import java.awt.*
 import java.awt.datatransfer.*
 
 class RefinerCopyRefSelectionAction(
-	refTextArea: RefinerRefTextArea
+	refEditor: RefinerRefEditor
 ) :
 	DefaultAction("Copy", ActionRunnable {
-		val selection = StringSelection(refTextArea.getSelectionText())
+		val selection = StringSelection(refEditor.getSelectionText())
 		val clipboard = Toolkit.getDefaultToolkit().systemClipboard
 		clipboard.setContents(selection, selection)
 	})

@@ -7,7 +7,7 @@ package dev.aibtra.main.resolver
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 
-class ResolverResolutionTextArea(focusGroup: TextAreaFocusGroup, environment: Environment) : ResolverTextArea(focusGroup, environment) {
+class ResolverResolutionEditor(focusGroup: TextEditorFocusGroup, environment: Environment) : ResolverEditor(focusGroup, environment) {
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle

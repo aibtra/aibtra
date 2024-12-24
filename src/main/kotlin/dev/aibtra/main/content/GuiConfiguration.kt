@@ -29,13 +29,13 @@ data class GuiConfiguration(
 	@Serializable
 	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
 		companion object {
-			private val textAreaFontSize = JTextArea().font.size
+			private val editorFontSize = JTextArea().font.size
 
 			val DEFAULT_FONT_SIZE = if (Ui.isHiDPI()) {
-				textAreaFontSize
+				editorFontSize
 			}
 			else {
-				Math.max(textAreaFontSize, 13)
+				Math.max(editorFontSize, 13)
 			}
 		}
 	}
