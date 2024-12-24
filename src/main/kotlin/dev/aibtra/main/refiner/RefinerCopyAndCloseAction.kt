@@ -5,7 +5,6 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.configuration.*
-import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 import dev.aibtra.refiner.*
 import java.awt.*

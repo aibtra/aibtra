@@ -8,9 +8,9 @@ import com.vladsch.flexmark.ast.*
 import com.vladsch.flexmark.parser.*
 import com.vladsch.flexmark.util.ast.*
 import com.vladsch.flexmark.util.data.*
-import dev.aibtra.resolver.*
 import dev.aibtra.core.*
 import dev.aibtra.core.DebugLog.*
+import dev.aibtra.resolver.*
 import org.json.simple.*
 import java.io.*
 import java.nio.file.*

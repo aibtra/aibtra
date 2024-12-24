@@ -6,8 +6,7 @@ import dev.aibtra.gui.*
 import dev.aibtra.openai.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Runnable
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 
 class RefinerDiffManager(
 	private val rawNormalizer: RawNormalizer,
