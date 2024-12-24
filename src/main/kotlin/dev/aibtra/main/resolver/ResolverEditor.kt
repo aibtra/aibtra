@@ -181,15 +181,7 @@ abstract class ResolverEditor(editable: Boolean, private val focusGroup: TextEdi
 
 	private open class BackgroundPainter(val configurationProvider: ConfigurationProvider) : DefaultHighlighter.DefaultHighlightPainter(Color.GREEN) {
 		protected fun getGuiColors(): GuiColors.Colors {
-			val configuration = configurationProvider.get(GuiConfiguration)
-			val guiColors = configurationProvider.get(GuiColors)
-			val colors = if (configuration.darkTheme) {
-				guiColors.dark
-			}
-			else {
-				guiColors.light
-			}
-			return colors
+			return GuiColors.getColors(configurationProvider)
 		}
 	}
 }

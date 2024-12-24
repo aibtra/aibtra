@@ -66,6 +66,17 @@ data class GuiColors(
 		override fun default(): GuiColors {
 			return GuiColors()
 		}
+
+		fun getColors(configurationProvider: ConfigurationProvider): Colors {
+			val configuration = configurationProvider.get(GuiConfiguration)
+			val guiColors = configurationProvider.get(GuiColors)
+			return if (configuration.darkTheme) {
+				guiColors.dark
+			}
+			else {
+				guiColors.light
+			}
+		}
 	}
 
 	object ColorSerializer : KSerializer<Color> {

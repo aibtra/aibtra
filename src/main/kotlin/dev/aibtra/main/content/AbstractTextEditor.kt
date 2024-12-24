@@ -256,15 +256,7 @@ open class AbstractTextEditor(editable: Boolean, environment: Environment) {
 		private val ourHighlightTags = HashSet<Any>()
 
 		fun run(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
-			val configuration = configurationProvider.get(GuiConfiguration)
-			val guiColors = configurationProvider.get(GuiColors)
-			val colors = if (configuration.darkTheme) {
-				guiColors.dark
-			}
-			else {
-				guiColors.light
-			}
-
+			val colors = GuiColors.getColors(configurationProvider)
 			for (tag in ourHighlightTags) {
 				textArea.removeHighlight(tag)
 			}
