@@ -21,8 +21,8 @@ internal class RefinerFileTab(tabbedPane: MainTabbedPane, environment: Environme
 		workFile.addStateListener { state ->
 			if (state != null && state.initial) {
 				val text = state.content
-				rawEditor.setText(text)
 				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, RefinerDiffManager.Normalization.STOP, null)
+				rawEditor.setText(text)
 
 				state.initialLine?.let {
 					// Needs to be postponed to function correctly
