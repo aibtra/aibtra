@@ -65,10 +65,6 @@ open class AbstractTextEditor(editable: Boolean, environment: Environment) {
 
 		val top = textArea.modelToView2D(pos.top)
 		val bottom = textArea.modelToView2D(pos.bottom)
-		if (top == null || bottom == null) {
-			return
-		}
-
 		val topBounds = top.bounds
 		val bottomBounds = bottom.bounds
 		val scrollTop: Int
@@ -299,7 +295,7 @@ open class AbstractTextEditor(editable: Boolean, environment: Environment) {
 
 	class HighlightStyle(val color: (GuiColors.Colors) -> Color, val shadow: (GuiColors.Colors) -> Color?, val sprinkled: Boolean, val strikethrough: Boolean, val gapStyle: GapStyle)
 
-	protected class HighlightPainter(val style: HighlightStyle, highlightColor: Color, val shadowColor: Color?, val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
+	protected class HighlightPainter(private val style: HighlightStyle, highlightColor: Color, private val shadowColor: Color?, private val foreground: Color, background: Color) : DefaultHighlighter.DefaultHighlightPainter(highlightColor) {
 		private val texturePaint = if (style.sprinkled) createSprinkledTexturePaint(highlightColor, background) else null
 
 		override fun paintLayer(g: Graphics, offs0: Int, offs1: Int, bounds: Shape, c: JTextComponent, view: View): Shape {
