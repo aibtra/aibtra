@@ -22,7 +22,7 @@ data class GuiColors(
 	data class Colors(
 		val rawBackgroundModified: Color, val rawBackgroundAdded: Color, val rawBackgroundAddedGap: Color, val rawBackgroundAddedShadow: Color, val rawBackgroundRemoved: Color,
 		val refBackgroundModified: Color, val refBackgroundAdded: Color, val refBackgroundRemoved: Color, val refBackgroundRemovedGap: Color, val refBackgroundRemovedShadow: Color,
-		val selectionColor: Color,
+		val activeRangeSoft: Color, val activeRangeIntense: Color,
 		val foregroundColor: Color,
 		val backgroundColor: Color,
 		val resolverUnresolvedConflictBackgroundColor: Color,
@@ -35,7 +35,8 @@ data class GuiColors(
 			private val LIGHT_RED = Color(0xFF, 0xA0, 0xA0)
 			private val LIGHT_RED_GAP = Color(0xFF, 0x60, 0x60)
 			private val LIGHT_RED_SHADOW = Color(0xFF, 0xA0, 0xA0, SHADOW_ALPHA)
-			private val LIGHT_SELECTION = Color(0xCC, 0xCC, 0xCC)
+			private val LIGHT_ACTIVE_RANGE_SOFT = Color(0xE0, 0xFF, 0xFF)
+			private val LIGHT_ACTIVE_RANGE_INTENSE = Color(0x00, 0x8B, 0x8B)
 			private val LIGHT_FOREGROUND = Color(0x10, 0x10, 0x10)
 			private val LIGHT_BACKGROUND = Color(0xF7, 0xF8, 0xFA)
 			private val LIGHT_CONFLICT_UNRESOLVED = Color(0xFF, 0x80, 0x80, SHADOW_ALPHA)
@@ -44,15 +45,16 @@ data class GuiColors(
 			private val DARK_GREEN_SHADOW = Color(0x25, 0xA6, 0x25, SHADOW_ALPHA)
 			private val DARK_RED = Color(0xC6, 0x28, 0x28)
 			private val DARK_RED_SHADOW = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
-			private val DARK_SELECTION = Color(0x70, 0x70, 0x70)
+			private val DARK_ACTIVE_RANGE_SOFT = Color(0x00, 0x4B, 0x4B)
+			private val DARK_ACTIVE_RANGE_INTENSE = Color(0x00, 0x8B, 0x8B)
 			private val DARK_FOREGROUND = Color(0xD0, 0xD0, 0xD0)
 			private val DARK_BACKGROUND = Color(0x10, 0x10, 0x20)
 			private val DARK_CONFLICT_UNRESOLVED = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
 			private val DARK_RESOLVER_HEADER_WARNING = Color(0xC0, 0x00, 0x00)
 
 
-			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_GAP, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_GAP, LIGHT_RED_SHADOW, LIGHT_SELECTION, LIGHT_FOREGROUND, LIGHT_BACKGROUND, LIGHT_CONFLICT_UNRESOLVED, LIGHT_RESOLVER_HEADER_WARNING)
-			val DEFAULTS_DARK = Colors(DARK_RED, DARK_GREEN, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED, DARK_RED_SHADOW, DARK_SELECTION, DARK_FOREGROUND, DARK_BACKGROUND, DARK_CONFLICT_UNRESOLVED, DARK_RESOLVER_HEADER_WARNING)
+			val DEFAULTS_LIGHT = Colors(LIGHT_RED, LIGHT_GREEN, LIGHT_GREEN_GAP, LIGHT_GREEN_SHADOW, LIGHT_RED, LIGHT_RED, LIGHT_GREEN, LIGHT_RED, LIGHT_RED_GAP, LIGHT_RED_SHADOW, LIGHT_ACTIVE_RANGE_SOFT, LIGHT_ACTIVE_RANGE_INTENSE, LIGHT_FOREGROUND, LIGHT_BACKGROUND, LIGHT_CONFLICT_UNRESOLVED, LIGHT_RESOLVER_HEADER_WARNING)
+			val DEFAULTS_DARK = Colors(DARK_RED, DARK_GREEN, DARK_GREEN, DARK_GREEN_SHADOW, DARK_RED, DARK_RED, DARK_GREEN, DARK_RED, DARK_RED, DARK_RED_SHADOW, DARK_ACTIVE_RANGE_SOFT, DARK_ACTIVE_RANGE_INTENSE, DARK_FOREGROUND, DARK_BACKGROUND, DARK_CONFLICT_UNRESOLVED, DARK_RESOLVER_HEADER_WARNING)
 		}
 	}
 

@@ -7,6 +7,7 @@ package dev.aibtra.main.refiner
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
+import dev.aibtra.main.content.TextArea
 import dev.aibtra.text.*
 import java.awt.*
 import java.awt.event.*
@@ -17,18 +18,17 @@ import javax.swing.undo.*
 class RefinerRawEditor(private val textInitializer: TextInitializer, environment: Environment) :
 	AbstractTextEditor(true, true, environment) {
 	private val undoManager: UndoManager
+	private val activeRange: TextArea.ActiveRange
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle
 	private val styleGapLeft: HighlightStyle
 	private val styleGapRight: HighlightStyle
 	private val styleFiltered: HighlightStyle
-	private val styleSelected: HighlightStyle
 
 	private var ignoreUndoableEvents = false
 	private var diffChars: List<DiffChar> = listOf()
 	private var filteredText: FilteredText = FilteredText.asIs(FilteredText.Part.of(""))
-	private var selection: IntRange? = null
 
 	init {
 		textArea.initDocumentFilter(object : DocumentFilter() {
@@ -53,9 +53,13 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 		styleGapLeft = HighlightStyle({ it.rawBackgroundAddedGap }, { it.rawBackgroundAddedShadow }, false, false, GapStyle.LEFT)
 		styleGapRight = HighlightStyle({ it.rawBackgroundAddedGap }, { it.rawBackgroundAddedShadow }, false, false, GapStyle.RIGHT)
 		styleFiltered = HighlightStyle({ Color.gray }, { null }, true, false, GapStyle.NONE)
-		styleSelected = HighlightStyle({ it.selectionColor }, { null }, false, false, GapStyle.NONE)
 
 		undoManager = UndoManager()
+
+		activeRange = TextArea.ActiveRange.install(scrollPane, environment.theme)
+		activeRange.addListener {
+			updateCharacterAttributes()
+		}
 
 		textArea.document.addUndoableEditListener { e ->
 			if (!ignoreUndoableEvents) {
@@ -113,10 +117,19 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 		updateCharacterAttributes()
 	}
 
-	fun setSelection(selection: IntRange?) {
-		this.selection = selection
+	fun getActiveRange(): IntRange? {
+		return activeRange.range?.let {
+			val max = textArea.text.length - 1
+			if (it.last <= max) it else IntRange(it.first, max)
+		}
+	}
 
-		updateCharacterAttributes()
+	fun setActiveRange(range: IntRange?) {
+		activeRange.update(range)
+	}
+
+	fun addActiveRangeListener(listen: (range: IntRange?) -> Unit) {
+		activeRange.addListener(listen)
 	}
 
 	private fun updateCharacterAttributes() {
@@ -129,10 +142,6 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 	}
 
 	private fun getHighlighting(index: Int, char: DiffChar): HighlightStyle? {
-		if (selection?.contains(index) == true) {
-			return styleSelected
-		}
-
 		if (filteredText.isFiltered(index)) {
 			return styleFiltered
 		}

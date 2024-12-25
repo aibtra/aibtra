@@ -257,4 +257,133 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 			}
 		}
 	}
+
+	class ActiveRange(val textArea: RSyntaxTextArea, private val gutter: Gutter, val theme: Theme) {
+		companion object {
+			fun install(scrollPaneRaw: JScrollPane, theme: Theme): ActiveRange {
+				val scrollPane = scrollPaneRaw as RTextScrollPane
+				val textArea = scrollPane.textArea as RSyntaxTextArea
+				val gutter = scrollPane.gutter
+				gutter.isIconRowHeaderEnabled = true
+				scrollPane.lineNumbersEnabled = true
+
+				val components = gutter.components
+				require(components.size == 2)
+
+				val activeRange = ActiveRange(textArea, gutter, theme)
+				val adapter = object : MouseAdapter() {
+					private var pressedLine: Int? = null
+					private var startLine: Int? = null
+					private var endLine: Int? = null
+
+					override fun mousePressed(e: MouseEvent) {
+						getLineFromMouseEvent(e)?.let { line ->
+							pressedLine = line
+							startLine = null
+							endLine = null
+							updateLineRange(textArea, null)
+						}
+					}
+
+					override fun mouseReleased(e: MouseEvent) {
+						getLineFromMouseEvent(e)?.let { line ->
+							startLine?.let { start ->
+								endLine = line
+								updateLineRange(textArea, IntRange(start, line))
+							}
+						}
+					}
+
+					override fun mouseDragged(e: MouseEvent) {
+						getLineFromMouseEvent(e)?.let { line ->
+							pressedLine?.let {
+								if (line == it) {
+									this.startLine = line
+								}
+
+								val startLine = startLine ?: line
+								this.endLine = line
+								updateLineRange(textArea, IntRange(startLine, line))
+							}
+						}
+					}
+
+					private fun getLineFromMouseEvent(e: MouseEvent): Int? {
+						return try {
+							val pos = textArea.viewToModel2D(e.point)
+							val line = textArea.getLineOfOffset(pos)
+							if (line >= 0 && line < textArea.lineCount) line else null
+						} catch (ex: Exception) {
+							null
+						}
+					}
+
+					private fun updateLineRange(textArea: RSyntaxTextArea, lineRange: IntRange?) {
+						lineRange?.let {
+							val startLine = min(it.first, it.last)
+							val endLine = max(it.first, it.last)
+							try {
+								val startOffset = textArea.getLineStartOffset(startLine)
+								val endOffset = textArea.getLineEndOffset(endLine) - 1
+								activeRange.update(IntRange(startOffset, endOffset))
+							} catch (_: BadLocationException) {
+							}
+						} ?: run {
+							activeRange.update(null)
+						}
+					}
+				}
+
+				for (component in components) {
+					component.addMouseListener(adapter)
+					component.addMouseMotionListener(adapter)
+				}
+
+				theme.addChangeListener {
+					activeRange.refresh()
+				}
+
+				activeRange.refresh()
+				return activeRange
+			}
+		}
+
+		private val listeners = mutableListOf<(IntRange?) -> Unit>()
+
+		var range: IntRange? = null
+			private set
+
+		fun addListener(listener: (IntRange?) -> Unit) {
+			listeners.add(listener)
+		}
+
+		fun update(range: IntRange?) {
+			require(range == null || range.start <= range.endInclusive)
+
+			this.range = range
+
+			refresh()
+
+			listeners.forEach { it(range) }
+		}
+
+		private fun refresh() {
+			val colors = GuiColors.getColors(theme.configurationProvider)
+			gutter.activeLineRangeColor = colors.activeRangeIntense
+			range?.let {
+				val activeColor = colors.activeRangeSoft
+				val fromLine = textArea.getLineOfOffset(it.first)
+				val toLine = textArea.getLineOfOffset(it.last)
+				textArea.setActiveLineRange(fromLine, toLine)
+
+				textArea.removeAllLineHighlights()
+				for (line in fromLine..toLine) {
+					textArea.addLineHighlight(line, activeColor)
+				}
+			} ?: run {
+				textArea.setActiveLineRange(-1, -1)
+				textArea.removeAllLineHighlights()
+			}
+		}
+	}
 }

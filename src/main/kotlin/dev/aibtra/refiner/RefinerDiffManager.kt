@@ -23,11 +23,11 @@ class RefinerDiffManager(
 	val state: State
 		get() = data.state
 
-	fun updateRawText(raw: String, selection: IntRange?, rawConfig: Config? = null, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, rawRange: IntRange?, rawConfig: Config? = null, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): String {
 		Ui.assertEdt()
 
 		data.let {
-			val (from, to) = selection?.let { s -> s.first to s.last + 1 } ?: (0 to raw.length)
+			val (from, to) = rawRange?.let { s -> s.first to s.last + 1 } ?: (0 to raw.length)
 			require(from <= to && to <= raw.length) { "from=${from};to=${to};raw=${raw}" }
 
 			val part = FilteredText.Part(raw, from, to)
