@@ -21,7 +21,7 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 	private val LOG = Logger.getLogger(this::class)
 
 	protected val textArea = TextArea(editable, syntaxSupport, environment.configurationProvider)
-	private val scrollPane = textArea.createScrollPane()
+	protected val scrollPane = textArea.createScrollPane()
 	private val configurationProvider = environment.configurationProvider
 	private val highlighter = Highlighter(textArea, configurationProvider)
 

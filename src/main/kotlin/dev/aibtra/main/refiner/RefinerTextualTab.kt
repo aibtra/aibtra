@@ -30,7 +30,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	private val submitAction: MainMenuAction
 	private val applyChangeAction: MainMenuAction
 	protected val profileComboBox: JComboBox<Any>
-	private val toggleSelectionMode: RefinerToggleSelectionModeAction
+	private val toggleSelectionMode: RefinerToggleActiveRangeAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
 	private val scrollListener: ScrollListener
 
@@ -50,7 +50,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		rawEditor.addContentListener {
 			textRefresher.refresh()
 		}
-		rawEditor.addSelectionListener { _ ->
+		rawEditor.addActiveRangeListener { _ ->
 			textRefresher.refresh()
 		}
 
@@ -64,10 +64,10 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 			state.rawText.let {
 				if (it.isPart()) {
-					rawEditor.setSelection(IntRange(it.from, it.to - 1))
+					rawEditor.setActiveRange(IntRange(it.from, it.to - 1))
 				}
 				else {
-					rawEditor.setSelection(null)
+					rawEditor.setActiveRange(null)
 				}
 			}
 
@@ -105,7 +105,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 		submitAction = RefinerSubmitAction(environment, diffManager, requestManager, submitter)
 		applyChangeAction = RefinerApplyChangeAction(refEditor, rawEditor, diffManager, environment.accelerators)
-		toggleSelectionMode = RefinerToggleSelectionModeAction(diffManager, profileManager, rawEditor, environment.accelerators)
+		toggleSelectionMode = RefinerToggleActiveRangeAction(diffManager, profileManager, rawEditor, environment.accelerators)
 		toggleShowDiffBeforeAfterAction = RefinerToggleShowRefBeforeAndAfterAction(diffManager, profileManager, environment.accelerators)
 	}
 
@@ -144,7 +144,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	}
 
 	protected open fun updateContent() {
-		diffManager.updateRawText(rawEditor.getText(), rawEditor.getSelectionRange(), profileManager.profile().diffConfig)
+		diffManager.updateRawText(rawEditor.getText(), rawEditor.getActiveRange(), profileManager.profile().diffConfig)
 	}
 
 	protected open fun normalizeText(raw: String): String {
