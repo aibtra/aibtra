@@ -14,7 +14,7 @@ import javax.swing.event.*
 import javax.swing.text.*
 import kotlin.math.*
 
-class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean, configurationProvider: ConfigurationProvider) {
+class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean, configurationProvider: ConfigurationProvider, nameForDebugging: String) {
 
 	var pasting = false
 		private set
@@ -24,6 +24,8 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 			highlightCurrentLine = false
 			animateBracketMatching = false
 			isBracketMatchingEnabled = false
+
+			name = nameForDebugging
 		}
 
 		override fun paste() {

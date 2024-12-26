@@ -11,7 +11,7 @@ import dev.aibtra.main.content.*
 import javax.swing.text.*
 
 class RefinerRefEditor(environment: Environment) :
-	AbstractTextEditor(false, true, environment) {
+	AbstractTextEditor(false, true, environment, "ref") {
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle
