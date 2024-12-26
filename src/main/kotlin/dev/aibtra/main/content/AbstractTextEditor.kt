@@ -17,10 +17,10 @@ import javax.swing.event.*
 import javax.swing.text.*
 import kotlin.math.*
 
-open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environment: Environment) {
+open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environment: Environment, nameForDebugging: String) {
 	private val LOG = Logger.getLogger(this::class)
 
-	protected val textArea = TextArea(editable, syntaxSupport, environment.configurationProvider)
+	protected val textArea = TextArea(editable, syntaxSupport, environment.configurationProvider, nameForDebugging)
 	protected val scrollPane = textArea.createScrollPane()
 	private val configurationProvider = environment.configurationProvider
 	private val highlighter = Highlighter(textArea, configurationProvider)

@@ -16,7 +16,7 @@ import javax.swing.text.*
 import javax.swing.undo.*
 
 class RefinerRawEditor(private val textInitializer: TextInitializer, environment: Environment) :
-	AbstractTextEditor(true, true, environment) {
+	AbstractTextEditor(true, true, environment, "raw") {
 	private val undoManager: UndoManager
 	private val activeRange: TextArea.ActiveRange
 	private val styleModified: HighlightStyle

@@ -13,8 +13,8 @@ import dev.aibtra.resolver.*
 import java.awt.*
 import javax.swing.text.*
 
-abstract class ResolverEditor(editable: Boolean, private val focusGroup: TextEditorFocusGroup, private val environment: Environment) :
-	AbstractTextEditor(editable, false, environment) {
+abstract class ResolverEditor(editable: Boolean, private val focusGroup: TextEditorFocusGroup, private val environment: Environment, nameForDebugging: String) :
+	AbstractTextEditor(editable, false, environment, nameForDebugging) {
 	protected val texter: Texter
 
 	protected abstract fun getHighlighting(char: DiffChar): HighlightStyle?
