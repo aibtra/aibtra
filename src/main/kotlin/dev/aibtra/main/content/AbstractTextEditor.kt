@@ -242,7 +242,7 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 		textArea.addFocusListener(focusListener)
 	}
 
-	private fun createScrollPos(): ScrollState.ScrollPos {
+	fun createScrollPos(): ScrollState.ScrollPos {
 		val rect = scrollPane.viewport.viewRect
 		val topModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), rect.y.toDouble()))
 		val bottomModel = textArea.viewToModel2D(Point2D.Double(rect.x.toDouble(), (rect.y + rect.height).toDouble()))

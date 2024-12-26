@@ -9,6 +9,7 @@ import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.content.*
 import dev.aibtra.refiner.*
+import kotlinx.coroutines.Runnable
 import java.nio.file.*
 import javax.swing.*
 
@@ -23,15 +24,12 @@ internal class RefinerFileTab(tabbedPane: MainTabbedPane, environment: Environme
 				val text = state.content
 				val syntaxType = SyntaxType.fromPath(state.path)
 				diffManager.updateSyntaxType(syntaxType)
-				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, RefinerDiffManager.Normalization.STOP, null)
-				rawEditor.setText(text, syntaxType)
-
-				state.initialLine?.let {
-					// Needs to be postponed to function correctly
-					Ui.runInEdt {
-						rawEditor.scrollToLine(it)
+				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, RefinerDiffManager.Normalization.STOP, Runnable {
+					state.initialLine?.let {
+						scrollListener.scrollLeftToLine(it)
 					}
-				}
+				})
+				rawEditor.setText(text, syntaxType)
 			}
 
 			updateTitle()
