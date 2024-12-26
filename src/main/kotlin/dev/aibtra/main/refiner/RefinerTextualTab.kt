@@ -179,10 +179,6 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 					if (blocks.isNotEmpty()) {
 						add(JMenuItem(applyChangeAction))
 					}
-					if (componentCount > 0) {
-						add(JSeparator())
-					}
-					add(JMenuItem(RefinerCopyRefSelectionAction(refEditor)))
 				}
 			}
 		}
