@@ -90,8 +90,12 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 
 		try {
 			val startOffset = textArea.getLineStartOffset(line)
-			val rectangle = textArea.modelToView2D(startOffset)
-			textArea.scrollRectToVisible(rectangle.bounds)
+			val rectangle = textArea.modelToView2D(startOffset).bounds
+			val viewportHeight = scrollPane.viewport.height
+			val maxScrollY = textArea.height - viewportHeight
+			val newY = max(0, min(rectangle.y - viewportHeight / 2, maxScrollY))
+			val centerRect = Rectangle(0, newY, 0, viewportHeight)
+			textArea.scrollRectToVisible(centerRect)
 		} catch (ex: BadLocationException) {
 			LOG.error(ex)
 		}
