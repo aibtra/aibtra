@@ -35,8 +35,7 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 		val focusGroup = TextEditorFocusGroup()
 		draftEditor = ResolverDraftEditor(focusGroup, environment)
 		resolutionEditor = ResolverResolutionEditor(focusGroup, environment)
-		scrollListener = ScrollListener(resolverManager.summaryScrollState) { false }
-		scrollListener.install(draftEditor, resolutionEditor)
+		scrollListener = ScrollListener.install(draftEditor, resolutionEditor, resolverManager.summaryScrollState) { false }
 
 		requestManager = ResolverRequestManager(resolverManager, environment, dialogDisplayer) { text ->
 			Ui.runInEdt {
