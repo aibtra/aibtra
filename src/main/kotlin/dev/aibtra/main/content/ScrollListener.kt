@@ -23,9 +23,23 @@ class ScrollListener private constructor(private val leftEditor: AbstractTextEdi
 		}
 	}
 
+	fun scrollLeftToLine(line: Int) {
+		inScrollPosUpdate = true
+		try {
+			leftEditor.scrollToLine(line)
+			Side.LEFT.update(scrollState, leftEditor.createScrollPos(), null, false)
+			rightEditor.scrollTo(scrollState.syncRightScrollPos(), ScrollState.ScrollMode.FORCE_TOP)
+		} finally {
+			inScrollPosUpdate = false
+		}
+	}
+
 	private fun install(editor: AbstractTextEditor, side: Side) {
+		var started = false
 		editor.addScrollListener { pos, mode ->
-			if (inScrollPosUpdate) {
+			started = started or (pos.top > 0) // E.g., when using simulated text, scrolling the raw area to a specific line may jump back immediately afterward due to a ScrollPaneLayout.layoutContainer event.
+
+			if (inScrollPosUpdate || !started) {
 				return@addScrollListener
 			}
 

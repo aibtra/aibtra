@@ -32,7 +32,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	protected val profileComboBox: JComboBox<Any>
 	private val toggleActiveRangeAction: RefinerToggleActiveRangeAction
 	private val toggleShowDiffBeforeAfterAction: MainMenuAction
-	private val scrollListener: ScrollListener
+	protected val scrollListener: ScrollListener
 
 	init {
 		val coroutineDispatcher = environment.coroutineDispatcher
@@ -75,7 +75,8 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 			Ui.runInEdt {
 				if (state.diff.refFinished && !lastState.diff.refFinished) {
-					if (!state.selection) {
+					if (!state.selection &&
+						rawEditor.createScrollPos().top == 0) { // Do not reset the scroll position if we have scrolled before (e.g. by --line command line parameter)
 						rawEditor.scrollTo(ScrollState.ScrollPos(1, 10), ScrollState.ScrollMode.FORCE_TOP)
 					}
 					else {
