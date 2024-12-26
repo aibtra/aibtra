@@ -84,7 +84,7 @@ class RefinerWorkFile(val mainScope: CoroutineScope, val dialogDisplayer: Dialog
 				val content = state.content
 				val eol = state.eol
 
-				val state = try {
+				val newState = try {
 					val lastModifiedTimeBefore = path.getLastModifiedTime().toMillis()
 					if (lastModifiedTimeBefore != state.lastModified) {
 						Ui.runInEdt {
@@ -103,7 +103,7 @@ class RefinerWorkFile(val mainScope: CoroutineScope, val dialogDisplayer: Dialog
 				}
 
 				Ui.runInEdt {
-					updateState(state)
+					updateState(newState)
 					successCallback()
 				}
 			}
