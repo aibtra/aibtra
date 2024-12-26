@@ -92,8 +92,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 		requestManager = RefinerRequestManager(diffManager, coroutineDispatcher, mainScope, dialogDisplayer)
 
-		scrollListener = ScrollListener(diffManager.scrollState) { diffManager.state.selection }
-		scrollListener.install(rawEditor, refEditor)
+		scrollListener = ScrollListener.install(rawEditor, refEditor, diffManager.scrollState) { diffManager.state.selection }
 
 		profileComboBox = createProfileComboBox()
 

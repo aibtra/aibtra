@@ -3,18 +3,23 @@ package dev.aibtra.main.content
 import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 
-class ScrollListener(private val scrollState: ScrollState, val keepLeftPosOnRightPosUpdate: () -> Boolean) {
+class ScrollListener private constructor(private val leftEditor: AbstractTextEditor, private val rightEditor: AbstractTextEditor, private val scrollState: ScrollState, val keepLeftPosOnRightPosUpdate: () -> Boolean) {
 	private var inScrollPosUpdate = false
 
-	fun install(leftEditor: AbstractTextEditor, rightEditor: AbstractTextEditor) {
-		install(leftEditor, Side.LEFT)
-		install(rightEditor, Side.RIGHT)
+	companion object {
+		fun install(leftEditor: AbstractTextEditor, rightEditor: AbstractTextEditor, scrollState: ScrollState, keepLeftPosOnRightPosUpdate: () -> Boolean): ScrollListener {
+			val listener = ScrollListener(leftEditor, rightEditor, scrollState, keepLeftPosOnRightPosUpdate)
+			listener.install(listener.leftEditor, Side.LEFT)
+			listener.install(listener.rightEditor, Side.RIGHT)
 
-		scrollState.addScrollListener { left, right, mode ->
-			Ui.assertEdt()
+			scrollState.addScrollListener { left, right, mode ->
+				Ui.assertEdt()
 
-			leftEditor.scrollTo(left, mode)
-			rightEditor.scrollTo(right, mode)
+				leftEditor.scrollTo(left, mode)
+				rightEditor.scrollTo(right, mode)
+			}
+
+			return listener
 		}
 	}
 
