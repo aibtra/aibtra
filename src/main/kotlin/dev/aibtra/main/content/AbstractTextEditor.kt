@@ -95,6 +95,7 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 			val maxScrollY = textArea.height - viewportHeight
 			val newY = max(0, min(rectangle.y - viewportHeight / 2, maxScrollY))
 			val centerRect = Rectangle(0, newY, 0, viewportHeight)
+			textArea.setCaretPosition(startOffset)
 			textArea.scrollRectToVisible(centerRect)
 		} catch (ex: BadLocationException) {
 			LOG.error(ex)

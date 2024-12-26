@@ -138,6 +138,10 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 		textArea.requestFocusInWindow()
 	}
 
+	fun setCaretPosition(pos: Int) {
+		textArea.caretPosition = pos
+	}
+
 	fun scrollRectToVisible(rectangle: Rectangle) {
 		textArea.scrollRectToVisible(rectangle)
 	}
