@@ -8,6 +8,7 @@ import dev.aibtra.gui.action.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.content.*
 import java.io.*
+import java.nio.file.InvalidPathException
 import javax.swing.*
 
 internal class RefinerOpenAction(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainMenuAction("open", "Open", "ctrl O", environment.accelerators, ActionRunnable {
@@ -21,7 +22,14 @@ internal class RefinerOpenAction(tabbedPane: MainTabbedPane, environment: Enviro
 		return@ActionRunnable
 	}
 
-	val selectedPath = fileChooser.selectedFile?.toPath() ?: return@ActionRunnable
+	val selectedFile = fileChooser.selectedFile ?: return@ActionRunnable
+	val selectedPath = try {
+		selectedFile.toPath()
+	} catch (e: InvalidPathException) {
+		Dialogs.showError("Open", e.message?.let { "Invalid path:\n\n${e.message}" } ?: "Invalid path '$selectedFile'", dialogDisplayer)
+		return@ActionRunnable
+	}
+
 	environment.configurationProvider.change(GuiConfiguration) {
 		it.copy(lastOpenPath = selectedPath.toString())
 	}
