@@ -174,6 +174,14 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 				val pos = textArea.viewToModel2D(e.point)
 				JPopupMenu().apply {
 					fill(pos, this)
+
+					getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), DefaultEditorKit.copyAction)
+					actionMap.put(DefaultEditorKit.copyAction, object : AbstractAction() {
+						override fun actionPerformed(e: ActionEvent?) {
+							textArea.copy()
+						}
+					})
+
 					if (componentCount > 0) {
 						show(e.component, e.x, e.y)
 					}
