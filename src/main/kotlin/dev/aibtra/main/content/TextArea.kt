@@ -216,6 +216,10 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 		})
 	}
 
+	fun copy() {
+		textArea.copy()
+	}
+
 	private class NonEditableDocumentFilter : DocumentFilter() {
 		private var locked = true
 
