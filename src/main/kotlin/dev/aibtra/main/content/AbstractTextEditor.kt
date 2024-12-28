@@ -249,7 +249,7 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 
 	private class Highlighter(private val textArea: TextArea, private val configurationProvider: ConfigurationProvider) {
 		private val highlightStyleToPainter = mutableMapOf<HighlightStyle, DefaultHighlighter.DefaultHighlightPainter>()
-		private val ourHighlightTags = HashSet<Any>()
+		private val ourHighlightTags = mutableSetOf<Any>()
 
 		fun run(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
 			val colors = GuiColors.getColors(configurationProvider)
