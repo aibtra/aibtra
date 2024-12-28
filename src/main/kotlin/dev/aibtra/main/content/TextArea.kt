@@ -2,8 +2,9 @@ package dev.aibtra.main.content
 
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
-import org.fife.ui.rtextarea.RTextScrollPane
+import dev.aibtra.gui.*
+import org.fife.ui.rsyntaxtextarea.*
+import org.fife.ui.rtextarea.*
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.*
@@ -184,6 +185,29 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 	fun putAction(key: String, keyStroke: KeyStroke, action: Action) {
 		textArea.actionMap.put(key, action)
 		textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, key)
+	}
+
+	fun addSelectionListener(listener: (Pair<Int, Int>?) -> Unit) {
+		var lastSelection: Pair<Int, Int>? = null
+		val check = {
+			val selection = if (selectionEnd > selectionStart) Pair(textArea.selectionStart, textArea.selectionEnd) else null
+			if (selection != lastSelection) {
+				Ui.runInEdt {
+					// Needs to be delayed; otherwise, when selecting the first character, the selection highlight gets lost.
+					listener(selection)
+				}
+				lastSelection = selection
+			}
+		}
+
+		textArea.addCaretListener {
+			check()
+		}
+		textArea.addKeyListener(object: KeyAdapter() {
+			override fun keyReleased(e: KeyEvent?) {
+				check()
+			}
+		})
 	}
 
 	private class NonEditableDocumentFilter : DocumentFilter() {
