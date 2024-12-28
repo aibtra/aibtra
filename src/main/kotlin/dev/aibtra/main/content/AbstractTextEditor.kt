@@ -7,6 +7,7 @@ package dev.aibtra.main.content
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
+import org.fife.ui.rtextarea.ChangeableHighlightPainter
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.*
@@ -249,14 +250,34 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 
 	private class Highlighter(private val textArea: TextArea, private val configurationProvider: ConfigurationProvider) {
 		private val highlightStyleToPainter = mutableMapOf<HighlightStyle, DefaultHighlighter.DefaultHighlightPainter>()
-		private val ourHighlightTags = mutableSetOf<Any>()
+		private val ourHighlights = mutableSetOf<javax.swing.text.Highlighter.Highlight>()
+
+		init {
+			textArea.addSelectionListener {
+				val first = textArea.highlights.firstOrNull()
+				if (first == null || first is ChangeableHighlightPainter) {
+					return@addSelectionListener
+				}
+
+				val oldHighlights = ourHighlights.toSet()
+				for (oldHighlight in ourHighlights) {
+					textArea.removeHighlight(oldHighlight)
+				}
+				ourHighlights.clear()
+
+				for (oldHighlight in oldHighlights) {
+					val highlight = textArea.addHighlight(oldHighlight.startOffset, oldHighlight.endOffset, oldHighlight.painter)
+					ourHighlights.add(highlight)
+				}
+			}
+		}
 
 		fun run(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
 			val colors = GuiColors.getColors(configurationProvider)
-			for (tag in ourHighlightTags) {
+			for (tag in ourHighlights) {
 				textArea.removeHighlight(tag)
 			}
-			ourHighlightTags.clear()
+			ourHighlights.clear()
 
 			var lastStart = -1
 			var last: HighlightStyle? = null
@@ -280,11 +301,11 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 
 		private fun addHighlight(from: Int, to: Int, highlightStyle: HighlightStyle?, colors: GuiColors.Colors) {
 			highlightStyle?.let { style ->
-				val highlight: DefaultHighlighter.DefaultHighlightPainter = highlightStyleToPainter.computeIfAbsent(style) {
+				val painter: DefaultHighlighter.DefaultHighlightPainter = highlightStyleToPainter.computeIfAbsent(style) {
 					HighlightPainter(it, it.color(colors), it.shadow(colors), textArea.foreground, textArea.background)
 				}
-				val tag = textArea.addHighlight(from, to, highlight)
-				ourHighlightTags.add(tag)
+				val highlight = textArea.addHighlight(from, to, painter)
+				ourHighlights.add(highlight)
 			}
 		}
 	}
