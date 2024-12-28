@@ -121,8 +121,8 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 		textArea.caretPosition = from
 	}
 
-	fun addHighlight(p0: Int, p1: Int, p: Highlighter.HighlightPainter): Any {
-		return textArea.highlighter.addHighlight(p0, p1, p)
+	fun addHighlight(p0: Int, p1: Int, p: Highlighter.HighlightPainter): Highlighter.Highlight {
+		return textArea.highlighter.addHighlight(p0, p1, p) as Highlighter.Highlight
 	}
 
 	fun removeHighlight(tag: Any) {
