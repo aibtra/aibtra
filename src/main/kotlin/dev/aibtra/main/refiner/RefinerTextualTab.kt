@@ -86,6 +86,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		}
 
 		profileManager.addListener { _, name ->
+			diffManager.updateProfile(name)
 			updateWordWrap()
 		}
 
@@ -131,7 +132,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		profileManager.fireInitialization() // to adjust all actions
 
 		environment.paths.getProperty("simulateOutputTextFile")?.let {
-			diffManager.updateRefText(Files.readString(Path.of(it)), true)
+			diffManager.updateRefText(Files.readString(Path.of(it)), RefinerConversation(listOf()))
 		}
 
 		configureSubmitOnInvocation()
@@ -359,9 +360,12 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 			commandControl.setProfile(profileManager.profile())
 		}
 
-		val commandControl = RefinerCommandControl(environment.configurationProvider)
+		val commandControl = RefinerCommandControl(diffManager, environment.configurationProvider)
 		profileManager.addListener { _, _ ->
 			updateProfile(commandControl)
+		}
+		diffManager.addStateListener { state, _ ->
+			commandControl.setConversation(state.conversation)
 		}
 		updateProfile(commandControl)
 		return commandControl

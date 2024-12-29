@@ -4,7 +4,6 @@
 
 package dev.aibtra.main.refiner
 
-import dev.aibtra.diff.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.refiner.*
@@ -30,18 +29,22 @@ class RefinerRequestManager(
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
 				notifyInProgress(true)
 
-				val filteredText = diffManager.state.filtered
+				val state = diffManager.state
+				val filteredText = state.filtered
+				val priorConversation = state.conversation
 				callback {
-					diffManager.updateRefText("", false) // signal started, so diff becomes reset
+					diffManager.updateRefText("", null) // signal started, so diff becomes reset
 				}
 
 				var lastRef: String? = null
+				var lastConversation: RefinerConversation? = null
 				try {
-					request.run(filteredText) { ref ->
+					request.run(filteredText, priorConversation) { ref, conversation ->
 						lastRef = ref
+						lastConversation = conversation
 
 						callback {
-							diffManager.updateRefText(ref, false)
+							diffManager.updateRefText(ref, null)
 						}
 
 						this == currentRun.get()
@@ -52,7 +55,7 @@ class RefinerRequestManager(
 					if (this == currentRun.get()) {
 						lastRef?.let { ref ->
 							callback {
-								diffManager.updateRefText(ref, true)
+								diffManager.updateRefText(ref, lastConversation)
 							}
 						}
 						inProgress = false
@@ -94,10 +97,10 @@ class RefinerRequestManager(
 	}
 
 	fun interface RequestCallback {
-		fun callback(ref: String): Boolean
+		fun callback(ref: String, conversation: RefinerConversation?): Boolean
 	}
 
 	fun interface Request {
-		fun run(filtered: FilteredText, callback: RequestCallback)
+		fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RequestCallback)
 	}
 }

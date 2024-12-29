@@ -345,9 +345,18 @@ data class OpenAIRefinementConfiguration(
 			return MainSerializer
 		}
 
-		fun getCommandInstructions(profile: Profile): List<String>? {
-			val instructions = profile.mainInstructions.stream().filter { i -> i.text.contains(COMMAND_MACRO) }.findAny().getOrNull()
-			return instructions?.text?.split(COMMAND_MACRO)
+		fun getCommandInstructions(profile: Profile, followUp: Boolean): List<String>? {
+			val instructionsList = if (followUp) {
+				profile.followUpInstructions ?: profile.mainInstructions
+			}
+			else {
+				profile.mainInstructions
+			}
+
+			val instructions = instructionsList.stream().filter { i -> i.text.contains(COMMAND_MACRO) }.findAny().getOrNull()
+			return instructions?.text?.split(COMMAND_MACRO)?.map {
+				if (it.trim().startsWith("```")) "" else it
+			}
 		}
 
 		fun replaceProfile(originalConfig: OpenAIRefinementConfiguration, targetProfile: Profile, change: (Profile) -> Profile): OpenAIRefinementConfiguration {
