@@ -84,8 +84,8 @@ data class AIRefinementConfiguration(
 
 	companion object : ConfigurationFactory<AIRefinementConfiguration> {
 		private const val PROOFREAD_ID = "proofread"
-		private const val CODE_ADJUSTMENT_ID = "code-adjustment"
-		private const val CODE_REFINEMENT_ID = "code-refinement"
+		private const val CODING_GPT_4O_ID = "code-adjustment"
+		private const val CODING_O1_MINI_ID = "code-refinement"
 		private const val GENERIC_GPT_4O_ID = "generic-gpt-4o"
 		private const val GENERIC_O1_MINI_ID = "generic-o1-mini"
 		const val CONTENT_MACRO = "\${CONTENT}"
@@ -164,186 +164,15 @@ data class AIRefinementConfiguration(
 			wordWrap = true
 		)
 
-		private val GENERIC_GPT_4O = Profile(
-			AIProvider.OPENAI,
-			AIProfile.Name(GENERIC_GPT_4O_ID, "Generic GPT-4o"),
-			MODEL_4O,
-			true,
-			false,
-			listOf(
-				Instruction(AIRole.USER, COMMAND_MACRO),
-				Instruction(AIRole.USER, SELECTION_MACRO)
-			),
-			null,
-			ResponseType.CONTENT_AS_IS,
-			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
-		)
+		private val CODING_GPT_4O = createCodeRefinementProfile(AIProvider.OPENAI, CODING_GPT_4O_ID, "Coding GPT-4o", MODEL_4O)
 
-		private val CODE_ADJUSTMENT = Profile(
-			AIProvider.OPENAI,
-			AIProfile.Name(CODE_ADJUSTMENT_ID, "Code adjustment (GPT-4o)"),
-			MODEL_4O,
-			false,
-			false,
-			listOf(
-				Instruction(
-					AIRole.USER,
-					"""
-						|Your objective is to apply the specified changes to a source code file:
-						|
-						|1. Begin by providing a detailed reasoning process about the planned modifications, explaining why and how each change will be implemented.
-						|2. Conclude your response with the updated file content enclosed in triple backticks (```).
-						|2.1 Be sure to preserve the indentation of every line exactly as is.
-						|
-						|The changes to be applied are described below:
-						|$COMMAND_MACRO
-					""".trimMargin()
-				),
-				Instruction(
-					AIRole.USER,
-					"""
-						|This is the file content:
-						|
-						|```
-						|$CONTENT_MACRO
-						|```
-					""".trimMargin()
-				),
-				Instruction(
-					AIRole.USER,
-					"""
-						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
-						|Do not touch other parts of the file.
-						|
-						|```
-						|$SELECTION_MACRO
-						|```
-					""".trimMargin(),
-					InstructionMode.SELECTION_ONLY
-				)
-			),
-			listOf(
-				Instruction(
-					AIRole.USER,
-					"""
-						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
-						|
-						|$COMMAND_MACRO
-					""".trimMargin()
-				),
-				Instruction(
-					AIRole.USER,
-					// When switching back and forth between selecting and entire file, it's important to ensure that we will get sent back the entire file.
-					"""
-						|The following is the complete content of the file. Make the requested modifications and ensure the response includes the entire updated file content.
-						|
-						|```
-						|$CONTENT_MACRO
-						|```
-					""".trimMargin(),
-					InstructionMode.FULL_ONLY
-				),
-				Instruction(
-					AIRole.USER,
-					"""
-						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
-						|Do not touch other parts of the file.
-						|
-						|```
-						|$SELECTION_MACRO
-						|```
-					""".trimMargin(),
-					InstructionMode.SELECTION_ONLY
-				)
-			),
-			ResponseType.CONTENT_FENCED,
-			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true)
-		)
+		private val CODING_O1_MINI = createCodeRefinementProfile(AIProvider.OPENAI, CODING_O1_MINI_ID, "Coding o1-mini", MODEL_O1_MINI, "ctrl shift R")
 
-		private val CODE_REFINEMENT = Profile(
-			AIProvider.OPENAI,
-			AIProfile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
-			MODEL_O1_MINI,
-			false,
-			false,
-			listOf(
-				Instruction(
-					AIRole.USER,
-					"""
-						|Your objective is to apply the specified changes to a source code file:
-						|
-						|1. Begin by providing a detailed reasoning process about the planned modifications, explaining why and how each change will be implemented.
-						|2. Conclude your response with the updated file content enclosed in triple backticks (```).
-						|2.1 Be sure to preserve the indentation of every line exactly as is.
-						|
-						|The changes to be applied are described below:
-						|$COMMAND_MACRO
-					""".trimMargin()
-				),
-				Instruction(
-					AIRole.USER,
-					"""
-						|This is the file content:
-						|
-						|```
-						|$CONTENT_MACRO
-						|```
-					""".trimMargin()
-				),
-				Instruction(
-					AIRole.USER,
-					"""
-						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
-						|Do not touch other parts of the file.
-						|
-						|```
-						|$SELECTION_MACRO
-						|```
-					""".trimMargin(),
-					InstructionMode.SELECTION_ONLY
-				)
-			),
-			listOf(
-				Instruction(
-					AIRole.USER,
-					"""
-						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
-						|
-						|$COMMAND_MACRO
-					""".trimMargin()
-				),
-				Instruction(
-					AIRole.USER,
-					"""
-						|This is the file content:
-						|
-						|```
-						|$CONTENT_MACRO
-						|```
-					""".trimMargin()
-				),
-			),
-			ResponseType.CONTENT_FENCED,
-			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true),
-			accelerator = "ctrl shift R"
-		)
+		private val GENERIC_GPT_4O = createGenericProfile(AIProvider.OPENAI, GENERIC_GPT_4O_ID, "Generic GPT-4o", MODEL_4O)
 
-		private val GENERIC_O1_MINI = Profile(
-			AIProvider.OPENAI,
-			AIProfile.Name(GENERIC_O1_MINI_ID, "Generic o1-mini"),
-			MODEL_O1_MINI,
-			false,
-			false,
-			listOf(
-				Instruction(AIRole.USER, COMMAND_MACRO),
-				Instruction(AIRole.USER, CONTENT_MACRO)
-			),
-			null,
-			ResponseType.CONTENT_AS_IS,
-			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
-		)
+		private val GENERIC_O1_MINI = createGenericProfile(AIProvider.OPENAI, GENERIC_O1_MINI_ID, "Generic o1-mini", MODEL_O1_MINI)
 
-		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, GENERIC_GPT_4O, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
+		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, null, CODING_GPT_4O, CODING_O1_MINI, null, GENERIC_GPT_4O, GENERIC_O1_MINI)
 
 		override fun name(): String = "ai-refiner"
 
@@ -389,6 +218,107 @@ data class AIRefinementConfiguration(
 			val digest = MessageDigest.getInstance("SHA-256")
 			val hashBytes = digest.digest(bytes)
 			return hashBytes.joinToString("") { "%02x".format(it) }
+		}
+
+		private fun createGenericProfile(provider: AIProvider, id: String, title: String, model: String): Profile {
+			return Profile(
+				provider,
+				AIProfile.Name(id, title),
+				model,
+				true,
+				false,
+				listOf(
+					Instruction(AIRole.USER, COMMAND_MACRO),
+					Instruction(AIRole.USER, SELECTION_MACRO)
+				),
+				null,
+				ResponseType.CONTENT_AS_IS,
+				RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
+			)
+		}
+
+		private fun createCodeRefinementProfile(provider: AIProvider, id: String, title: String, model: String, accelerator: String? = null): Profile {
+			return Profile(
+				provider,
+				AIProfile.Name(id, title),
+				model,
+				false,
+				false,
+				listOf(
+					Instruction(
+						AIRole.USER,
+						"""
+						|Your objective is to apply the specified changes to a source code file:
+						|
+						|1. Begin by providing a detailed reasoning process about the planned modifications, explaining why and how each change will be implemented.
+						|2. Conclude your response with the updated file content enclosed in triple backticks (```).
+						|2.1 Be sure to preserve the indentation of every line exactly as is.
+						|
+						|The changes to be applied are described below:
+						|$COMMAND_MACRO
+					""".trimMargin()
+					),
+					Instruction(
+						AIRole.USER,
+						"""
+						|This is the file content:
+						|
+						|```
+						|$CONTENT_MACRO
+						|```
+					""".trimMargin()
+					),
+					Instruction(
+						AIRole.USER,
+						"""
+						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
+						|Do not touch other parts of the file.
+						|
+						|```
+						|$SELECTION_MACRO
+						|```
+					""".trimMargin(),
+						InstructionMode.SELECTION_ONLY
+					)
+				),
+				listOf(
+					Instruction(
+						AIRole.USER,
+						"""
+						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
+						|
+						|$COMMAND_MACRO
+					""".trimMargin()
+					),
+					Instruction(
+						AIRole.USER,
+						// When switching back and forth between selecting and entire file, it's important to ensure that we will get sent back the entire file.
+						"""
+						|The following is the complete content of the file. Make the requested modifications and ensure the response includes the entire updated file content.
+						|
+						|```
+						|$CONTENT_MACRO
+						|```
+					""".trimMargin(),
+						InstructionMode.FULL_ONLY
+					),
+					Instruction(
+						AIRole.USER,
+						"""
+						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
+						|Do not touch other parts of the file.
+						|
+						|```
+						|$SELECTION_MACRO
+						|```
+					""".trimMargin(),
+						InstructionMode.SELECTION_ONLY
+					)
+				),
+				ResponseType.CONTENT_FENCED,
+				RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, true),
+				accelerator = accelerator
+			)
 		}
 	}
 
