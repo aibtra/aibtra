@@ -6,7 +6,7 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.gui.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 
 open class RefinerMainMenuProfileBooleanAction(
 	id: String,
@@ -16,9 +16,9 @@ open class RefinerMainMenuProfileBooleanAction(
 	keyStrokeDefault: String? = null,
 	accelerators: Accelerators?,
 	private val profileManager: RefinerProfileManager,
-	val get: (OpenAIRefinementConfiguration.Profile) -> Boolean,
-	set: (OpenAIRefinementConfiguration.Profile, Boolean) -> OpenAIRefinementConfiguration.Profile,
-	invoke: (OpenAIRefinementConfiguration.Profile) -> Unit
+	val get: (AIRefinementConfiguration.Profile) -> Boolean,
+	set: (AIRefinementConfiguration.Profile, Boolean) -> AIRefinementConfiguration.Profile,
+	invoke: (AIRefinementConfiguration.Profile) -> Unit
 ) :
 	MainMenuAction(
 		id, title, toolBarIcon, toolBarText, keyStrokeDefault, accelerators,

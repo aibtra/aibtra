@@ -2,7 +2,7 @@
  * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
  */
 
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import com.vladsch.flexmark.ast.*
 import com.vladsch.flexmark.parser.*
@@ -17,8 +17,8 @@ import java.nio.file.*
 import java.util.function.*
 import kotlin.io.path.*
 
-class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, val paths: ApplicationPaths) : OpenAIService(apiToken, debugLog) {
-	fun request(approach: OpenAIResolverConfiguration.Approach, snippets: ResolverSnippets, resolverPacket: ResolverPacket?, failureHandler: FailureHandler, callback: Callback) {
+class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog: DebugLog, val paths: ApplicationPaths) : AIService(driver, apiToken, debugLog) {
+	fun request(approach: AIResolverConfiguration.Approach, snippets: ResolverSnippets, resolverPacket: ResolverPacket?, failureHandler: FailureHandler, callback: Callback) {
 		var debugStep = 0
 
 		val idToStepToDebugDetails = mutableMapOf<ResolverId, MutableMap<String, String>>()
@@ -87,7 +87,7 @@ class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, va
 		callback.finish()
 	}
 
-	private fun createSummarizeInput(snippets: ResolverSnippets, approach: OpenAIResolverConfiguration.Approach, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+	private fun createSummarizeInput(snippets: ResolverSnippets, approach: AIResolverConfiguration.Approach, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
 		val input = JSONArray()
 		val debugDetailsBuilderMain = StringBuilder()
 		addMessage(approach.summarizeMainInstruction, input, debugDetailsBuilderMain)
@@ -96,16 +96,16 @@ class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, va
 			val fileName = snippet.file.name
 			val debugDetailsBuilder = StringBuilder(debugDetailsBuilderMain).append("\n\n")
 
-			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.join(false), OpenAIRole.USER, input, debugDetailsBuilder)
-			addMessage("Filename '$fileName', CONFLICT-ID '$id', BASE version:\n\n" + snippet.base.join(false), OpenAIRole.USER, input, debugDetailsBuilder)
-			addMessage("Filename '$fileName', CONFLICT-ID '$id', OURS version:\n\n" + snippet.ours.join(false), OpenAIRole.USER, input, debugDetailsBuilder)
-			addMessage("Filename '$fileName', CONFLICT-ID '$id', THEIRS version:\n\n" + snippet.theirs.join(false), OpenAIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', BASE version:\n\n" + snippet.base.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', OURS version:\n\n" + snippet.ours.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', THEIRS version:\n\n" + snippet.theirs.join(false), AIRole.USER, input, debugDetailsBuilder)
 			putDebugDetails(id, "1-summarize-input", debugDetailsBuilder, idToStepToDebugDetails)
 		}
 		return input
 	}
 
-	private fun createMergeInput(approach: OpenAIResolverConfiguration.Approach, summaries: List<Summary>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+	private fun createMergeInput(approach: AIResolverConfiguration.Approach, summaries: List<Summary>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
 		val input = JSONArray()
 		val debugDetailsBuilderMain = StringBuilder()
 		addMessage(approach.mergeMainInstruction, input, debugDetailsBuilderMain)
@@ -113,13 +113,13 @@ class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, va
 			val id = summary.id
 			val debugDetailsBuilder = StringBuilder(debugDetailsBuilderMain).append("\n\n")
 
-			addMessage("```\n${summary.content}\n```", OpenAIRole.USER, input, debugDetailsBuilder)
+			addMessage("```\n${summary.content}\n```", AIRole.USER, input, debugDetailsBuilder)
 			putDebugDetails(id, "2-merge-input", debugDetailsBuilder, idToStepToDebugDetails)
 		}
 		return input
 	}
 
-	private fun createResolveInput(approach: OpenAIResolverConfiguration.Approach, snippets: ResolverSnippets, merges: List<Merge>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+	private fun createResolveInput(approach: AIResolverConfiguration.Approach, snippets: ResolverSnippets, merges: List<Merge>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
 		val idToMerge = merges.associateBy { it.id }
 		val input = JSONArray()
 		val debugDetailsBuilderMain = StringBuilder()
@@ -138,7 +138,7 @@ class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, va
 			builder.append("BASE version:\n```\n${snippet.base.join(true)}```\n\n")
 			builder.append("OURS version:\n```\n${snippet.ours.join(true)}```\n\n")
 			builder.append("THEIRS version:\n```\n${snippet.theirs.join(true)}```\n\n")
-			addMessage(builder.toString(), OpenAIRole.USER, input, debugDetailsBuilder)
+			addMessage(builder.toString(), AIRole.USER, input, debugDetailsBuilder)
 			putDebugDetails(id, "3-resolve-input", debugDetailsBuilder, idToStepToDebugDetails)
 		}
 		return input
@@ -278,14 +278,14 @@ class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, va
 		private const val KEY_INSTRUCTIONS = "INSTRUCTIONS:"
 		private const val KEY_RESOLUTION = "RESOLUTION:"
 
-		fun addMessage(instruction: OpenAIResolverConfiguration.Instruction, array: JSONArray, debugBuilder: StringBuilder) {
+		fun addMessage(instruction: AIResolverConfiguration.Instruction, array: JSONArray, debugBuilder: StringBuilder) {
 			debugBuilder.append("ROLE: ${instruction.role.id}\n")
 			debugBuilder.append("${instruction.text}\n")
 			debugBuilder.append("\n")
 			array.add(createMessage(instruction))
 		}
 
-		fun addMessage(content: String, role: OpenAIRole, array: JSONArray, debugBuilder: StringBuilder) {
+		fun addMessage(content: String, role: AIRole, array: JSONArray, debugBuilder: StringBuilder) {
 			debugBuilder.append("ROLE: ${role.id}\n")
 			debugBuilder.append("$content\n")
 			debugBuilder.append("\n")
@@ -332,7 +332,7 @@ class OpenAIResolverService(apiToken: String, private val debugLog: DebugLog, va
 			debugLog.log(category, title, level, text)
 		}
 		
-		private fun createMessage(instruction: OpenAIResolverConfiguration.Instruction): JSONObject {
+		private fun createMessage(instruction: AIResolverConfiguration.Instruction): JSONObject {
 			return createMessage(instruction.text, instruction.role)
 		}
 

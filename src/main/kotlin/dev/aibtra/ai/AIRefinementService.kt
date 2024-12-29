@@ -2,7 +2,7 @@
  * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
  */
 
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import com.vladsch.flexmark.ast.*
 import com.vladsch.flexmark.parser.*
@@ -17,8 +17,8 @@ import org.json.simple.parser.*
 import java.io.*
 import java.util.function.*
 
-class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIService(apiToken, debugLog) {
-	fun request(profile: OpenAIRefinementConfiguration.Profile, part: FilteredText.Part, rawPriorConversation: RefinerConversation?, macroResolver: MacroResolver, callback: (result: Result) -> Boolean) {
+class AIRefinementService(driver: AIDriver, apiToken: String, debugLog: DebugLog) : AIService(driver, apiToken, debugLog) {
+	fun request(profile: AIRefinementConfiguration.Profile, part: FilteredText.Part, rawPriorConversation: RefinerConversation?, macroResolver: MacroResolver, callback: (result: Result) -> Boolean) {
 		val streaming = profile.streaming
 		val selectionMode = part.isPart()
 		val responseType = profile.responseType
@@ -78,12 +78,12 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 		})
 	}
 
-	private fun processResponse(message: String, content: String, responseType: OpenAIRefinementConfiguration.ResponseType, priorConversation: RefinerConversation?, newMessages: List<JSONObject>, callback: (result: Result) -> Boolean) {
+	private fun processResponse(message: String, content: String, responseType: AIRefinementConfiguration.ResponseType, priorConversation: RefinerConversation?, newMessages: List<JSONObject>, callback: (result: Result) -> Boolean) {
 		// We always have to create a conversation:
 		// - to signal that a streaming request is now finished (triggering a final ref-update)
 		// - to be able to display the output for Show Full Response
 		val conversation = createConversation(message, priorConversation, newMessages)
-		if (responseType == OpenAIRefinementConfiguration.ResponseType.CONTENT_FENCED) {
+		if (responseType == AIRefinementConfiguration.ResponseType.CONTENT_FENCED) {
 			val response = extractLastFencedCodeBlock(message).let {
 				val fixed = StringUtils.fixIndentation(it, content)
 				ensureLeadingAndTrailingWhitespaces(content, fixed)
@@ -144,7 +144,7 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 			val substring = firstMessage.take(TITLE_MAX_LENGTH)
 			val title = if (firstMessage.length > TITLE_MAX_LENGTH) "$substring..." else substring
 			val priorEntries: List<ConversationEntry> = priorConversation?.entries?.map { it as ConversationEntry } ?: listOf()
-			val assistantMessage = createMessage(message, OpenAIRole.ASSISTANT)
+			val assistantMessage = createMessage(message, AIRole.ASSISTANT)
 			return RefinerConversation(priorEntries + listOf(ConversationEntry(title, message, newMessages + assistantMessage)))
 		}
 
@@ -256,7 +256,7 @@ class OpenAIRefinementService(apiToken: String, debugLog: DebugLog) : OpenAIServ
 			val matcher = FuzzyMatcher.findBestMatch(content, old, focusStart, 16, old.length / 64)
 			val index = matcher.from
 			if (index < 0) {
-				LOG.info("OLD (as reported by OpenAI):")
+				LOG.info("OLD (as reported by AI):")
 				LOG.info(old)
 				LOG.info("CONTENT:")
 				LOG.info(content)

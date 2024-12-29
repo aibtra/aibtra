@@ -1,10 +1,10 @@
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import java.io.*
 
-class OpenAIResolverServiceTest {
+class AIResolverServiceTest {
 
 	@Test
 	fun testExactObject() {
@@ -258,7 +258,7 @@ class OpenAIResolverServiceTest {
 	}
 
 	private fun assert(content: String, json: String, focusStart: Int, expected: String) {
-		val actual = OpenAIRefinementService.applyJson(json, content, focusStart)
+		val actual = AIRefinementService.applyJson(json, content, focusStart)
 		Assertions.assertEquals(expected, actual)
 	}
 }

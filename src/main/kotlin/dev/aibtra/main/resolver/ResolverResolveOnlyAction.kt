@@ -7,7 +7,7 @@ package dev.aibtra.main.resolver
 import dev.aibtra.configuration.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 
 class ResolverResolveOnlyAction(
 	private val resolverManager: ResolverManager,
@@ -19,7 +19,7 @@ class ResolverResolveOnlyAction(
 		val state = resolverManager.state
 		state.snippets?.let { snippets ->
 			state.resolutions?.let { resolutions ->
-				val configuration = configurationProvider.get(OpenAIResolverConfiguration)
+				val configuration = configurationProvider.get(AIResolverConfiguration)
 				requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, resolutions.resolverPacket, configuration.profiles[0]))
 			}
 		}

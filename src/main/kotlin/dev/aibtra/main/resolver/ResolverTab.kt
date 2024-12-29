@@ -8,7 +8,7 @@ import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import java.awt.*
 import java.nio.file.*
 import javax.swing.*
@@ -159,7 +159,7 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 	}
 
 	fun initialize(overviewFile: Path) {
-		val configuration = environment.configurationProvider.get(OpenAIResolverConfiguration)
+		val configuration = environment.configurationProvider.get(AIResolverConfiguration)
 		requestManager.submit(ResolverRequestManager.Request(overviewFile, true, null, configuration.profiles[0]))
 	}
 

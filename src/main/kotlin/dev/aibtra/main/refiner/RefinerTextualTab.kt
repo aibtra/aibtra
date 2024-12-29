@@ -10,7 +10,7 @@ import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import dev.aibtra.refiner.*
 import dev.aibtra.refiner.RefinerDiffManager.*
 import java.awt.*
@@ -303,7 +303,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 				}
 
 				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
-				if (value is OpenAIProfile.Name) {
+				if (value is AIProfile.Name) {
 					label.text = value.title
 				}
 				else {
@@ -317,7 +317,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		comboBox.adjustWidth()
 
 		comboBox.addItemListener(object : ItemListener {
-			private var lastSelected: OpenAIProfile.Name
+			private var lastSelected: AIProfile.Name
 
 			init {
 				lastSelected = initialProfile.name
@@ -328,13 +328,13 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 				if (item is ProfileSeparator) {
 					Ui.runInEdt {
 						for (index in comboBox.selectedIndex - 1 downTo 0) {
-							(comboBox.getItemAt(index) as? OpenAIProfile.Name)?.let {
+							(comboBox.getItemAt(index) as? AIProfile.Name)?.let {
 								profileManager.setProfile(it)
 								return@runInEdt
 							}
 						}
 						for (index in comboBox.selectedIndex + 1 until comboBox.itemCount) {
-							(comboBox.getItemAt(index) as? OpenAIProfile.Name)?.let {
+							(comboBox.getItemAt(index) as? AIProfile.Name)?.let {
 								profileManager.setProfile(it)
 								return@runInEdt
 							}
@@ -343,7 +343,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 					return
 				}
 
-				(item as? OpenAIProfile.Name)?.let {
+				(item as? AIProfile.Name)?.let {
 					profileManager.setProfile(it)
 				}
 			}

@@ -2,9 +2,9 @@
  * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
  */
 
-@file:UseSerializers(OpenAIRefinementConfiguration.MainSerializer::class)
+@file:UseSerializers(AIRefinementConfiguration.MainSerializer::class)
 
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
@@ -17,7 +17,7 @@ import java.security.*
 import kotlin.jvm.optionals.*
 
 @Serializable
-data class OpenAIRefinementConfiguration(
+data class AIRefinementConfiguration(
 	val profiles: List<Profile?> = DEFAULT_PROFILES,
 	val workingModeToDefaultProfileId: Map<WorkingMode, String> = WORKING_MODE_TO_DEFAULT_PROFILE_ID,
 	val lastCommands: List<String> = listOf(),
@@ -26,7 +26,8 @@ data class OpenAIRefinementConfiguration(
 
 	@Serializable
 	data class Profile(
-		override val name: OpenAIProfile.Name,
+		override val provider: AIProvider,
+		override val name: AIProfile.Name,
 		val model: String,
 		val streaming: Boolean,
 		val supportsSchemes: Boolean = false,
@@ -38,7 +39,7 @@ data class OpenAIRefinementConfiguration(
 		val submitOnProfileChange: Boolean = false,
 		val wordWrap: Boolean = false,
 		val accelerator: String? = null
-	) : OpenAIProfile {
+	) : AIProfile {
 
 		fun supportsSelection(): Boolean {
 			for (instruction in mainInstructions) {
@@ -65,7 +66,7 @@ data class OpenAIRefinementConfiguration(
 	}
 
 	@Serializable
-	data class Instruction(val role: OpenAIRole, val text: String, val mode: InstructionMode = InstructionMode.ANY)
+	data class Instruction(val role: AIRole, val text: String, val mode: InstructionMode = InstructionMode.ANY)
 
 	enum class ResponseType {
 		CONTENT_AS_IS, CONTENT_FENCED;
@@ -81,7 +82,7 @@ data class OpenAIRefinementConfiguration(
 		} ?: PROOFREAD
 	}
 
-	companion object : ConfigurationFactory<OpenAIRefinementConfiguration> {
+	companion object : ConfigurationFactory<AIRefinementConfiguration> {
 		private const val PROOFREAD_ID = "proofread"
 		private const val CUSTOM_INSTRUCTIONS_ID = "custom-instructions"
 		private const val CODE_ADJUSTMENT_ID = "code-adjustment"
@@ -99,19 +100,20 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val PROOFREAD = Profile(
-			OpenAIProfile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),
+			AIProvider.OPENAI,
+			AIProfile.Name(PROOFREAD_ID, "Proofread (GPT-4o)"),
 			MODEL_4O,
 			true,
 			true,
 			listOf(
 				Instruction(
-					OpenAIRole.USER, "Correct typos and grammar in the markdown following " +
+					AIRole.USER, "Correct typos and grammar in the markdown following " +
 									"AND stay as close as possible to the original " +
 									"AND do not change the markdown structure " +
 									"AND preserve the detected language " +
 									"AND do not include additional comments in the response, but purely the correction:"
 				),
-				Instruction(OpenAIRole.USER, SELECTION_MACRO)
+				Instruction(AIRole.USER, SELECTION_MACRO)
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
@@ -121,19 +123,20 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val IMPROVE = Profile(
-			OpenAIProfile.Name("improve", "Improve Text (GPT-4o)"),
+			AIProvider.OPENAI,
+			AIProfile.Name("improve", "Improve Text (GPT-4o)"),
 			MODEL_4O,
 			true,
 			true,
 			listOf(
 				Instruction(
-					OpenAIRole.USER, "Proofread " +
+					AIRole.USER, "Proofread " +
 									"AND improve wording, but stay close to the original, only apply changes to quite uncommon wording " +
 									"AND do not change the markdown structure or indentation or other special symbols " +
 									"AND preserve the detected language " +
 									"AND do not include additional comments in the response, but purely the correction:"
 				),
-				Instruction(OpenAIRole.USER, SELECTION_MACRO)
+				Instruction(AIRole.USER, SELECTION_MACRO)
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
@@ -143,16 +146,17 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val TO_STANDARD_ENGLISH = Profile(
-			OpenAIProfile.Name("to-standard-english", "To Standard English (GPT-4o)"),
+			AIProvider.OPENAI,
+			AIProfile.Name("to-standard-english", "To Standard English (GPT-4o)"),
 			MODEL_4O,
 			true,
 			true,
 			listOf(
 				Instruction(
-					OpenAIRole.USER, "Rewrite to Standard English " +
+					AIRole.USER, "Rewrite to Standard English " +
 									"BUT stay as close as possible to the original:"
 				),
-				Instruction(OpenAIRole.USER, SELECTION_MACRO)
+				Instruction(AIRole.USER, SELECTION_MACRO)
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
@@ -161,13 +165,14 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val CUSTOM_INSTRUCTIONS = Profile(
-			OpenAIProfile.Name(CUSTOM_INSTRUCTIONS_ID, "Custom Instructions (GPT-4o)"),
+			AIProvider.OPENAI,
+			AIProfile.Name(CUSTOM_INSTRUCTIONS_ID, "Custom Instructions (GPT-4o)"),
 			MODEL_4O,
 			true,
 			false,
 			listOf(
-				Instruction(OpenAIRole.USER, COMMAND_MACRO),
-				Instruction(OpenAIRole.USER, SELECTION_MACRO)
+				Instruction(AIRole.USER, COMMAND_MACRO),
+				Instruction(AIRole.USER, SELECTION_MACRO)
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
@@ -175,13 +180,14 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val CODE_ADJUSTMENT = Profile(
-			OpenAIProfile.Name(CODE_ADJUSTMENT_ID, "Code adjustment (GPT-4o)"),
+			AIProvider.OPENAI,
+			AIProfile.Name(CODE_ADJUSTMENT_ID, "Code adjustment (GPT-4o)"),
 			MODEL_4O,
 			false,
 			false,
 			listOf(
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|Your objective is to apply the specified changes to a source code file:
 						|
@@ -194,7 +200,7 @@ data class OpenAIRefinementConfiguration(
 					""".trimMargin()
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|This is the file content:
 						|
@@ -204,7 +210,7 @@ data class OpenAIRefinementConfiguration(
 					""".trimMargin()
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
 						|Do not touch other parts of the file.
@@ -218,7 +224,7 @@ data class OpenAIRefinementConfiguration(
 			),
 			listOf(
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
 						|
@@ -226,7 +232,7 @@ data class OpenAIRefinementConfiguration(
 					""".trimMargin()
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					// When switching back and forth between selecting and entire file, it's important to ensure that we will get sent back the entire file.
 					"""
 						|The following is the complete content of the file. Make the requested modifications and ensure the response includes the entire updated file content.
@@ -238,7 +244,7 @@ data class OpenAIRefinementConfiguration(
 					InstructionMode.FULL_ONLY
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
 						|Do not touch other parts of the file.
@@ -255,13 +261,14 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val CODE_REFINEMENT = Profile(
-			OpenAIProfile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
+			AIProvider.OPENAI,
+			AIProfile.Name(CODE_REFINEMENT_ID, "Code refinement (o1-mini)"),
 			MODEL_O1_MINI,
 			false,
 			false,
 			listOf(
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|Your objective is to apply the specified changes to a source code file:
 						|
@@ -274,7 +281,7 @@ data class OpenAIRefinementConfiguration(
 					""".trimMargin()
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|This is the file content:
 						|
@@ -284,7 +291,7 @@ data class OpenAIRefinementConfiguration(
 					""".trimMargin()
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|The given changes should be applied only to following portion of the file and only this modified portion should be sent back.
 						|Do not touch other parts of the file.
@@ -298,7 +305,7 @@ data class OpenAIRefinementConfiguration(
 			),
 			listOf(
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
 						|
@@ -306,7 +313,7 @@ data class OpenAIRefinementConfiguration(
 					""".trimMargin()
 				),
 				Instruction(
-					OpenAIRole.USER,
+					AIRole.USER,
 					"""
 						|This is the file content:
 						|
@@ -322,13 +329,14 @@ data class OpenAIRefinementConfiguration(
 		)
 
 		private val GENERIC_O1_MINI = Profile(
-			OpenAIProfile.Name(GENERIC_O1_MINI_ID, "Generic o1-mini"),
+			AIProvider.OPENAI,
+			AIProfile.Name(GENERIC_O1_MINI_ID, "Generic o1-mini"),
 			MODEL_O1_MINI,
 			false,
 			false,
 			listOf(
-				Instruction(OpenAIRole.USER, COMMAND_MACRO),
-				Instruction(OpenAIRole.USER, CONTENT_MACRO)
+				Instruction(AIRole.USER, COMMAND_MACRO),
+				Instruction(AIRole.USER, CONTENT_MACRO)
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
@@ -337,11 +345,11 @@ data class OpenAIRefinementConfiguration(
 
 		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
 
-		override fun name(): String = "openai-profiles"
+		override fun name(): String = "ai-refiner"
 
-		override fun default(): OpenAIRefinementConfiguration = OpenAIRefinementConfiguration()
+		override fun default(): AIRefinementConfiguration = AIRefinementConfiguration()
 
-		override fun createSerializer(): KSerializer<OpenAIRefinementConfiguration> {
+		override fun createSerializer(): KSerializer<AIRefinementConfiguration> {
 			return MainSerializer
 		}
 
@@ -359,7 +367,7 @@ data class OpenAIRefinementConfiguration(
 			}
 		}
 
-		fun replaceProfile(originalConfig: OpenAIRefinementConfiguration, targetProfile: Profile, change: (Profile) -> Profile): OpenAIRefinementConfiguration {
+		fun replaceProfile(originalConfig: AIRefinementConfiguration, targetProfile: Profile, change: (Profile) -> Profile): AIRefinementConfiguration {
 			return originalConfig.copy(profiles = originalConfig.profiles.map { profile ->
 				if (profile === targetProfile) {
 					change(profile)
@@ -384,10 +392,10 @@ data class OpenAIRefinementConfiguration(
 		}
 	}
 
-	object MainSerializer : KSerializer<OpenAIRefinementConfiguration> {
+	object MainSerializer : KSerializer<AIRefinementConfiguration> {
 		override val descriptor: SerialDescriptor = serializer().descriptor
 
-		override fun deserialize(decoder: Decoder): OpenAIRefinementConfiguration {
+		override fun deserialize(decoder: Decoder): AIRefinementConfiguration {
 			var configuration = serializer().deserialize(decoder)
 			val idToHashDefault = HashMap(createProfileIdToHash(DEFAULT_PROFILES))
 			for (profile in configuration.profiles.filterNotNull()) {
@@ -419,26 +427,26 @@ data class OpenAIRefinementConfiguration(
 			return configuration
 		}
 
-		override fun serialize(encoder: Encoder, value: OpenAIRefinementConfiguration) {
+		override fun serialize(encoder: Encoder, value: AIRefinementConfiguration) {
 			serializer().serialize(encoder, value)
 		}
 
-		private fun addProfile(originalConfig: OpenAIRefinementConfiguration, targetProfile: Profile): OpenAIRefinementConfiguration {
+		private fun addProfile(originalConfig: AIRefinementConfiguration, targetProfile: Profile): AIRefinementConfiguration {
 			return originalConfig.copy(profiles = originalConfig.profiles + targetProfile)
 		}
 
-		private fun removeProfile(originalConfig: OpenAIRefinementConfiguration, targetProfile: Profile): OpenAIRefinementConfiguration {
+		private fun removeProfile(originalConfig: AIRefinementConfiguration, targetProfile: Profile): AIRefinementConfiguration {
 			return originalConfig.copy(profiles = originalConfig.profiles.filter { it !== targetProfile })
 		}
 
-		private fun updateHash(originalConfig: OpenAIRefinementConfiguration, profile: Profile): OpenAIRefinementConfiguration {
+		private fun updateHash(originalConfig: AIRefinementConfiguration, profile: Profile): AIRefinementConfiguration {
 			val id = profile.name.id
 			val hash = createProfileHash(profile)
 			val replacedProfileIdToHash: Map<String, String> = originalConfig.profileIdToHash + (id to hash)
 			return originalConfig.copy(profileIdToHash = replacedProfileIdToHash)
 		}
 
-		private fun removeHash(originalConfig: OpenAIRefinementConfiguration, profileId: String): OpenAIRefinementConfiguration {
+		private fun removeHash(originalConfig: AIRefinementConfiguration, profileId: String): AIRefinementConfiguration {
 			val replacedProfileIdToHash: Map<String, String> = originalConfig.profileIdToHash - profileId
 			return originalConfig.copy(profileIdToHash = replacedProfileIdToHash)
 		}

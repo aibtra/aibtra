@@ -8,7 +8,7 @@ import dev.aibtra.core.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import dev.aibtra.text.*
 import java.awt.*
 import javax.swing.*
@@ -153,7 +153,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 		}
 
 		fun updateEnabledState() {
-			(profileComboBox.selectedItem as? OpenAIProfile.Name)?.let { name ->
+			(profileComboBox.selectedItem as? AIProfile.Name)?.let { name ->
 				profileManager.getProfile(name)?.let { profile ->
 					comboBox.isEnabled = profile.supportsSchemes
 				}

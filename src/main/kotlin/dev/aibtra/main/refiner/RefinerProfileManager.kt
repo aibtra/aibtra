@@ -2,29 +2,29 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.configuration.*
 import dev.aibtra.core.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 
 class RefinerProfileManager(private val workingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
 
-	private val listeners = ArrayList<(OpenAIProfile.Name, OpenAIProfile.Name) -> Unit>()
-	private var name: OpenAIProfile.Name = configurationProvider.get(OpenAIRefinementConfiguration).currentProfile(workingMode).name
+	private val listeners = ArrayList<(AIProfile.Name, AIProfile.Name) -> Unit>()
+	private var name: AIProfile.Name = configurationProvider.get(AIRefinementConfiguration).currentProfile(workingMode).name
 
-	fun profile(): OpenAIRefinementConfiguration.Profile {
-		val configuration = configurationProvider.get(OpenAIRefinementConfiguration)
+	fun profile(): AIRefinementConfiguration.Profile {
+		val configuration = configurationProvider.get(AIRefinementConfiguration)
 		return configuration.profile(name.id) ?: configuration.currentProfile(workingMode)
 	}
 
-	fun profiles(): List<OpenAIRefinementConfiguration.Profile?> {
-		val configuration = configurationProvider.get(OpenAIRefinementConfiguration)
+	fun profiles(): List<AIRefinementConfiguration.Profile?> {
+		val configuration = configurationProvider.get(AIRefinementConfiguration)
 		return configuration.profiles
 	}
 
-	fun getProfile(name: OpenAIProfile.Name): OpenAIRefinementConfiguration.Profile? {
-		val configuration = configurationProvider.get(OpenAIRefinementConfiguration)
+	fun getProfile(name: AIProfile.Name): AIRefinementConfiguration.Profile? {
+		val configuration = configurationProvider.get(AIRefinementConfiguration)
 		return configuration.profile(name.id)
 	}
 
-	fun setProfile(name: OpenAIProfile.Name) {
+	fun setProfile(name: AIProfile.Name) {
 		if (name.id == this.name.id) {
 			return
 		}
@@ -32,7 +32,7 @@ class RefinerProfileManager(private val workingMode: WorkingMode, val configurat
 		val lastName = this.name
 		this.name = name
 
-		configurationProvider.change(OpenAIRefinementConfiguration) {
+		configurationProvider.change(AIRefinementConfiguration) {
 			it.copy(workingModeToDefaultProfileId = it.workingModeToDefaultProfileId.plus(workingMode to name.id))
 		}
 
@@ -40,7 +40,7 @@ class RefinerProfileManager(private val workingMode: WorkingMode, val configurat
 	}
 
 	fun overrideProfile(id: String) {
-		val name = configurationProvider.get(OpenAIRefinementConfiguration).profile(id)?.name
+		val name = configurationProvider.get(AIRefinementConfiguration).profile(id)?.name
 		if (name == null || name.id == this.name.id) {
 			return
 		}
@@ -50,15 +50,15 @@ class RefinerProfileManager(private val workingMode: WorkingMode, val configurat
 		fireChanged(name, name)
 	}
 
-	fun updateCurrentProfile(update: (OpenAIRefinementConfiguration.Profile) -> OpenAIRefinementConfiguration.Profile): OpenAIRefinementConfiguration.Profile {
-		configurationProvider.change(OpenAIRefinementConfiguration) {
-			OpenAIRefinementConfiguration.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
+	fun updateCurrentProfile(update: (AIRefinementConfiguration.Profile) -> AIRefinementConfiguration.Profile): AIRefinementConfiguration.Profile {
+		configurationProvider.change(AIRefinementConfiguration) {
+			AIRefinementConfiguration.replaceProfile(it, it.currentProfile(workingMode)) { profile -> update(profile) }
 		}
 		fireChanged(name, name)
-		return configurationProvider.get(OpenAIRefinementConfiguration).currentProfile(workingMode)
+		return configurationProvider.get(AIRefinementConfiguration).currentProfile(workingMode)
 	}
 
-	fun addListener(listener: (OpenAIProfile.Name, OpenAIProfile.Name) -> Unit) {
+	fun addListener(listener: (AIProfile.Name, AIProfile.Name) -> Unit) {
 		listeners.add(listener)
 	}
 
@@ -66,7 +66,7 @@ class RefinerProfileManager(private val workingMode: WorkingMode, val configurat
 		fireChanged(name, name)
 	}
 
-	private fun fireChanged(lastName: OpenAIProfile.Name, name: OpenAIProfile.Name) {
+	private fun fireChanged(lastName: AIProfile.Name, name: AIProfile.Name) {
 		listeners.forEach { it(lastName, name) }
 	}
 }

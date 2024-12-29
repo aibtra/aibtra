@@ -5,11 +5,11 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import javax.swing.*
 
 class RefinerSetProfileAction(
-	profile: OpenAIProfile.Name,
+	profile: AIProfile.Name,
 	profileManager: RefinerProfileManager,
 	radioButtonGroup: ButtonGroup
 ) : MainMenuAction("profile-" + profile.id, profile.title, profileManager.getProfile(profile)?.accelerator, null, {
