@@ -340,7 +340,7 @@ data class AIRefinementConfiguration(
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
-			RefinerDiffManager.Config(false, false, DiffTokenizingMode.ALPHANUMERIC, false)
+			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
 		)
 
 		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
