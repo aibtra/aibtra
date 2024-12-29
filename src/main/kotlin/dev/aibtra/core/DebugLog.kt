@@ -14,9 +14,10 @@ import java.time.*
 import java.time.format.*
 
 class DebugLog(
-	val config: Config
+	val config: Config,
+	val settingsPath: Path
 ) {
-	private val debugDirectory = initializeDebugDirectory(config)
+	private val debugDirectory = initializeDebugDirectory(config, settingsPath)
 	private val debugStartTime = System.currentTimeMillis()
 
 	fun run(category: String, title: String, level: Level, task: (log: Log, logActive: Boolean) -> Unit) {
@@ -63,13 +64,13 @@ class DebugLog(
 		private val LOG = Logger.getLogger(this::class)
 		private val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
 
-		fun initializeDebugDirectory(config: Config): Path? {
+		fun initializeDebugDirectory(config: Config, settingsPath: Path): Path? {
 			if (config.directory == null) {
 				return null
 			}
 
 			return try {
-				val dir = Path.of(config.directory)
+				val dir = settingsPath.resolve(Path.of(config.directory))
 				Files.createDirectories(dir)
 				dir
 			} catch (e: Exception) {

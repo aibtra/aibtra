@@ -25,5 +25,5 @@ class MainApplication(
 	override val frameManager = FrameManager()
 	override val theme = Theme(configurationProvider)
 	override val hotkeyListener = HotkeyListener(configurationProvider, frameManager)
-	override val debugLog = DebugLog(configurationProvider.get(DebugLog.Config))
+	override val debugLog = DebugLog(configurationProvider.get(DebugLog.Config), paths.settingsPath)
 }
