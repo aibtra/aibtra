@@ -2,22 +2,23 @@
  * Copyright 2023 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
  */
 
-@file:UseSerializers(OpenAIRefinementConfiguration.MainSerializer::class)
+@file:UseSerializers(AIRefinementConfiguration.MainSerializer::class)
 
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import dev.aibtra.configuration.*
 import kotlinx.serialization.*
 
 @Serializable
-data class OpenAIResolverConfiguration(
+data class AIResolverConfiguration(
 	val profiles: List<Profile> = DEFAULT_PROFILES
 ) {
 	@Serializable
 	data class Profile(
-		override val name: OpenAIProfile.Name,
+		override val provider: AIProvider,
+		override val name: AIProfile.Name,
 		val approaches: List<Approach>
-	) : OpenAIProfile
+	) : AIProfile
 
 	@Serializable
 	data class Approach(
@@ -38,19 +39,19 @@ data class OpenAIResolverConfiguration(
 	sealed interface Atom
 
 	@Serializable
-	data class Instruction(val role: OpenAIRole, val text: String) : Atom
+	data class Instruction(val role: AIRole, val text: String) : Atom
 
 	fun profile(id: String): Profile? {
 		return profiles.find { it.name.id == id }
 	}
 
-	companion object : ConfigurationFactory<OpenAIResolverConfiguration> {
+	companion object : ConfigurationFactory<AIResolverConfiguration> {
 		private const val MODEL_O1_MINI = "o1-mini"
 
 		private val THREE_STAGE_APPROACH = Approach(
 			MODEL_O1_MINI,
 			Instruction(
-				OpenAIRole.USER,
+				AIRole.USER,
 				"""
 					For the following code snippets, there have been concurrent changes from BASE to OURS and from BASE to THEIRS.
 					
@@ -75,7 +76,7 @@ data class OpenAIResolverConfiguration(
 				""".trimIndent()
 			),
 			Instruction(
-				OpenAIRole.USER,
+				AIRole.USER,
 				"""
 					Below are multiple sets of high-level instructions for various source code conflicts, each containing conflicting directives labeled as OURS and THEIRS.
 					
@@ -95,7 +96,7 @@ data class OpenAIResolverConfiguration(
 				""".trimIndent()
 			),
 			Instruction(
-				OpenAIRole.USER,
+				AIRole.USER,
 				"""
 					Below is a set of conflicts between BASE and OURS, as well as between BASE and THEIRS.
 					
@@ -124,15 +125,16 @@ data class OpenAIResolverConfiguration(
 		)
 
 		private val DEFAULT = Profile(
-			OpenAIProfile.Name("Default", "Default (o1-mini)"),
+			AIProvider.OPENAI,
+			AIProfile.Name("Default", "Default (o1-mini)"),
 			listOf(THREE_STAGE_APPROACH)
 		)
 
 		private val DEFAULT_PROFILES = listOf(DEFAULT)
 
-		override fun name(): String = "openai-resolver"
+		override fun name(): String = "ai-resolver"
 
-		override fun default(): OpenAIResolverConfiguration = OpenAIResolverConfiguration()
+		override fun default(): AIResolverConfiguration = AIResolverConfiguration()
 	}
 }
 

@@ -1,19 +1,17 @@
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import dev.aibtra.core.*
-import dev.aibtra.core.JsonUtils.Companion.objNotNull
 import org.json.simple.*
 import org.json.simple.parser.*
 import java.io.*
 import java.net.*
 import java.nio.charset.*
 
-open class OpenAIService(private val apiToken: String, private val debugLog: DebugLog) {
+open class AIService(private val driver: AIDriver, private val apiToken: String, private val debugLog: DebugLog) {
 
 	protected fun request(model: String, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
 		val input = JSONObject()
-		input["model"] = model
-		input["n"] = 1
+		driver.initializeInput(model, input)
 		input["messages"] = messages
 
 		val streaming = handler is StreamingHandler
@@ -21,7 +19,7 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 			input["stream"] = true
 		}
 
-		val url = URI("https://api.openai.com/v1/chat/completions").toURL()
+		val url = driver.getCompletionsURI().toURL()
 		val connection = url.openConnection() as HttpURLConnection
 		val startTime = System.currentTimeMillis()
 
@@ -30,10 +28,10 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 		try {
 			connection.doOutput = true
 			connection.requestMethod = "POST"
-			connection.addRequestProperty("Authorization", "Bearer $apiToken")
 			connection.addRequestProperty("Content-Type", "application/json")
+			driver.initializeConnection(connection, apiToken)
 
-			debugLog.run("openai", "network", DebugLog.Level.INFO) { log: DebugLog.Log, _: Boolean ->
+			debugLog.run("aiService", "network", DebugLog.Level.INFO) { log: DebugLog.Log, _: Boolean ->
 				val jsonInput = input.toJSONString()
 				log.println("SEND: ")
 				log.println(JsonUtils.formatJson(jsonInput))
@@ -72,17 +70,10 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 								is ResultHandler -> {
 									InputStreamReader(input, StandardCharsets.UTF_8).use {
 										val parser = JSONParser()
-										val result = parser.parse(it)
+										val result = parser.parse(it) as? JSONObject ?: throw IOException("Invalid response (no JSON)")
 										log.println(result.toString())
 
-										val choices = objNotNull<JSONArray>(result, "choices")
-										if (choices.size != 1) {
-											throw IOException("Unexpected number of 'choices'")
-										}
-										val choice = requireNotNull(choices[0])
-										val messageOut = objNotNull<JSONObject>(choice, "message")
-										val message = objNotNull<String>(messageOut, "content")
-
+										val message = driver.processCompleteResponse(result)
 										measureRequestTime(startTime, requestId)
 										handler.process(message)
 									}
@@ -121,24 +112,18 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 	}
 
 	private fun parseDataChunk(data: String, builder: StringBuilder, handler: StreamingHandler): Boolean {
-		return StringReader(data).use {
+		return StringReader(data).use { reader ->
 			val parser = JSONParser()
-			val result = parser.parse(it)
-			val choices = objNotNull<JSONArray>(result, "choices")
-			if (choices.size != 1) {
-				throw IOException("Unexpected number of 'choices'")
-			}
-
-			val choice = requireNotNull(choices[0])
-			val messageOut = objNotNull<JSONObject>(choice, "delta")
-			if (JsonUtils.objMaybeNull<String>(choice, "finish_reason") == null) {
-				val message = objNotNull<Any>(messageOut, "content")
-				builder.append(message)
-				handler.process(builder)
-			}
-			else {
-				false
-			}
+			val result = parser.parse(reader) as? JSONObject ?: throw IOException("Invalid response (no JSON)")
+			driver.processStreamingChunk(result)?.let { chunk ->
+				if (chunk.isNotEmpty()) {
+					builder.append(chunk)
+					handler.process(builder)
+				}
+				else {
+					true
+				}
+			} ?: false
 		}
 	}
 
@@ -163,11 +148,11 @@ open class OpenAIService(private val apiToken: String, private val debugLog: Deb
 		private val LOG = Logger.getLogger(this::class)
 		private val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
 
-		fun addMessage(content: String, role: OpenAIRole, array: JSONArray) {
+		fun addMessage(content: String, role: AIRole, array: JSONArray) {
 			array.add(createMessage(content, role))
 		}
 
-		fun createMessage(content: String, role: OpenAIRole): JSONObject {
+		fun createMessage(content: String, role: AIRole): JSONObject {
 			val message = JSONObject()
 			message["role"] = role.id
 			message["content"] = content

@@ -1,8 +1,10 @@
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import kotlinx.serialization.*
 
-interface OpenAIProfile {
+interface AIProfile {
+	val provider: AIProvider
+
 	val name: Name
 
 	@Serializable

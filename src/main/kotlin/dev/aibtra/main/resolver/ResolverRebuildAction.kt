@@ -7,7 +7,7 @@ package dev.aibtra.main.resolver
 import dev.aibtra.configuration.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import java.util.concurrent.atomic.*
 
 class ResolverRebuildAction(
@@ -39,7 +39,7 @@ class ResolverRebuildAction(
 			else {
 				saver.checkSave { snippets ->
 					snippets?.let {
-						val configuration = configurationProvider.get(OpenAIResolverConfiguration)
+						val configuration = configurationProvider.get(AIResolverConfiguration)
 						requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, null, configuration.profiles[0]))
 					}
 				}

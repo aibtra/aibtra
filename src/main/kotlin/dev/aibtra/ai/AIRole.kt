@@ -1,9 +1,9 @@
-package dev.aibtra.openai
+package dev.aibtra.ai
 
 import kotlinx.serialization.*
 
 @Suppress("unused")
 @Serializable
-enum class OpenAIRole(val id: String) {
+enum class AIRole(val id: String) {
 	USER("user"), SYSTEM("system"), ASSISTANT("assistant")
 }

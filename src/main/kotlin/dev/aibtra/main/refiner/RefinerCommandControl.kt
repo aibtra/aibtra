@@ -2,7 +2,7 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.configuration.*
 import dev.aibtra.gui.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import dev.aibtra.refiner.*
 import java.awt.*
 import java.awt.event.*
@@ -18,7 +18,7 @@ class RefinerCommandControl(val refinerDiffManager: RefinerDiffManager, val conf
 	private val mainPanel = JPanel()
 	private val enterListeners = ArrayList<(ev: KeyEvent) -> Unit>()
 
-	private var profile: OpenAIRefinementConfiguration.Profile? = null
+	private var profile: AIRefinementConfiguration.Profile? = null
 	private var conversation: RefinerConversation? = null
 
 	init {
@@ -61,7 +61,7 @@ class RefinerCommandControl(val refinerDiffManager: RefinerDiffManager, val conf
 		})
 	}
 
-	fun setProfile(profile: OpenAIRefinementConfiguration.Profile?) {
+	fun setProfile(profile: AIRefinementConfiguration.Profile?) {
 		if (this.profile != profile) {
 			if (this.conversation != null) {
 				resetCommand()
@@ -95,7 +95,7 @@ class RefinerCommandControl(val refinerDiffManager: RefinerDiffManager, val conf
 
 		conversation.let { conversation ->
 			if (conversation == null || conversation.isEmpty()) {
-				configurationProvider.change(OpenAIRefinementConfiguration) { configuration ->
+				configurationProvider.change(AIRefinementConfiguration) { configuration ->
 					val newCommands = configuration.lastCommands.stream().filter { it != command && it.isNotBlank() }.collect(Collectors.toList())
 					newCommands.addFirst(command)
 
@@ -116,7 +116,7 @@ class RefinerCommandControl(val refinerDiffManager: RefinerDiffManager, val conf
 	}
 
 	private fun updateInstructions(): Boolean {
-		val split: List<String>? = profile?.let { OpenAIRefinementConfiguration.getCommandInstructions(it, conversation != null) }
+		val split: List<String>? = profile?.let { AIRefinementConfiguration.getCommandInstructions(it, conversation != null) }
 		if (split == null || split.size != 2) {
 			mainPanel.isVisible = false
 			return false
@@ -156,7 +156,7 @@ class RefinerCommandControl(val refinerDiffManager: RefinerDiffManager, val conf
 	}
 
 	private fun resetCommand() {
-		configurationProvider.get(OpenAIRefinementConfiguration).lastCommands.firstOrNull()?.let {
+		configurationProvider.get(AIRefinementConfiguration).lastCommands.firstOrNull()?.let {
 			commandArea.text = it
 		}
 	}

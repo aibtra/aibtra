@@ -1,10 +1,10 @@
-package dev.aibtra.openai
+package dev.aibtra.ai
 
-import dev.aibtra.openai.OpenAIResolverService.*
+import dev.aibtra.ai.AIResolverService.*
 import dev.aibtra.resolver.*
 import org.junit.jupiter.api.*
 
-class OpenAIRefinementServiceTest {
+class AIRefinementServiceTest {
 
 	@Test
 	fun testAssertResolutionsExpectedFormat() {
@@ -111,7 +111,7 @@ class OpenAIRefinementServiceTest {
 
 	private fun assertResolutions(input: String, vararg expectedResolutions: Resolution) {
 		val expected = expectedResolutions.asList().map { Pair(it.id, it.resolution) }
-		val actual = OpenAIResolverService.extractResolutions(input, mutableMapOf()).map { Pair(it.id, it.resolution) }
+		val actual = AIResolverService.extractResolutions(input, mutableMapOf()).map { Pair(it.id, it.resolution) }
 		Assertions.assertEquals(expected, actual)
 	}
 }

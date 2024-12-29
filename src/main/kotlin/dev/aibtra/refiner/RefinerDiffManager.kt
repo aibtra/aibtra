@@ -3,7 +3,7 @@ package dev.aibtra.refiner
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.gui.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
@@ -93,7 +93,7 @@ class RefinerDiffManager(
 		}
 	}
 
-	fun updateProfile(profileName: OpenAIProfile.Name) {
+	fun updateProfile(profileName: AIProfile.Name) {
 		Ui.assertEdt()
 
 		data.let {
@@ -251,9 +251,9 @@ class RefinerDiffManager(
 		}
 	}
 
-	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?)
+	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?)
 
-	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val syntaxType: SyntaxType, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?, val callback: Runnable?)
+	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val syntaxType: SyntaxType, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?, val callback: Runnable?)
 
 	private class Data(val input: Input, val state: State, val sequenceId: Int)
 

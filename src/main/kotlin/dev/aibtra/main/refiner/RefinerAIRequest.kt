@@ -2,18 +2,18 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.core.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import dev.aibtra.refiner.*
 import dev.aibtra.text.*
 
-class RefinerOpenAIRequest(val profile: OpenAIRefinementConfiguration.Profile, private val service: OpenAIRefinementService, val retrieveCommand: () -> String) : RefinerRequestManager.Request {
+class RefinerAIRequest(val profile: AIRefinementConfiguration.Profile, private val service: AIRefinementService, val retrieveCommand: () -> String) : RefinerRequestManager.Request {
 	override fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RefinerRequestManager.RequestCallback, failureHandler: RequestManagerFailureHandler) {
 		val part = filtered.clean
 		val macroResolver = MacroResolver {
 			when (it) {
-				OpenAIRefinementConfiguration.CONTENT_MACRO -> part.all
-				OpenAIRefinementConfiguration.SELECTION_MACRO -> part.extract
-				OpenAIRefinementConfiguration.COMMAND_MACRO -> retrieveCommand()
+				AIRefinementConfiguration.CONTENT_MACRO -> part.all
+				AIRefinementConfiguration.SELECTION_MACRO -> part.extract
+				AIRefinementConfiguration.COMMAND_MACRO -> retrieveCommand()
 				else -> null
 			}
 		}

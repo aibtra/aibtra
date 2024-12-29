@@ -7,7 +7,7 @@ package dev.aibtra.main.resolver
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.content.*
-import dev.aibtra.openai.*
+import dev.aibtra.ai.*
 import dev.aibtra.resolver.*
 import kotlinx.coroutines.*
 import java.io.*
@@ -29,7 +29,7 @@ class ResolverRequestManager(
 	fun submit(request: Request) {
 		Submitter(environment, dialogDisplayer) { apiToken, failureHandler ->
 			schedule(request, apiToken, failureHandler)
-		}.submit()
+		}.submit(request.profile.provider)
 	}
 
 	fun stopCurrent() {
@@ -99,17 +99,17 @@ class ResolverRequestManager(
 			return null
 		}
 
-		val service = OpenAIResolverService(apiToken, environment.debugLog, environment.paths)
-		val profile: OpenAIResolverConfiguration.Profile = request.profile
+		val service = AIResolverService(request.profile.provider.driver, apiToken, environment.debugLog, environment.paths)
+		val profile: AIResolverConfiguration.Profile = request.profile
 		val approaches = profile.approaches
 		require(approaches.size == 1)
 
 		var result: ResolverResolutions? = null
-		service.request(approaches[0], snippets, request.resolverPacket, object : OpenAIService.FailureHandler {
+		service.request(approaches[0], snippets, request.resolverPacket, object : AIService.FailureHandler {
 			override fun process(failure: IOException, mightBeAuthentication: Boolean) {
 				failureHandler.process(failure, mightBeAuthentication)
 			}
-		}, object : OpenAIResolverService.Callback {
+		}, object : AIResolverService.Callback {
 			override fun startSummaries() {
 				progressTexter("summarizing")
 			}
@@ -154,7 +154,7 @@ class ResolverRequestManager(
 		fun setInProgress(inProgress: Boolean)
 	}
 
-	class Request(val overviewFile: Path, val skipInCaseOfWarnings: Boolean, val resolverPacket: ResolverPacket?, val profile: OpenAIResolverConfiguration.Profile)
+	class Request(val overviewFile: Path, val skipInCaseOfWarnings: Boolean, val resolverPacket: ResolverPacket?, val profile: AIResolverConfiguration.Profile)
 
 	companion object {
 		const val CONTEXT_SIZE = 10
