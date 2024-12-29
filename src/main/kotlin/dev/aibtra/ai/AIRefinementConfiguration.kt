@@ -84,9 +84,9 @@ data class AIRefinementConfiguration(
 
 	companion object : ConfigurationFactory<AIRefinementConfiguration> {
 		private const val PROOFREAD_ID = "proofread"
-		private const val CUSTOM_INSTRUCTIONS_ID = "custom-instructions"
 		private const val CODE_ADJUSTMENT_ID = "code-adjustment"
 		private const val CODE_REFINEMENT_ID = "code-refinement"
+		private const val GENERIC_GPT_4O_ID = "generic-gpt-4o"
 		private const val GENERIC_O1_MINI_ID = "generic-o1-mini"
 		const val CONTENT_MACRO = "\${CONTENT}"
 		const val SELECTION_MACRO = "\${SELECTION}"
@@ -164,9 +164,9 @@ data class AIRefinementConfiguration(
 			wordWrap = true
 		)
 
-		private val CUSTOM_INSTRUCTIONS = Profile(
+		private val GENERIC_GPT_4O = Profile(
 			AIProvider.OPENAI,
-			AIProfile.Name(CUSTOM_INSTRUCTIONS_ID, "Custom Instructions (GPT-4o)"),
+			AIProfile.Name(GENERIC_GPT_4O_ID, "Generic GPT-4o"),
 			MODEL_4O,
 			true,
 			false,
@@ -176,7 +176,7 @@ data class AIRefinementConfiguration(
 			),
 			null,
 			ResponseType.CONTENT_AS_IS,
-			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, true)
+			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
 		)
 
 		private val CODE_ADJUSTMENT = Profile(
@@ -343,7 +343,7 @@ data class AIRefinementConfiguration(
 			RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
 		)
 
-		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, CUSTOM_INSTRUCTIONS, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
+		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, GENERIC_GPT_4O, CODE_ADJUSTMENT, null, CODE_REFINEMENT, GENERIC_O1_MINI)
 
 		override fun name(): String = "ai-refiner"
 
