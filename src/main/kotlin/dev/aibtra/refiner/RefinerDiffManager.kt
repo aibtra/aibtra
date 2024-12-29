@@ -3,6 +3,7 @@ package dev.aibtra.refiner
 import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.gui.*
+import dev.aibtra.openai.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Runnable
@@ -18,7 +19,7 @@ class RefinerDiffManager(
 	private val stateListeners = ArrayList<(State, State) -> Unit>()
 	val scrollState = ScrollState()
 
-	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", INITIAL_CONFIG, true, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), Diff.INITIAL, false), 0)
+	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", INITIAL_CONFIG, true, null, null, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), Diff.INITIAL, false, null, null), 0)
 
 	val state: State
 		get() = data.state
@@ -65,16 +66,43 @@ class RefinerDiffManager(
 		}
 	}
 
-	fun updateRefText(ref: String, finished: Boolean) {
+	fun updateRefText(ref: String, conversation: RefinerConversation?) {
 		Ui.assertEdt()
 
 		data.let {
-			if (it.input.ref == ref && it.input.finished == finished) {
+			if (it.input.ref == ref && it.input.conversation == conversation) {
 				return
 			}
 
 			// Once starting the refinement, this will be no more the "initial" state, hence reset rawOrg
-			updateState(it.input.copy(ref = ref, finished = finished), finished, if (finished) "updateRef" else null)
+			val finished = conversation != null
+			val newConversation = conversation ?: data.input.conversation
+			updateState(it.input.copy(ref = ref, finished = finished, conversation = newConversation), finished, if (finished) "updateRef" else null)
+		}
+	}
+
+	fun updateConversation(conversation: RefinerConversation?) {
+		Ui.assertEdt()
+
+		data.let {
+			if (it.input.conversation == conversation) {
+				return
+			}
+
+			val finished = conversation != null
+			updateState(it.input.copy(finished = finished, conversation = conversation), finished, if (finished) "updateConversation" else null)
+		}
+	}
+
+	fun updateProfile(profileName: OpenAIProfile.Name) {
+		Ui.assertEdt()
+
+		data.let {
+			if (it.input.profileName == profileName) {
+				return
+			}
+
+			updateState(it.input.copy(profileName = profileName, conversation = null), it.input.finished, "updateProfile")
 		}
 	}
 
@@ -133,6 +161,8 @@ class RefinerDiffManager(
 
 				val raw = input.raw
 				val ref = input.ref
+				val conversation = input.conversation
+				val profileName = input.profileName
 				val config = input.config
 				val finished = input.finished
 				val selection = input.raw.isPart()
@@ -155,7 +185,7 @@ class RefinerDiffManager(
 					DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED
 				}
 				val (refFormatted, refChars) = DiffFormatter(mode).format(diff)
-				val state = State(raw, rawChars, filtered, refFormatted, refChars, diff, selection)
+				val state = State(raw, rawChars, filtered, refFormatted, refChars, diff, selection, conversation, profileName)
 				callback {
 					Ui.assertEdt()
 
@@ -213,9 +243,9 @@ class RefinerDiffManager(
 		}
 	}
 
-	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff, val selection: Boolean)
+	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?)
 
-	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val config: Config, val finished: Boolean, val callback: Runnable?)
+	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: OpenAIProfile.Name?, val callback: Runnable?)
 
 	private class Data(val input: Input, val state: State, val sequenceId: Int)
 
