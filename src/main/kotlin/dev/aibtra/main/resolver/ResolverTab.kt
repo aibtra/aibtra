@@ -8,6 +8,7 @@ import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
+import dev.aibtra.openai.*
 import java.awt.*
 import java.nio.file.*
 import javax.swing.*
@@ -45,8 +46,8 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 		}
 
 		saveAction = ResolverSaveAction(resolverSaver, environment)
-		rebuildAction = ResolverRebuildAction(resolverManager, resolverSaver, requestManager, environment.accelerators)
-		resolveOnlyAction = ResolverResolveOnlyAction(resolverManager, requestManager, environment.accelerators)
+		rebuildAction = ResolverRebuildAction(resolverManager, resolverSaver, requestManager, environment.configurationProvider, environment.accelerators)
+		resolveOnlyAction = ResolverResolveOnlyAction(resolverManager, requestManager, environment.configurationProvider, environment.accelerators)
 		applyResolutionAction = ResolverApplyResolutionAction(draftEditor, resolutionEditor, resolverManager, environment.accelerators)
 		applyChangeAction = ResolverApplyChangeAction(draftEditor, resolutionEditor, resolverManager, environment.accelerators)
 		showDebugDetails = ResolverShowDebugDetailsAction(draftEditor, resolverManager, environment.guiConfiguration, dialogDisplayer, environment.accelerators)
@@ -158,7 +159,8 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 	}
 
 	fun initialize(overviewFile: Path) {
-		requestManager.submit(ResolverRequestManager.Request(overviewFile, true, null))
+		val configuration = environment.configurationProvider.get(OpenAIResolverConfiguration)
+		requestManager.submit(ResolverRequestManager.Request(overviewFile, true, null, configuration.profiles[0]))
 	}
 
 	private fun createDraftControl(): Component {

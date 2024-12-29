@@ -99,9 +99,8 @@ class ResolverRequestManager(
 			return null
 		}
 
-		val configuration = environment.configurationProvider.get(OpenAIResolverConfiguration)
 		val service = OpenAIResolverService(apiToken, environment.debugLog, environment.paths)
-		val profile: OpenAIResolverConfiguration.Profile = configuration.profiles[0]
+		val profile: OpenAIResolverConfiguration.Profile = request.profile
 		val approaches = profile.approaches
 		require(approaches.size == 1)
 
@@ -155,7 +154,7 @@ class ResolverRequestManager(
 		fun setInProgress(inProgress: Boolean)
 	}
 
-	class Request(val overviewFile: Path, val skipInCaseOfWarnings: Boolean, val resolverPacket: ResolverPacket?)
+	class Request(val overviewFile: Path, val skipInCaseOfWarnings: Boolean, val resolverPacket: ResolverPacket?, val profile: OpenAIResolverConfiguration.Profile)
 
 	companion object {
 		const val CONTEXT_SIZE = 10
