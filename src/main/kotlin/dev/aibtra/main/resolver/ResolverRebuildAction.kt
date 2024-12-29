@@ -4,27 +4,31 @@
 
 package dev.aibtra.main.resolver
 
+import dev.aibtra.configuration.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
+import dev.aibtra.openai.*
 import java.util.concurrent.atomic.*
 
 class ResolverRebuildAction(
 	resolverManager: ResolverManager,
 	resolverSaver: ResolverSaver,
 	requestManager: ResolverRequestManager,
+	configurationProvider: ConfigurationProvider,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("rebuild", "Rebuild", Icons.REBUILD, "Rebuild", "F5", accelerators, ActionRunnable {
 			action -> (action as ResolverRebuildAction).worker.run()
 	}) {
 
-	private val worker: Worker = Worker(this, resolverSaver, resolverManager, requestManager)
+	private val worker: Worker = Worker(this, resolverSaver, resolverManager, requestManager, configurationProvider)
 
 	class Worker(
 		private val action: ResolverRebuildAction,
 		private val saver: ResolverSaver,
 		private val resolverManager: ResolverManager,
-		private val requestManager: ResolverRequestManager
+		private val requestManager: ResolverRequestManager,
+		private val configurationProvider: ConfigurationProvider
 	) {
 		private val stopMode = AtomicBoolean(false)
 
@@ -35,7 +39,8 @@ class ResolverRebuildAction(
 			else {
 				saver.checkSave { snippets ->
 					snippets?.let {
-						requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, null))
+						val configuration = configurationProvider.get(OpenAIResolverConfiguration)
+						requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, null, configuration.profiles[0]))
 					}
 				}
 			}

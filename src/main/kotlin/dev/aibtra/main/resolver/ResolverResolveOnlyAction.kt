@@ -4,19 +4,23 @@
 
 package dev.aibtra.main.resolver
 
+import dev.aibtra.configuration.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
+import dev.aibtra.openai.*
 
 class ResolverResolveOnlyAction(
 	private val resolverManager: ResolverManager,
 	private val requestManager: ResolverRequestManager,
+	private val configurationProvider: ConfigurationProvider,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("resolveOnly", "Resolve Only", Icons.RESOLVE_ONLY, "Resolve Only", "shift F5", accelerators, ActionRunnable {
 		val state = resolverManager.state
 		state.snippets?.let { snippets ->
 			state.resolutions?.let { resolutions ->
-				requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, resolutions.resolverPacket))
+				val configuration = configurationProvider.get(OpenAIResolverConfiguration)
+				requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, resolutions.resolverPacket, configuration.profiles[0]))
 			}
 		}
 	}) {
