@@ -111,7 +111,7 @@ class AIRefinementServiceTest {
 
 	private fun assertResolutions(input: String, vararg expectedResolutions: Resolution) {
 		val expected = expectedResolutions.asList().map { Pair(it.id, it.resolution) }
-		val actual = AIResolverService.extractResolutions(input, mutableMapOf()).map { Pair(it.id, it.resolution) }
+		val actual = AIResolverService.extractResolutions(input, mutableMapOf(), "").map { Pair(it.id, it.resolution) }
 		Assertions.assertEquals(expected, actual)
 	}
 }

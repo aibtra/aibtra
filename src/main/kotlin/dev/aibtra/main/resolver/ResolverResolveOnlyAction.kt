@@ -4,23 +4,20 @@
 
 package dev.aibtra.main.resolver
 
-import dev.aibtra.configuration.*
 import dev.aibtra.gui.action.*
 import dev.aibtra.main.content.*
-import dev.aibtra.ai.*
 
 class ResolverResolveOnlyAction(
 	private val resolverManager: ResolverManager,
 	private val requestManager: ResolverRequestManager,
-	private val configurationProvider: ConfigurationProvider,
+	private val profileManager: ResolverProfileManager,
 	accelerators: Accelerators
 ) :
 	MainMenuAction("resolveOnly", "Resolve Only", Icons.RESOLVE_ONLY, "Resolve Only", "shift F5", accelerators, ActionRunnable {
 		val state = resolverManager.state
 		state.snippets?.let { snippets ->
 			state.resolutions?.let { resolutions ->
-				val configuration = configurationProvider.get(AIResolverConfiguration)
-				requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, resolutions.resolverPacket, configuration.profiles[0]))
+				requestManager.submit(ResolverRequestManager.Request(snippets.files.overviewFile, false, resolutions.resolverPacket, profileManager.profile()))
 			}
 		}
 	}) {
@@ -34,11 +31,18 @@ class ResolverResolveOnlyAction(
 			updateEnabledState()
 		}
 
+		profileManager.addListener { _, _ ->
+			updateEnabledState()
+		}
+
 		updateEnabledState()
 	}
 
 	private fun updateEnabledState() {
-		isEnabled = !requestManager.inProgress && resolverManager.state.resolutions != null
+		isEnabled = !requestManager.inProgress
+						&& resolverManager.state.resolutions?.resolverPacket?.let {
+			it.supportsResolveOnly && it.profileName == profileManager.profile().name
+		} ?: false
 	}
 }
 
