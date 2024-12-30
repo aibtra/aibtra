@@ -74,10 +74,13 @@ data class AIResolverConfiguration(
 							For the following code snippets, there have been concurrent changes from BASE to OURS and from BASE to THEIRS.
 							
 							1. Output an overview analysis of these conflicts and try to understand relations between them.
+							1.1. Focus exclusively on the semantic (or conceptual) differences when analyzing and resolving any conflicts. That is, consider how the changes differ logically or in terms of the API surface and whether they can coexist harmoniously.
+							1.2. Try hard to understand in which way the changes could be seen as complementary and thus are not conflicting.
+							1.3. Output your reasoning.
 							2. Resolve each conflict one-by-one:
-							2.1. Identify and explain the central changes for each side
-							2.2. Make sure that the central changes from each side will be preserved for the resolution
-							2.3. If the central changes are not semantically conflicting, find the minimal conflict solution
+							2.1. Identify and explain the central semantic changes for each side.
+							2.2. Make sure that the central semantic changes from each side will be preserved for the resolution
+							2.3. If the central semantic changes are not semantically conflicting, find the minimal conflict solution
 							2.4. Maintain consistency between OURS and THEIRS where they are in sync.
 							2.5. Preserve formatting, indentation, and line breaks wherever both sides agree.
 		          3. Output the resolution in the format specified below:
