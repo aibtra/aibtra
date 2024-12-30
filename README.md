@@ -1,6 +1,6 @@
 # Aibtra
 
-This is the source code of [Aibtra](https://www.aibtra.dev/), a desktop tool for refining texts using OpenAI.
+This is the source code of [Aibtra](https://www.aibtra.dev/), a desktop tool for refining texts using services like OpenAI or Anthropic.
 If you are only interested in Aibtra from a user's perspective, visit the [website](https://www.aibtra.dev/).
 Binaries can be downloaded directly from [GitHub ](https://github.com/aibtra/aibtra/releases/tag/latest).
 
