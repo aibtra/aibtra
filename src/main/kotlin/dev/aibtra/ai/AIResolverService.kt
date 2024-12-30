@@ -18,11 +18,66 @@ import java.util.function.*
 import kotlin.io.path.*
 
 class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog: DebugLog, val paths: ApplicationPaths) : AIService(driver, apiToken, debugLog) {
-	fun request(approach: AIResolverConfiguration.Approach, snippets: ResolverSnippets, resolverPacket: ResolverPacket?, failureHandler: FailureHandler, callback: Callback) {
+	fun request(profileName: AIProfile.Name, approach: AIResolverConfiguration.Approach, snippets: ResolverSnippets, resolverPacket: ResolverPacket?, failureHandler: FailureHandler, callback: Callback) {
+		when (approach) {
+			is AIResolverConfiguration.SingleStageApproach -> requestSingleStage(profileName, approach, snippets, failureHandler, callback)
+			is AIResolverConfiguration.SummarizeMergeResolveApproach -> requestSummarizeMergeResolve(profileName, approach, snippets, resolverPacket, failureHandler, callback)
+		}
+	}
+
+	private fun requestSingleStage(profileName: AIProfile.Name, approach: AIResolverConfiguration.SingleStageApproach, snippets: ResolverSnippets, failureHandler: FailureHandler, callback: Callback) {
 		var debugStep = 0
 
 		val idToStepToDebugDetails = mutableMapOf<ResolverId, MutableMap<String, String>>()
-		val merges = (resolverPacket as? ResolverPacketImpl)?.merges ?: run {
+		val resolveInput = createSingleStageInput(snippets, approach, idToStepToDebugDetails)
+		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-input", DebugLog.Level.INFO, JsonUtils.formatJson(resolveInput.toJSONString()), debugLog)
+
+		callback.startResolutions()
+		val resolveOutput = sendRequest(approach.model, resolveInput, failureHandler, "request") ?: return
+		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-output", DebugLog.Level.INFO, resolveOutput, debugLog)
+
+		val resolutions = extractResolutions(resolveOutput, idToStepToDebugDetails, "1-resolve-output")
+		validateIds(resolutions, snippets)?.let {
+			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-missing-conflicts", DebugLog.Level.INFO, it, debugLog)
+		}
+
+		val resolutionList = mutableListOf<ResolverResolution>()
+		val idToResolution = resolutions.associateBy { it.id }
+		for (snippet in snippets) {
+			idToResolution[snippet.id]?.let {
+				resolutionList.add(ResolverPatcher.apply(it.resolution, snippet, ResolverPatcher.FuzzyRange(5, 1)))
+			}
+		}
+
+		val resolverResolutions = ResolverResolutions(snippets, resolutionList, ResolverSingleStagePacket(profileName, idToStepToDebugDetails))
+		callback.handleResolutions(resolverResolutions)
+
+		callback.finish()
+	}
+
+	private fun createSingleStageInput(snippets: ResolverSnippets, approach: AIResolverConfiguration.SingleStageApproach, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+		val input = JSONArray()
+		val debugDetailsBuilderMain = StringBuilder()
+		addMessage(approach.mainInstruction, input, debugDetailsBuilderMain)
+		for (snippet in snippets) {
+			val id = snippet.id
+			val fileName = snippet.file.name
+			val debugDetailsBuilder = StringBuilder(debugDetailsBuilderMain).append("\n\n")
+
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', BASE version:\n\n" + snippet.base.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', OURS version:\n\n" + snippet.ours.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', THEIRS version:\n\n" + snippet.theirs.join(false), AIRole.USER, input, debugDetailsBuilder)
+			putDebugDetails(id, "1-resolve-input", debugDetailsBuilder, idToStepToDebugDetails)
+		}
+		return input
+	}
+
+	private fun requestSummarizeMergeResolve(profileName: AIProfile.Name, approach: AIResolverConfiguration.SummarizeMergeResolveApproach, snippets: ResolverSnippets, resolverPacket: ResolverPacket?, failureHandler: FailureHandler, callback: Callback) {
+		var debugStep = 0
+
+		val idToStepToDebugDetails = mutableMapOf<ResolverId, MutableMap<String, String>>()
+		val merges = (resolverPacket as? ResolverSummarizeMergeResolvePacket)?.merges ?: run {
 			val snippetsDebugString = snippets.joinToString("---\n\n") { it.toDebugString() }
 			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-conflicts", DebugLog.Level.INFO, snippetsDebugString, debugLog)
 
@@ -68,7 +123,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		val resolveOutput = sendRequest(approach.model, resolveInput, failureHandler, "resolve") ?: return
 		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-resolve-output", DebugLog.Level.INFO, resolveOutput, debugLog)
 
-		val resolutions = extractResolutions(resolveOutput, idToStepToDebugDetails)
+		val resolutions = extractResolutions(resolveOutput, idToStepToDebugDetails, "3-resolve-output")
 		validateIds(resolutions, snippets)?.let {
 			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-resolve-missing-conflicts", DebugLog.Level.INFO, it, debugLog)
 		}
@@ -81,13 +136,13 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			}
 		}
 
-		val resolverResolutions = ResolverResolutions(snippets, resolutionList, ResolverPacketImpl(merges, idToStepToDebugDetails))
+		val resolverResolutions = ResolverResolutions(snippets, resolutionList, ResolverSummarizeMergeResolvePacket(profileName, merges, idToStepToDebugDetails))
 		callback.handleResolutions(resolverResolutions)
 
 		callback.finish()
 	}
 
-	private fun createSummarizeInput(snippets: ResolverSnippets, approach: AIResolverConfiguration.Approach, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+	private fun createSummarizeInput(snippets: ResolverSnippets, approach: AIResolverConfiguration.SummarizeMergeResolveApproach, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
 		val input = JSONArray()
 		val debugDetailsBuilderMain = StringBuilder()
 		addMessage(approach.summarizeMainInstruction, input, debugDetailsBuilderMain)
@@ -105,7 +160,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		return input
 	}
 
-	private fun createMergeInput(approach: AIResolverConfiguration.Approach, summaries: List<Summary>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+	private fun createMergeInput(approach: AIResolverConfiguration.SummarizeMergeResolveApproach, summaries: List<Summary>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
 		val input = JSONArray()
 		val debugDetailsBuilderMain = StringBuilder()
 		addMessage(approach.mergeMainInstruction, input, debugDetailsBuilderMain)
@@ -119,7 +174,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		return input
 	}
 
-	private fun createResolveInput(approach: AIResolverConfiguration.Approach, snippets: ResolverSnippets, merges: List<Merge>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
+	private fun createResolveInput(approach: AIResolverConfiguration.SummarizeMergeResolveApproach, snippets: ResolverSnippets, merges: List<Merge>, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): JSONArray {
 		val idToMerge = merges.associateBy { it.id }
 		val input = JSONArray()
 		val debugDetailsBuilderMain = StringBuilder()
@@ -292,7 +347,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			array.add(createMessage(content, role))
 		}
 
-		fun extractResolutions(raw: String, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>): List<Resolution> {
+		fun extractResolutions(raw: String, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>, detailsKey: String): List<Resolution> {
 			val options = MutableDataSet()
 			options.set(Parser.BLANK_LINES_IN_AST, true)
 
@@ -319,7 +374,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 								val trimmed2 = if (trimmed1.endsWith("\n")) trimmed1.substring(0, trimmed1.length - 1) else text
 								val id = ResolverId(it.value)
 								resolutions.add(Resolution(id, content, trimmed2))
-								putDebugDetails(id, "3-resolve-output", content, idToStepToDebugDetails)
+								putDebugDetails(id, detailsKey, content, idToStepToDebugDetails)
 							}
 						}
 					}
@@ -345,5 +400,13 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		}
 	}
 
-	private class ResolverPacketImpl(val merges: List<Merge>, override val idToStepToDebugDetails: Map<ResolverId, Map<String, String>>) : ResolverPacket
+	private class ResolverSummarizeMergeResolvePacket(override val profileName: AIProfile.Name, val merges: List<Merge>, override val idToStepToDebugDetails: Map<ResolverId, Map<String, String>>) : ResolverPacket {
+		override val supportsResolveOnly: Boolean
+			get() = false
+	}
+
+	private class ResolverSingleStagePacket(override val profileName: AIProfile.Name, override val idToStepToDebugDetails: Map<ResolverId, Map<String, String>>) : ResolverPacket {
+		override val supportsResolveOnly: Boolean
+			get() = false
+	}
 }

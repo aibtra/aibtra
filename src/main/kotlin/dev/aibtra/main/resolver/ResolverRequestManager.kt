@@ -105,7 +105,7 @@ class ResolverRequestManager(
 		require(approaches.size == 1)
 
 		var result: ResolverResolutions? = null
-		service.request(approaches[0], snippets, request.resolverPacket, object : AIService.FailureHandler {
+		service.request(profile.name, approaches[0], snippets, request.resolverPacket, object : AIService.FailureHandler {
 			override fun process(failure: IOException, mightBeAuthentication: Boolean) {
 				failureHandler.process(failure, mightBeAuthentication)
 			}

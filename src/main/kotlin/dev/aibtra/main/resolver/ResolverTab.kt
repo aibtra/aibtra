@@ -10,10 +10,12 @@ import dev.aibtra.gui.toolbar.*
 import dev.aibtra.main.content.*
 import dev.aibtra.ai.*
 import java.awt.*
+import java.awt.event.*
 import java.nio.file.*
 import javax.swing.*
 
 internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(tabbedPane, environment, dialogDisplayer) {
+	private val profileManager: ResolverProfileManager
 	private val resolverManager: ResolverManager
 	private val resolverSaver: ResolverSaver
 	private val draftEditor: ResolverDraftEditor
@@ -21,6 +23,7 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 	private val scrollListener: ScrollListener
 	private val requestManager: ResolverRequestManager
 
+	private val profileComboBox: JComboBox<Any>
 	private val saveAction: MainMenuAction
 	private val rebuildAction: MainMenuAction
 	private val resolveOnlyAction: MainMenuAction
@@ -32,11 +35,14 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 
 	init {
 		resolverManager = ResolverManager(environment.coroutineDispatcher, environment.mainScope)
+		profileManager = ResolverProfileManager(environment.configurationProvider)
 		resolverSaver = ResolverSaver(resolverManager, environment, dialogDisplayer)
 		val focusGroup = TextEditorFocusGroup()
 		draftEditor = ResolverDraftEditor(focusGroup, environment)
 		resolutionEditor = ResolverResolutionEditor(focusGroup, environment)
 		scrollListener = ScrollListener.install(draftEditor, resolutionEditor, resolverManager.summaryScrollState) { false }
+
+		profileComboBox = createProfileComboBox()
 
 		requestManager = ResolverRequestManager(resolverManager, environment, dialogDisplayer) { text ->
 			Ui.runInEdt {
@@ -46,8 +52,8 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 		}
 
 		saveAction = ResolverSaveAction(resolverSaver, environment)
-		rebuildAction = ResolverRebuildAction(resolverManager, resolverSaver, requestManager, environment.configurationProvider, environment.accelerators)
-		resolveOnlyAction = ResolverResolveOnlyAction(resolverManager, requestManager, environment.configurationProvider, environment.accelerators)
+		rebuildAction = ResolverRebuildAction(resolverManager, resolverSaver, requestManager, profileManager, environment.accelerators)
+		resolveOnlyAction = ResolverResolveOnlyAction(resolverManager, requestManager, profileManager, environment.accelerators)
 		applyResolutionAction = ResolverApplyResolutionAction(draftEditor, resolutionEditor, resolverManager, environment.accelerators)
 		applyChangeAction = ResolverApplyChangeAction(draftEditor, resolutionEditor, resolverManager, environment.accelerators)
 		showDebugDetails = ResolverShowDebugDetailsAction(draftEditor, resolverManager, environment.guiConfiguration, dialogDisplayer, environment.accelerators)
@@ -143,6 +149,7 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 
 	override fun fillToolBarLeft(bar: ToolBar) {
 		bar.add(saveAction)
+		bar.add(profileComboBox)
 		bar.add(rebuildAction)
 		bar.add(resolveOnlyAction)
 	}
@@ -159,8 +166,7 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 	}
 
 	fun initialize(overviewFile: Path) {
-		val configuration = environment.configurationProvider.get(AIResolverConfiguration)
-		requestManager.submit(ResolverRequestManager.Request(overviewFile, true, null, configuration.profiles[0]))
+		requestManager.submit(ResolverRequestManager.Request(overviewFile, true, null, profileManager.profile()))
 	}
 
 	private fun createDraftControl(): Component {
@@ -169,5 +175,72 @@ internal class ResolverTab(tabbedPane: MainTabbedPane, environment: Environment,
 
 	private fun createResolutionControl(): Component {
 		return resolutionEditor.getControl()
+	}
+
+	private fun createProfileComboBox(): ComboBoxWithPreferredSize<Any> {
+		val comboBox: ComboBoxWithPreferredSize<Any> = ComboBoxWithPreferredSize(profileManager.profiles().map { it?.name ?: ProfileSeparator() }.toTypedArray())
+		val initialProfile = profileManager.profile()
+		comboBox.selectedItem = initialProfile.name
+
+		comboBox.renderer = object : DefaultListCellRenderer() {
+			override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+				if (value is ProfileSeparator) {
+					val separator = JLabel()
+					separator.border = BorderFactory.createMatteBorder(1, 0, 0, 0, list.foreground)
+					return separator
+				}
+
+				val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
+				if (value is AIProfile.Name) {
+					label.text = value.title
+				}
+				else {
+					label.text = "<default instructions>"
+				}
+
+				return label
+			}
+		}
+
+		comboBox.adjustWidth()
+
+		comboBox.addItemListener(object : ItemListener {
+			private var lastSelected: AIProfile.Name
+
+			init {
+				lastSelected = initialProfile.name
+			}
+
+			override fun itemStateChanged(e: ItemEvent?) {
+				val item = comboBox.selectedItem
+				if (item is ProfileSeparator) {
+					Ui.runInEdt {
+						for (index in comboBox.selectedIndex - 1 downTo 0) {
+							(comboBox.getItemAt(index) as? AIProfile.Name)?.let {
+								profileManager.setProfile(it)
+								return@runInEdt
+							}
+						}
+						for (index in comboBox.selectedIndex + 1 until comboBox.itemCount) {
+							(comboBox.getItemAt(index) as? AIProfile.Name)?.let {
+								profileManager.setProfile(it)
+								return@runInEdt
+							}
+						}
+					}
+					return
+				}
+
+				(item as? AIProfile.Name)?.let {
+					profileManager.setProfile(it)
+				}
+			}
+		})
+
+		profileManager.addListener { _, name ->
+			comboBox.selectedItem = name
+		}
+
+		return comboBox
 	}
 }

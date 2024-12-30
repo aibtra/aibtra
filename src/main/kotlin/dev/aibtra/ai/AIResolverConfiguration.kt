@@ -11,7 +11,8 @@ import kotlinx.serialization.*
 
 @Serializable
 data class AIResolverConfiguration(
-	val profiles: List<Profile> = DEFAULT_PROFILES
+	val profiles: List<Profile> = DEFAULT_PROFILES,
+	val currentProfileId: String = O1_MINI_SUMMARIZE_MERGE_RESOLVE_ID
 ) {
 	@Serializable
 	data class Profile(
@@ -21,12 +22,8 @@ data class AIResolverConfiguration(
 	) : AIProfile
 
 	@Serializable
-	data class Approach(
-		val model: String,
-		val summarizeMainInstruction: Instruction,
-		val mergeMainInstruction: Instruction,
-		val resolveMainInstruction: Instruction
-	) {
+	sealed interface Approach {
+		val model: String
 
 		@Suppress("unused")
 		fun toHashString(): String {
@@ -36,10 +33,28 @@ data class AIResolverConfiguration(
 	}
 
 	@Serializable
+	data class SingleStageApproach(
+		override val model: String,
+		val mainInstruction: Instruction
+	) : Approach
+
+	@Serializable
+	data class SummarizeMergeResolveApproach(
+		override val model: String,
+		val summarizeMainInstruction: Instruction,
+		val mergeMainInstruction: Instruction,
+		val resolveMainInstruction: Instruction
+	) : Approach
+
+	@Serializable
 	sealed interface Atom
 
 	@Serializable
 	data class Instruction(val role: AIRole, val text: String) : Atom
+
+	fun currentProfile(): Profile {
+		return profiles.find { it.name.id == currentProfileId } ?: O1_MINI_SUMMARIZE_MERGE_RESOLVE
+	}
 
 	fun profile(id: String): Profile? {
 		return profiles.find { it.name.id == id }
@@ -47,90 +62,133 @@ data class AIResolverConfiguration(
 
 	companion object : ConfigurationFactory<AIResolverConfiguration> {
 		private const val MODEL_O1_MINI = "o1-mini"
+		private const val O1_MINI_SUMMARIZE_MERGE_RESOLVE_ID = "o1-mini-summarize-merge-resolve"
 
-		private val THREE_STAGE_APPROACH = Approach(
-			MODEL_O1_MINI,
-			Instruction(
-				AIRole.USER,
-				"""
-					For the following code snippets, there have been concurrent changes from BASE to OURS and from BASE to THEIRS.
-					
-					Provide a detailed analysis of these conflicts.
-					
-					Then, perform the following steps for each conflict:
-					
-					1. Analyze and explain the differences between BASE and OURS, and independently between BASE and THEIRS in natural language.
-					
-					2. Summarize these differences as a sequence of atomic operations, as you would instruct a software developer to transform BASE into OURS and to transform BASE into THEIRS. Ensure that the instructions for each conflict relate only to that specific conflict and not to others.
-					
-					3. Output this summary enclosed within a ```-block using the following format. Do not attempt to resolve conflicting instructions. Be sure to preserve the `CONFLICT-ID` and `FILENAME` exactly as provided:
-					
-					```
-					CONFLICT-ID: <conflict-id>
-					FILENAME: <filename>
-					OURS:
-					<list-of-atomic-operations-from-base-to-ours>
-					THEIRS:
-					<list-of-atomic-operations-from-base-to-theirs>
-					```
-				""".trimIndent()
-			),
-			Instruction(
-				AIRole.USER,
-				"""
-					Below are multiple sets of high-level instructions for various source code conflicts, each containing conflicting directives labeled as OURS and THEIRS.
-					
-					Your task is to merge these conflicting directives into a single, coherent set of instructions for each conflict:
-					
-					1. Start by applying the OURS instructions.
-					2. Then, incorporate the THEIRS instructions, adjusting them as necessary to account for any changes introduced by OURS.
-					3. The final merged instructions should be actionable, enabling a developer to implement the required changes effectively.
-					
-					Output the combined instructions using the format below, preserving the conflict-id and filename exactly as provided and outputting every conflict in a separate ```-block:
-
-					```
-					CONFLICT-ID: <conflict-id>
-					FILENAME: <filename>
-					INSTRUCTIONS: <instructions>
-					```
-				""".trimIndent()
-			),
-			Instruction(
-				AIRole.USER,
-				"""
-					Below is a set of conflicts between BASE and OURS, as well as between BASE and THEIRS.
-					
-					For each conflict, follow the instructions provided to resolve it:
-
-					1. Resolve each conflict according to the corresponding HINTS:
-					1.1 Ignore any HINTS that are unrelated to the core conflict.
-					2. Maintain consistency between OURS and THEIRS where they are in sync:
-					2.1 Preserve formatting, indentation and line breaks wherever both sides agree.
-          3. Output the resolution in the format specified below:
-					3.1. Use exactly the format shown.
-					3.2. Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
-					3.3. Provide each resolution in a separate code block enclosed by triple backticks (```).
-					3.4. Do not attempt to complete or modify any code beyond the conflict resolution.
-					3.5. Preserve and report the non-conflicting areas exactly as they were.
+		private fun createDefaultSingleStageApproach(model: String): SingleStageApproach {
+			return SingleStageApproach(
+				model,
+				Instruction(
+					AIRole.USER,
+					"""
+							For the following code snippets, there have been concurrent changes from BASE to OURS and from BASE to THEIRS.
 							
-					Format for each resolution:
-					```
-					CONFLICT-ID: <conflict-id>
-					FILENAME: <filename>
-					RESOLUTION:
-					<conflict-resolution>
-					```
-				""".trimIndent()
+							1. Output an overview analysis of these conflicts and try to understand relations between them.
+							2. Resolve each conflict one-by-one:
+							2.1. Identify and explain the central changes for each side
+							2.2. Make sure that the central changes from each side will be preserved for the resolution
+							2.3. If the central changes are not semantically conflicting, find the minimal conflict solution
+							2.4. Maintain consistency between OURS and THEIRS where they are in sync.
+							2.5. Preserve formatting, indentation, and line breaks wherever both sides agree.
+		          3. Output the resolution in the format specified below:
+							3.1. Use exactly the format shown.
+							3.2. Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
+							3.3. Provide each resolution in a separate code block enclosed by triple backticks (```).
+							3.4. Do not attempt to complete or modify any code beyond the conflict resolution.
+							3.5. Preserve and report the non-conflicting areas exactly as they were.
+									
+							Format for each resolution:
+							```
+							CONFLICT-ID: <conflict-id>
+							FILENAME: <filename>
+							RESOLUTION:
+							<conflict-resolution>
+							```
+						""".trimIndent()
+				)
 			)
-		)
+		}
 
-		private val DEFAULT = Profile(
+		private fun createDefaultSummarizeMergeResolveApproach(model: String): SummarizeMergeResolveApproach {
+			return SummarizeMergeResolveApproach(
+				model,
+				Instruction(
+					AIRole.USER,
+					"""
+							For the following code snippets, there have been concurrent changes from BASE to OURS and from BASE to THEIRS.
+							
+							Provide a detailed analysis of these conflicts.
+							
+							Then, perform the following steps for each conflict:
+							
+							1. Analyze and explain the differences between BASE and OURS, and independently between BASE and THEIRS in natural language.
+							
+							2. Summarize these differences as a sequence of atomic operations, as you would instruct a software developer to transform BASE into OURS and to transform BASE into THEIRS. Ensure that the instructions for each conflict relate only to that specific conflict and not to others.
+							
+							3. Output this summary enclosed within a ```-block using the following format. Do not attempt to resolve conflicting instructions. Be sure to preserve the `CONFLICT-ID` and `FILENAME` exactly as provided:
+							
+							```
+							CONFLICT-ID: <conflict-id>
+							FILENAME: <filename>
+							OURS:
+							<list-of-atomic-operations-from-base-to-ours>
+							THEIRS:
+							<list-of-atomic-operations-from-base-to-theirs>
+							```
+						""".trimIndent()
+				),
+				Instruction(
+					AIRole.USER,
+					"""
+							Below are multiple sets of high-level instructions for various source code conflicts, each containing conflicting directives labeled as OURS and THEIRS.
+							
+							Your task is to merge these conflicting directives into a single, coherent set of instructions for each conflict:
+							
+							1. Start by applying the OURS instructions.
+							2. Then, incorporate the THEIRS instructions, adjusting them as necessary to account for any changes introduced by OURS.
+							3. The final merged instructions should be actionable, enabling a developer to implement the required changes effectively.
+							
+							Output the combined instructions using the format below, preserving the conflict-id and filename exactly as provided and outputting every conflict in a separate ```-block:
+		
+							```
+							CONFLICT-ID: <conflict-id>
+							FILENAME: <filename>
+							INSTRUCTIONS: <instructions>
+							```
+						""".trimIndent()
+				),
+				Instruction(
+					AIRole.USER,
+					"""
+							Below is a set of conflicts between BASE and OURS, as well as between BASE and THEIRS.
+							
+							For each conflict, follow the instructions provided to resolve it:
+		
+							1. Resolve each conflict according to the corresponding HINTS:
+							1.1 Ignore any HINTS that are unrelated to the core conflict.
+							2. Maintain consistency between OURS and THEIRS where they are in sync:
+							2.1 Preserve formatting, indentation and line breaks wherever both sides agree.
+		          3. Output the resolution in the format specified below:
+							3.1. Use exactly the format shown.
+							3.2. Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
+							3.3. Provide each resolution in a separate code block enclosed by triple backticks (```).
+							3.4. Do not attempt to complete or modify any code beyond the conflict resolution.
+							3.5. Preserve and report the non-conflicting areas exactly as they were.
+									
+							Format for each resolution:
+							```
+							CONFLICT-ID: <conflict-id>
+							FILENAME: <filename>
+							RESOLUTION:
+							<conflict-resolution>
+							```
+						""".trimIndent()
+				)
+			)
+		}
+
+		private val O1_MINI_SINGLE_STAGE = Profile(
 			AIProvider.OPENAI,
-			AIProfile.Name("Default", "Default (o1-mini)"),
-			listOf(THREE_STAGE_APPROACH)
+			AIProfile.Name("o1-mini-single-stage", "Single Stage (o1-mini)"),
+			listOf(createDefaultSingleStageApproach(MODEL_O1_MINI))
 		)
 
-		private val DEFAULT_PROFILES = listOf(DEFAULT)
+		private val O1_MINI_SUMMARIZE_MERGE_RESOLVE = Profile(
+			AIProvider.OPENAI,
+			AIProfile.Name(O1_MINI_SUMMARIZE_MERGE_RESOLVE_ID, "Summarize-Merge-Resolve (o1-mini)"),
+			listOf(createDefaultSummarizeMergeResolveApproach(MODEL_O1_MINI))
+		)
+
+		private val DEFAULT_PROFILES = listOf(O1_MINI_SINGLE_STAGE, O1_MINI_SUMMARIZE_MERGE_RESOLVE)
 
 		override fun name(): String = "ai-resolver"
 

@@ -408,30 +408,4 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		}
 		diffManager.addStateListener(listener)
 	}
-
-	protected class ComboBoxWithPreferredSize<T>(entries: Array<T>) : JComboBox<T>(entries) {
-		private var preferredWidth: Int = 0
-
-		override fun getPreferredSize(): Dimension {
-			val superPreferredSize = super.getPreferredSize()
-			return Dimension(preferredWidth, superPreferredSize.height)
-		}
-
-		override fun getMaximumSize(): Dimension {
-			return preferredSize
-		}
-
-		fun adjustWidth() {
-			var maxWidth = 0
-			val jList = JList(model)
-			for (i in 0 until itemCount) {
-				val comp = renderer.getListCellRendererComponent(jList, getItemAt(i), i, false, false)
-				maxWidth = maxOf(comp.preferredSize.width, maxWidth)
-			}
-
-			preferredWidth = maxWidth + 30 // have some padding which should be sufficient for every L&F
-		}
-	}
-
-	private class ProfileSeparator
 }
