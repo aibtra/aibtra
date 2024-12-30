@@ -359,10 +359,13 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			val node = parser.parse(input)
 			val resolutions = mutableListOf<Resolution>()
 			object : NodeVisitor() {
+				var lastOffset: Int = 0
+
 				override fun processNode(node: Node, withChildren: Boolean, processor: BiConsumer<Node, Visitor<Node>>) {
 					super.processNode(node, withChildren, processor)
 
 					if (node is FencedCodeBlock) {
+						val part = raw.substring(lastOffset, node.endOffset)
 						val content = node.contentChars.toString()
 						val regex = Regex("CONFLICT-ID:\\s+([a-f0-9-]+)")
 						val matchResult = regex.find(content)
@@ -374,9 +377,11 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 								val trimmed2 = if (trimmed1.endsWith("\n")) trimmed1.substring(0, trimmed1.length - 1) else text
 								val id = ResolverId(it.value)
 								resolutions.add(Resolution(id, content, trimmed2))
-								putDebugDetails(id, detailsKey, content, idToStepToDebugDetails)
+								putDebugDetails(id, detailsKey, part, idToStepToDebugDetails)
 							}
 						}
+
+						lastOffset = node.endOffset
 					}
 				}
 			}.visit(node)
