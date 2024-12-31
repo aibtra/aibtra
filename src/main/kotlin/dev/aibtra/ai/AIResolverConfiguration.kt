@@ -71,33 +71,36 @@ data class AIResolverConfiguration(
 				Instruction(
 					AIRole.USER,
 					"""
-							For the following code snippets, there have been concurrent changes from BASE to OURS and from BASE to THEIRS.
-							
-							1. Output an overview analysis of these conflicts and try to understand relations between them.
-							1.1. Focus exclusively on the semantic (or conceptual) differences when analyzing and resolving any conflicts. That is, consider how the changes differ logically or in terms of the API surface and whether they can coexist harmoniously.
-							1.2. Try hard to understand in which way the changes could be seen as complementary and thus are not conflicting.
-							1.3. Output your reasoning.
-							2. Resolve each conflict one-by-one:
-							2.1. Identify and explain the central semantic changes for each side.
-							2.2. Make sure that the central semantic changes from each side will be preserved for the resolution
-							2.3. If the central semantic changes are not semantically conflicting, find the minimal conflict solution
-							2.4. Maintain consistency between OURS and THEIRS where they are in sync.
-							2.5. Preserve formatting, indentation, and line breaks wherever both sides agree.
-		          3. Output the resolution in the format specified below:
-							3.1. Use exactly the format shown.
-							3.2. Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
-							3.3. Provide each resolution in a separate code block enclosed by triple backticks (```).
-							3.4. Do not attempt to complete or modify any code beyond the conflict resolution.
-							3.5. Preserve and report the non-conflicting areas exactly as they were.
-									
-							Format for each resolution:
-							```
-							CONFLICT-ID: <conflict-id>
-							FILENAME: <filename>
-							RESOLUTION:
-							<conflict-resolution>
-							```
-						""".trimIndent()
+						You are given code snippets that contain concurrent changes from BASE to OURS and from BASE to THEIRS. Your task is to resolve these conflicts by focusing exclusively on the semantic (or conceptual) differences. That means you should consider how the changes differ logically, in terms of the API surface, and whether those differences can coexist.
+						
+						Please follow these steps:
+						
+				    Overview & Guidelines
+						- Conduct an overview analysis of all conflicts and provide a brief explanation for each semantic conflict identified.
+						- This overview analysis serves as your "guideline" for resolving individual conflicts.
+				
+				    Conflict Resolution
+				    - Resolve each conflict according to your "guideline".
+				    - If multiple interpretations exist, choose the resolution that aligns best with your guideline.
+				    - Strive for a minimal solution -- do not add unnecessary changes.
+				    - Wherever OURS and THEIRS agree, keep them in sync.
+				    - Preserve formatting, indentation, and line breaks wherever both versions match.
+				
+				    Resolution Output Format
+						- Use exactly the format shown.
+						- Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
+						- Provide each resolution in a separate code block enclosed by triple backticks (```).
+						- Do not attempt to complete or modify any code beyond the conflict resolution.
+						- Preserve and report the non-conflicting areas exactly as they were.
+								
+						Format for each resolution:
+						```
+						CONFLICT-ID: <conflict-id>
+						FILENAME: <filename>
+						RESOLUTION:
+						<conflict-resolution>
+						```
+					""".trimIndent()
 				)
 			)
 		}
