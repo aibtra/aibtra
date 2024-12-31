@@ -341,7 +341,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		}
 
 		private fun putDebugDetails(id: ResolverId, step: String, details: String, idToStepToDebugDetails: MutableMap<ResolverId, MutableMap<String, String>>) {
-			idToStepToDebugDetails.computeIfAbsent(id) { mutableMapOf() }[step] = details
+			idToStepToDebugDetails.computeIfAbsent(id) { mutableMapOf() }.compute(step) { _, old -> old?.let { it + "\n\n" + details } ?: details }
 		}
 	}
 
