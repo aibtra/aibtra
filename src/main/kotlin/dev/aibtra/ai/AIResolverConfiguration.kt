@@ -75,7 +75,7 @@ data class AIResolverConfiguration(
 						Your task is to resolve these conflicts by focusing exclusively on the semantic (or conceptual) differences.
 						That means you should consider how the changes differ logically, in terms of the API surface, and whether those differences can coexist.
 						
-						For every conflict, follow these steps:
+						For every conflict, follow subsequent steps. Do this three times for the most promising conflict resolutions you can identify:
 						
 						Conflict Resolution
 						- Explain in a single sentence the most straight-forward intepretation of what has changed between BASE and OURS ("ours-changes")
@@ -103,6 +103,9 @@ data class AIResolverConfiguration(
 						RESOLUTION:
 						<conflict-resolution>
 						```
+						
+						Given your resolutions, which one matches the "ours-changes" and "theirs-changes" explanations *literally* the best (forget about all the coding details)?
+						Finally, output this resolution once again using the above format.
 					""".trimIndent()
 				)
 			)
