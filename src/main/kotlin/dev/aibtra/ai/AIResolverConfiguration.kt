@@ -71,22 +71,22 @@ data class AIResolverConfiguration(
 				Instruction(
 					AIRole.USER,
 					"""
-						You are given code snippets that contain concurrent changes from BASE to OURS and from BASE to THEIRS. Your task is to resolve these conflicts by focusing exclusively on the semantic (or conceptual) differences. That means you should consider how the changes differ logically, in terms of the API surface, and whether those differences can coexist.
+						You are given code snippets that contain concurrent changes from BASE to OURS and from BASE to THEIRS.
+						Your task is to resolve these conflicts by focusing exclusively on the semantic (or conceptual) differences.
+						That means you should consider how the changes differ logically, in terms of the API surface, and whether those differences can coexist.
 						
-						Please follow these steps:
+						For every conflict, follow these steps:
 						
-				    Overview & Guidelines
-						- Conduct an overview analysis of all conflicts and provide a brief explanation for each semantic conflict identified.
-						- This overview analysis serves as your "guideline" for resolving individual conflicts.
-				
-				    Conflict Resolution
-				    - Resolve each conflict according to your "guideline".
-				    - If multiple interpretations exist, choose the resolution that aligns best with your guideline.
-				    - Strive for a minimal solution -- do not add unnecessary changes.
-				    - Wherever OURS and THEIRS agree, keep them in sync.
-				    - Preserve formatting, indentation, and line breaks wherever both versions match.
-				
-				    Resolution Output Format
+						Conflict Resolution
+						- Explain in a single sentence the most straight-forward intepretation of what has changed between BASE and OURS ("ours-changes")
+						- Explain in a single sentence the most straight-forward intepretation of what has changed between BASE and THEIRS ("theirs-changes")
+						- Compose "merge-instructions" by AND-ing above explanations
+							- forget about the code completely
+							- your two explanations are the only input for this step
+							- preserve the literal meaning of both explanations, don't be creative in composing these instructions
+						- Resolve the conflict according to these "merge-instructions"
+						
+						Resolution Output Format
 						- Use exactly the format shown.
 						- Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
 						- Provide each resolution in a separate code block enclosed by triple backticks (```).
@@ -97,6 +97,9 @@ data class AIResolverConfiguration(
 						```
 						CONFLICT-ID: <conflict-id>
 						FILENAME: <filename>
+						OURS-CHANGES: <ours-changes>
+						THEIRS-CHANGES: <theirs-changes>
+						MERGE-INSTRUCTIONS: <merge-instructions>
 						RESOLUTION:
 						<conflict-resolution>
 						```
