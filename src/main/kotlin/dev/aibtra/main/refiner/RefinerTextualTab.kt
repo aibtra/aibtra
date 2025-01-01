@@ -377,8 +377,16 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 		profileManager.addListener { lastName, name ->
 			val profile = profileManager.profile()
 			diffManager.setConfig(profile.diffConfig)
+		}
 
-			if (profileManager.profile().submitOnProfileChange && lastName != name && diffManager.state.rawText.all.isNotBlank()) {
+		var lastProfileName : AIProfile.Name? = null
+		diffManager.addStateListener { state, last ->
+			if (profileManager.profile().submitOnProfileChange &&
+				state.profileName != lastProfileName &&
+				!diffManager.state.normalizationPending &&
+				diffManager.state.rawText.all.isNotBlank()) {
+				lastProfileName = state.profileName
+
 				submitter.run()
 			}
 		}
@@ -388,7 +396,9 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 	private fun configureSubmitOnInvocation() {
 		var listener: ((state: State, last: State) -> Unit)? = null
 		listener = { state, last ->
-			if (state.diff.raw.isNotEmpty() && last.diff.raw.isEmpty()) {
+			if (state.diff.raw.isNotEmpty()
+				&& last.diff.raw.isEmpty()
+				&& !last.normalizationPending) {
 				diffManager.removeStateListener(listener!!)
 
 				if (profileManager.profile().submitOnInvocation && rawEditor.getText().split("\n", " ", "\t").size >= 2) { // Do not submit single words, this should prevent submitting passwords.
