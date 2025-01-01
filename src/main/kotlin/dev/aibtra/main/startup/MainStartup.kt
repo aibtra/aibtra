@@ -107,15 +107,11 @@ class MainStartup {
 			Ui.runInEdt {
 				environment.frameManager.getFrame()?.let {
 					it.toFront()
-					if (workingMode != WorkingMode.OPEN) {
-						it.checkClose {
-							if (fileToOpen != null || workingMode == WorkingMode.CLIPBOARD) {
-								setMainFrameContent(workingMode, options, fileToOpen, it, environment)
-							}
-						}
+					if (fileToOpen != null || workingMode == WorkingMode.CLIPBOARD) {
+						setMainFrameContent(workingMode, options, fileToOpen, it, environment)
 					}
 				} ?: run {
-					val frame = MainFrame(workingMode, environment)
+					val frame = MainFrame(environment)
 					frame.show()
 
 					UpdateCheck(environment.buildInfo, environment.configurationProvider, environment.coroutineDispatcher, environment.mainScope, environment.paths, frame.dialogDisplayer).invoke()
@@ -128,8 +124,11 @@ class MainStartup {
 			if (fileToOpen != null) {
 				frame.openFile(fileToOpen, options.profile, options.line)
 			}
+			else if (workingMode == WorkingMode.CLIPBOARD) {
+				frame.openText(getContentFromClipboard(environment.paths), workingMode, options.profile)
+			}
 			else {
-				frame.setText(getContentFromClipboard(environment.paths), workingMode, options.profile)
+				frame.openEmpty(options.profile)
 			}
 		}
 

@@ -5,26 +5,42 @@
 package dev.aibtra.main.frame
 
 import dev.aibtra.gui.action.ActionRunnable
-import java.awt.Component
+import dev.aibtra.gui.dialogs.DialogDisplayer
+import java.io.File
 import javax.swing.JFileChooser
 
-class OpenAction(workFile: WorkFile, parent: Component, environment: Environment) : MainMenuAction("open", "Open", "ctrl O", environment.accelerators, ActionRunnable {
-	workFile.checkSave {
-		val fileChooser = JFileChooser()
-		workFile.state?.let {
-			fileChooser.currentDirectory = it.path.parent.toFile()
-		}
+internal class OpenAction(tabbedPane: MainTabbedPane, environment: Environment, dialogDisplayer: DialogDisplayer) : MainMenuAction("open", "Open", "ctrl O", environment.accelerators, ActionRunnable {
+	val guiConfiguration = environment.configurationProvider.get(GuiConfiguration)
+	val fileChooser = JFileChooser().apply {
+		guiConfiguration.lastOpenPath?.let { currentDirectory = File(it) }
+	}
 
-		val result = fileChooser.showOpenDialog(parent)
-		if (result != JFileChooser.APPROVE_OPTION) {
-			return@checkSave
-		}
+	val result = fileChooser.showOpenDialog(tabbedPane.control)
+	if (result != JFileChooser.APPROVE_OPTION) {
+		return@ActionRunnable
+	}
 
-		val selectedFile = fileChooser.selectedFile
-		if (selectedFile == null) {
-			return@checkSave
-		}
+	val selectedPath = fileChooser.selectedFile?.toPath() ?: return@ActionRunnable
+	environment.configurationProvider.change(GuiConfiguration) {
+		it.copy(lastOpenPath = selectedPath.toString())
+	}
 
-		workFile.load(selectedFile.toPath(), null)
+	if (tabbedPane.iterate { tab ->
+			(tab as? MainFileTab)?.let {
+				if (it.getFile() == selectedPath) {
+					it.toFront()
+					true
+				}
+				else {
+					null
+				}
+			}
+		} == true) {
+		return@ActionRunnable
+	}
+
+	MainFileTab(tabbedPane, environment, dialogDisplayer).apply {
+		setFile(selectedPath, null, null)
+		tabbedPane.add(this)
 	}
 })

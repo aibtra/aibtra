@@ -71,6 +71,10 @@ class ToolBar(
 		return toolBar
 	}
 
+	fun isNotEmpty() : Boolean {
+		return toolBar.componentCount > 0
+	}
+
 	fun dispose() {
 		theme.removeChangeListener(themeListener)
 	}

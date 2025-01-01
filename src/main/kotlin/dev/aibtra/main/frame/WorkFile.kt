@@ -105,8 +105,10 @@ class WorkFile(val mainScope: CoroutineScope, val dialogDisplayer: DialogDisplay
 		}
 	}
 
-	fun checkSave(runnable: Runnable) {
+	fun checkSave(preDialogRunnable: Runnable, runnable: Runnable) {
 		if (state?.modified == true) {
+			preDialogRunnable.run()
+
 			Dialogs.showYesNoCancelDialog("Save Changes", "The file is modified, save changes?", "Save", "Discard", dialogDisplayer) { save ->
 				if (save) {
 					save {
