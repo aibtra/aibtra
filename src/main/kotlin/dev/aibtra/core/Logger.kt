@@ -52,6 +52,17 @@ class Logger private constructor(private val logger: Logger) {
 		fun setup(logFile: Path) {
 			this.logFile = logFile
 
+			// Example logger.properties:
+			//
+			// .level = INFO
+			//
+			// dev.aibtra.refiner.level = FINE
+			//
+			// handlers = java.util.logging.ConsoleHandler
+			// java.util.logging.ConsoleHandler.level = FINE
+			// java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
+			// java.util.logging.SimpleFormatter.format = [%1$tF %1$tT] [%2$s] [%4$s] [%3$s] %5$s %6$s%n
+
 			val configFile = logFile.parent.resolve("logger.properties")
 			if (Files.isRegularFile(configFile)) {
 				System.setProperty("java.util.logging.config.file", configFile.toString())
