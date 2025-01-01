@@ -7,17 +7,14 @@ package dev.aibtra.main.resolver
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 
-class ResolverResolutionEditor(focusGroup: TextEditorFocusGroup, environment: Environment) : ResolverEditor(focusGroup, environment) {
+class ResolverResolutionEditor(focusGroup: TextEditorFocusGroup, environment: Environment) : ResolverEditor(false, focusGroup, environment) {
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
 	private val styleRemoved: HighlightStyle
 	private val styleGapLeft: HighlightStyle
 	private val styleGapRight: HighlightStyle
-	private val documentFilter: NonEditableDocumentFilter
 
 	init {
-		documentFilter = disableEditing()
-
 		styleModified = HighlightStyle({ it.refBackgroundModified }, { null }, false, false, GapStyle.NONE)
 		styleAdded = HighlightStyle({ it.refBackgroundAdded }, { null }, false, false, GapStyle.NONE)
 		styleRemoved = HighlightStyle({ it.refBackgroundRemoved }, { null }, false, true, GapStyle.NONE)
@@ -27,10 +24,7 @@ class ResolverResolutionEditor(focusGroup: TextEditorFocusGroup, environment: En
 
 	fun update(summary: ResolveSummary) {
 		texter.initialize(summary, true) { text, textArea ->
-			documentFilter.update {
-				textArea.text = text
-				textArea.caretPosition = 0
-			}
+			textArea.setText(text)
 		}
 
 		setSummary(summary)

@@ -14,7 +14,7 @@ import javax.swing.text.*
 import javax.swing.undo.*
 
 class RefinerRawEditor(private val textInitializer: TextInitializer, environment: Environment) :
-	AbstractTextEditor<RefinerRawEditor.TextArea>(TextArea(), environment) {
+	AbstractTextEditor(true, environment) {
 	private val undoManager: UndoManager
 	private val styleModified: HighlightStyle
 	private val styleAdded: HighlightStyle
@@ -30,27 +30,21 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 	private var selection: IntRange? = null
 
 	init {
-		(textArea.document as AbstractDocument).let {
-			it.documentFilter = object : DocumentFilter() {
-				override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
-					val normalized: String = if (textArea.pasting && offset == 0 && length == fb.document.length) {
-						textInitializer.initialize(text)
-					}
-					else {
-						text
-					}
-
-					super.replace(fb, offset, length, normalized, attrs)
+		textArea.initDocumentFilter(object : DocumentFilter() {
+			override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attrs: AttributeSet?) {
+				val normalized: String = if (textArea.pasting && offset == 0 && length == fb.document.length) {
+					textInitializer.initialize(text)
 				}
+				else {
+					text
+				}
+
+				super.replace(fb, offset, length, normalized, attrs)
 			}
-		}
+		})
 
-		textArea.isEditable = true
-		textArea.lineWrap = false
-		textArea.wrapStyleWord = true
-
-		val guiConfiguration = environment.guiConfiguration
-		textArea.font = guiConfiguration.fonts.monospacedFont
+		textArea.setEditable(true)
+		textArea.setLineWrap(false)
 
 		styleModified = HighlightStyle({ it.rawBackgroundModified }, { null }, false, false, GapStyle.NONE)
 		styleAdded = HighlightStyle({ it.rawBackgroundAdded }, { null }, false, false, GapStyle.NONE)
@@ -68,7 +62,7 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 			}
 		}
 
-		textArea.actionMap.put("Undo", object : AbstractAction("Undo") {
+		textArea.putAction("Undo", KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK), object : AbstractAction("Undo") {
 			override fun actionPerformed(evt: ActionEvent?) {
 				if (undoManager.canUndo()) {
 					undoManager.undo()
@@ -76,7 +70,7 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 			}
 		})
 
-		textArea.actionMap.put("Redo", object : AbstractAction("Redo") {
+		textArea.putAction("Redo", KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK), object : AbstractAction("Redo") {
 			override fun actionPerformed(evt: ActionEvent?) {
 				if (undoManager.canRedo()) {
 					undoManager.redo()
@@ -89,10 +83,6 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 				updateCharacterAttributes()
 			}
 		}
-
-		val inputMap = textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-		inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK), "Redo")
-		inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK), "Undo")
 	}
 
 	fun getText(): String {
@@ -104,16 +94,13 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 	}
 
 	fun setText(text: String) {
-		textArea.text = text
-		textArea.caretPosition = 0
+		textArea.setText(text)
 
 		undoManager.discardAllEdits()
 	}
 
 	fun replaceText(from: Int, to: Int, text: String) {
-		textArea.document.remove(from, to - from)
-		textArea.document.insertString(from, text, null)
-		textArea.caretPosition = from
+		textArea.replaceText(from, to, text)
 	}
 
 	fun setDiffCharsAndFilteredText(diffChars: List<DiffChar>, filteredText: FilteredText) {
@@ -161,18 +148,5 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 
 	fun interface TextInitializer {
 		fun initialize(text: String): String
-	}
-
-	class TextArea : JTextArea() {
-		var pasting = false
-
-		override fun paste() {
-			pasting = true
-			try {
-				super.paste()
-			} finally {
-				pasting = false
-			}
-		}
 	}
 }
