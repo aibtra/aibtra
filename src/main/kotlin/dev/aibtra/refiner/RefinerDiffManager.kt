@@ -7,6 +7,7 @@ import dev.aibtra.ai.*
 import dev.aibtra.text.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
+import kotlin.random.*
 
 class RefinerDiffManager(
 	private val rawNormalizer: RawNormalizer,
@@ -18,7 +19,7 @@ class RefinerDiffManager(
 	private val stateListeners = ArrayList<(State, State) -> Unit>()
 	val scrollState = ScrollState()
 
-	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", SyntaxType.NONE, INITIAL_CONFIG, true, null, null, null), State(FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), SyntaxType.NONE, Diff.INITIAL, false, null, null), 0)
+	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", SyntaxType.NONE, INITIAL_CONFIG, true, null, null, null), State(formatStateId(0), FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), SyntaxType.NONE, Diff.INITIAL, false, null, null), 0)
 
 	val state: State
 		get() = data.state
@@ -150,10 +151,9 @@ class RefinerDiffManager(
 	}
 
 	private fun updateState(input: Input, forceUpdate: Boolean, debugOperationName: String?) {
-		LOG.debug("updateState (schedule): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.all.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
-
 		val dataState = data.state
 		data = Data(input, dataState, data.sequenceId + 1)
+		LOG.debug("updateState (schedule): operationName=${debugOperationName ?: "<null>"}, state=${state.id}, raw=${input.raw.all.length}, rawOrg=${input.rawOrg?.length ?: "<null>"}, ref=${input.ref.length}, finished=${input.finished}, callback=${input.callback}, config=${input.config}")
 
 		if (debugOperationName != null) {
 			writeDebugFile(data.sequenceId, debugOperationName, "input-raw", input.raw.all, null)
@@ -164,7 +164,7 @@ class RefinerDiffManager(
 
 		sequentialRunner.schedule(object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
-				LOG.debug("updateState (run): operationName=" + (debugOperationName ?: "<null>") + ", raw=" + input.raw.all.length + ", rawOrg=" + (input.rawOrg?.length ?: "<null>") + ", ref=" + input.ref.length + ", finished=" + input.finished + ", callback=" + input.callback + ", config=" + input.config)
+				LOG.debug("updateState (run): operationName=${debugOperationName ?: "<null>"}, state=${dataState.id}, raw=${input.raw.all.length}, rawOrg=${input.rawOrg?.length ?: "<null>"}, ref=${input.ref.length}, finished=${input.finished}, callback=${input.callback}, config=${input.config}")
 
 				val raw = input.raw
 				val ref = input.ref
@@ -193,7 +193,7 @@ class RefinerDiffManager(
 					DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED
 				}
 				val (refFormatted, refChars) = DiffFormatter(mode).format(diff)
-				val state = State(raw, rawChars, filtered, refFormatted, refChars, syntaxType, diff, selection, conversation, profileName)
+				val state = State(formatStateId(Random.nextLong()), raw, rawChars, filtered, refFormatted, refChars, syntaxType, diff, selection, conversation, profileName)
 				callback {
 					Ui.assertEdt()
 
@@ -203,6 +203,8 @@ class RefinerDiffManager(
 					val latestState = latestData.state
 					this@RefinerDiffManager.data = data
 					latestInput.callback?.run()
+
+					LOG.debug("updateState (set): operationName=${debugOperationName ?: "<null>"}, state=${state.id}, raw=${input.raw.all.length}, rawOrg=${input.rawOrg?.length ?: "<null>"}, ref=${input.ref.length}, finished=${input.finished}, callback=${input.callback}, config=${input.config}")
 
 					if (debugOperationName != null) {
 						writeDebugFile(data.sequenceId, debugOperationName, "state-raw", data.state.diff.raw, data.state.rawChars)
@@ -251,7 +253,11 @@ class RefinerDiffManager(
 		}
 	}
 
-	class State(val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?)
+	class State(val id: String, val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?) {
+		override fun toString(): String {
+			return "state=$id, raw=${rawText.all.length}, refFormatted=${refFormatted.length}, profile=$profileName"
+		}
+	}
 
 	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val syntaxType: SyntaxType, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?, val callback: Runnable?)
 
@@ -282,6 +288,10 @@ class RefinerDiffManager(
 			}
 
 			return selected
+		}
+
+		private fun formatStateId(long: Long): String {
+			return long.toULong().toString(16).padStart(16, '0')
 		}
 	}
 

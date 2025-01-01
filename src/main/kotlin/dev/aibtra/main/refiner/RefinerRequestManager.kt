@@ -4,6 +4,7 @@
 
 package dev.aibtra.main.refiner
 
+import dev.aibtra.core.*
 import dev.aibtra.gui.*
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.content.*
@@ -26,11 +27,15 @@ class RefinerRequestManager(
 		private set
 
 	fun schedule(request: Request, failureHandler: RequestManagerFailureHandler) {
+		LOG.debug("schedule")
+
 		val run = object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
 				notifyInProgress(true)
 
 				val state = diffManager.state
+				LOG.debug("invoke: $state")
+
 				val filteredText = state.filtered
 				val priorConversation = state.conversation
 				callback {
@@ -110,5 +115,9 @@ class RefinerRequestManager(
 
 	fun interface Request {
 		fun run(filtered: FilteredText, priorConversation: RefinerConversation?, callback: RequestCallback, failureHandler: RequestManagerFailureHandler)
+	}
+
+	companion object {
+		private val LOG = Logger.getLogger(this::class)
 	}
 }
