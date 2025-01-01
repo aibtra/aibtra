@@ -19,7 +19,7 @@ class RefinerDiffManager(
 	private val stateListeners = ArrayList<(State, State) -> Unit>()
 	val scrollState = ScrollState()
 
-	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", SyntaxType.NONE, INITIAL_CONFIG, true, null, null, null), State(formatStateId(0), FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), SyntaxType.NONE, Diff.INITIAL, false, null, null), 0)
+	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", SyntaxType.NONE, INITIAL_CONFIG, true, false, null, null, null), State(formatStateId(0), FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), SyntaxType.NONE, Diff.INITIAL, false, false, null, null), 0)
 
 	val state: State
 		get() {
@@ -64,7 +64,8 @@ class RefinerDiffManager(
 				Pair(raw, null)
 			}
 
-			updateState(input.copy(raw = part, rawOrg = rawOrgNew, config = config, callback = callback), true, "updateRaw")
+			val normalizationPending = rawNew != raw
+			updateState(input.copy(raw = part, rawOrg = rawOrgNew, config = config, normalizationPending = normalizationPending, callback = callback), true, "updateRaw")
 			scrollState.updateLeftText(raw)
 			return rawNew
 		}
@@ -178,6 +179,7 @@ class RefinerDiffManager(
 				val config = input.config
 				val finished = input.finished
 				val selection = input.raw.isPart()
+				val normalizationPending = input.normalizationPending
 				val diff = DiffExtender(config.tokenizingMode, enabled = config.enabled).extend(raw.all, ref, dataState.diff, finished)
 
 				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
@@ -197,7 +199,7 @@ class RefinerDiffManager(
 					DiffFormatter.Mode.KEEP_REF_FOR_MODIFIED
 				}
 				val (refFormatted, refChars) = DiffFormatter(mode).format(diff)
-				val state = State(formatStateId(Random.nextLong()), raw, rawChars, filtered, refFormatted, refChars, syntaxType, diff, selection, conversation, profileName)
+				val state = State(formatStateId(Random.nextLong()), raw, rawChars, filtered, refFormatted, refChars, syntaxType, diff, selection, normalizationPending, conversation, profileName)
 				callback {
 					Ui.assertEdt()
 
@@ -257,13 +259,13 @@ class RefinerDiffManager(
 		}
 	}
 
-	class State(val id: String, val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?) {
+	class State(val id: String, val rawText: FilteredText.Part, val rawChars: List<DiffChar>, val filtered: FilteredText, val refFormatted: String, val refChars: List<DiffChar>, val syntaxType: SyntaxType, val diff: Diff, val selection: Boolean, val normalizationPending: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?) {
 		override fun toString(): String {
 			return "state=$id, raw=${rawText.all.length}, refFormatted=${refFormatted.length}, profile=$profileName"
 		}
 	}
 
-	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val syntaxType: SyntaxType, val config: Config, val finished: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?, val callback: Runnable?)
+	private data class Input(val raw: FilteredText.Part, val rawOrg: String?, val ref: String, val syntaxType: SyntaxType, val config: Config, val finished: Boolean, val normalizationPending: Boolean, val conversation: RefinerConversation?, val profileName: AIProfile.Name?, val callback: Runnable?)
 
 	private class Data(val input: Input, val state: State, val sequenceId: Int)
 
