@@ -7,6 +7,7 @@ package dev.aibtra.main.refiner
 import dev.aibtra.gui.dialogs.*
 import dev.aibtra.main.content.*
 import dev.aibtra.ai.*
+import dev.aibtra.core.*
 
 class RefinerSubmitter(private val environment: Environment, private val requestManager: RefinerRequestManager, private val commandControl: RefinerCommandControl, private val dialogDisplayer: DialogDisplayer, val profile: () -> AIRefinementConfiguration.Profile) {
 	init {
@@ -17,11 +18,19 @@ class RefinerSubmitter(private val environment: Environment, private val request
 	}
 
 	fun run() {
+		LOG.debug("run")
+
 		val profile = profile()
 		Submitter(environment, dialogDisplayer) { apiToken, failureHandler ->
+			LOG.debug("submit")
+
 			val service = AIRefinementService(profile.provider.driver, apiToken, environment.debugLog)
 			val request = RefinerAIRequest(profile, service) { commandControl.retrieveCommand() }
 			requestManager.schedule(request, failureHandler)
 		}.submit(profile.provider)
+	}
+
+	companion object {
+		private val LOG = Logger.getLogger(this::class)
 	}
 }
