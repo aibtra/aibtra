@@ -22,7 +22,11 @@ class RefinerDiffManager(
 	private var data: Data = Data(Input(FilteredText.Part.of(""), "", "", SyntaxType.NONE, INITIAL_CONFIG, true, null, null, null), State(formatStateId(0), FilteredText.Part.of(""), listOf(), FilteredText.asIs(FilteredText.Part.of("")), "", listOf(), SyntaxType.NONE, Diff.INITIAL, false, null, null), 0)
 
 	val state: State
-		get() = data.state
+		get() {
+			Ui.assertEdt()
+
+			return data.state
+		}
 
 	fun updateRawText(raw: String, rawRange: IntRange?, rawConfig: Config? = null, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): String {
 		Ui.assertEdt()
