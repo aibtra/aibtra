@@ -254,24 +254,6 @@ class MainStartup {
 		}
 	}
 
-	class LogFormatter : Formatter() {
-		override fun format(record: LogRecord): String {
-			val stringBuilder = StringBuilder()
-			stringBuilder.append("${LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)} [${Thread.currentThread().name}] ${record.level}: ${record.message}\n")
-
-			record.thrown?.let {
-				val stringWriter = StringWriter()
-				val printWriter = PrintWriter(stringWriter)
-				it.printStackTrace(printWriter)
-				printWriter.flush()
-
-				stringBuilder.append(stringWriter.toString()).append('\n')
-			}
-
-			return stringBuilder.toString()
-		}
-	}
-
 	public class ConfigurationProviderImpl(private val settingsRoot: Path, private val dialogDisplayer: DialogDisplayer) : ConfigurationProvider {
 		private val classToConfiguration = HashMap<Class<ConfigurationFactory<Any>>, ConfigurationFile<Any>>()
 		private val classToListeners = HashMap<Any, ArrayList<Runnable>>()

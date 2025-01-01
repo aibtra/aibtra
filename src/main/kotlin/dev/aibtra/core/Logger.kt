@@ -4,8 +4,10 @@
 
 package dev.aibtra.core
 
-import dev.aibtra.main.startup.*
+import java.io.*
 import java.nio.file.*
+import java.time.*
+import java.time.format.*
 import java.util.logging.*
 import java.util.logging.Logger
 import kotlin.reflect.*
@@ -61,7 +63,7 @@ class Logger private constructor(private val logger: Logger) {
 
 			val logger: Logger = Logger.getLogger("")
 			fileHandler = FileHandler(logFile.toString()).apply {
-				formatter = MainStartup.LogFormatter()
+				formatter = LogFormatter()
 			}
 			logger.addHandler(fileHandler)
 		}
@@ -71,6 +73,24 @@ class Logger private constructor(private val logger: Logger) {
 			logFile?.let {
 				Files.copy(it, Files.createTempFile(it.parent, "$prefix-", ".txt"), StandardCopyOption.REPLACE_EXISTING)
 			}
+		}
+	}
+
+	private class LogFormatter : Formatter() {
+		override fun format(record: LogRecord): String {
+			val stringBuilder = StringBuilder()
+			stringBuilder.append("${LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)} [${Thread.currentThread().name}] ${record.level}: ${record.message}\n")
+
+			record.thrown?.let {
+				val stringWriter = StringWriter()
+				val printWriter = PrintWriter(stringWriter)
+				it.printStackTrace(printWriter)
+				printWriter.flush()
+
+				stringBuilder.append(stringWriter.toString()).append('\n')
+			}
+
+			return stringBuilder.toString()
 		}
 	}
 }
