@@ -174,7 +174,7 @@ class RefinerDiffManager(
 				val config = input.config
 				val finished = input.finished
 				val selection = input.raw.isPart()
-				val diff = DiffExtender(config.tokenizingMode, enabled = config.enabled).extend(raw.all, ref, state.diff, finished)
+				val diff = DiffExtender(config.tokenizingMode, enabled = config.enabled).extend(raw.all, ref, dataState.diff, finished)
 
 				val (rawFormatted, rawChars) = DiffFormatter(DiffFormatter.Mode.KEEP_RAW_FOR_MODIFIED).format(diff)
 				require(rawFormatted.length == raw.all.length)
