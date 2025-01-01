@@ -27,13 +27,13 @@ class RefinerRequestManager(
 		private set
 
 	fun schedule(request: Request, failureHandler: RequestManagerFailureHandler) {
-		LOG.debug("schedule")
+		val state = diffManager.state
+		LOG.debug("schedule: $state")
 
 		val run = object : Run {
 			override suspend fun invoke(callback: Callback, coroutineScope: CoroutineScope) {
 				notifyInProgress(true)
 
-				val state = diffManager.state
 				LOG.debug("invoke: $state")
 
 				val filteredText = state.filtered
