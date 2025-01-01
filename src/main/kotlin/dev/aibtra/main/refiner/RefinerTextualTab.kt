@@ -41,7 +41,7 @@ internal abstract class RefinerTextualTab(initialWorkingMode: WorkingMode, priva
 
 		profileManager = RefinerProfileManager(initialWorkingMode, environment.configurationProvider)
 
-		rawEditor = RefinerRawEditor({ text -> diffManager.updateRawText(text, null, profileManager.profile().diffConfig, normalization = Normalization.INITIALIZE) }, environment)
+		rawEditor = RefinerRawEditor({ text -> diffManager.updateRawText(text, null, profileManager.profile().diffConfig, normalization = Normalization.INITIALIZE).first }, environment)
 		refEditor = RefinerRefEditor(environment)
 
 		val textRefresher = DelayedUiRefresher(100) {

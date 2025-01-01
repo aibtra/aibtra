@@ -6,6 +6,7 @@ package dev.aibtra.main.refiner
 
 import dev.aibtra.main.content.*
 import dev.aibtra.refiner.*
+import javax.swing.*
 
 class RefinerToggleActiveRangeAction(
 	private val diffManager: RefinerDiffManager,
@@ -16,11 +17,18 @@ class RefinerToggleActiveRangeAction(
 	MainMenuAction("toggleActiveRange", "Transfer only active range", null, "Active Range", null, accelerators,
 		{ action ->
 			val raw = rawEditor.getText()
-			if (action.isSelected()) {
-				diffManager.updateRawText(raw, null)
+			val updated = if (action.isSelected()) {
+				diffManager.updateRawText(raw, null).second
 			}
 			else {
-				diffManager.updateRawText(raw, rawEditor.getActiveRange())
+				diffManager.updateRawText(raw, rawEditor.getActiveRange()).second
+			}
+
+			if (!updated) {
+				(action as RefinerToggleActiveRangeAction).let {
+					it.updateState()
+					it.firePropertyChange(Action.SELECTED_KEY, true, false)
+				}
 			}
 		}
 	) {

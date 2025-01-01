@@ -28,7 +28,7 @@ class RefinerDiffManager(
 			return data.state
 		}
 
-	fun updateRawText(raw: String, rawRange: IntRange?, rawConfig: Config? = null, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): String {
+	fun updateRawText(raw: String, rawRange: IntRange?, rawConfig: Config? = null, normalization: Normalization = Normalization.AS_IS, callback: Runnable? = null): Pair<String, Boolean> {
 		Ui.assertEdt()
 
 		data.let {
@@ -39,7 +39,7 @@ class RefinerDiffManager(
 			val input = it.input
 			val config = rawConfig ?: input.config
 			if (input.raw.all == raw && input.raw == part && config == input.config && normalization == Normalization.AS_IS && callback == null) {
-				return raw
+				return Pair(raw, false)
 			}
 
 			// For the "initial" call, we are backing up raw to rawOrg,
@@ -67,7 +67,7 @@ class RefinerDiffManager(
 			val normalizationPending = rawNew != raw
 			updateState(input.copy(raw = part, rawOrg = rawOrgNew, config = config, normalizationPending = normalizationPending, callback = callback), true, "updateRaw")
 			scrollState.updateLeftText(raw)
-			return rawNew
+			return Pair(rawNew, true)
 		}
 	}
 
