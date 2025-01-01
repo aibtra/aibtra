@@ -4,6 +4,7 @@
 
 package dev.aibtra.main.resolver
 
+import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 
@@ -24,7 +25,7 @@ class ResolverResolutionEditor(focusGroup: TextEditorFocusGroup, environment: En
 
 	fun update(summary: ResolveSummary) {
 		texter.initialize(summary, true) { text, textArea ->
-			textArea.setText(text)
+			textArea.setText(text, SyntaxType.NONE)
 		}
 
 		setSummary(summary)

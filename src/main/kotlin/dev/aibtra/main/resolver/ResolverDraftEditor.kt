@@ -4,6 +4,7 @@
 
 package dev.aibtra.main.resolver
 
+import dev.aibtra.core.*
 import dev.aibtra.diff.*
 import dev.aibtra.main.content.*
 import java.awt.event.*
@@ -85,7 +86,7 @@ class ResolverDraftEditor(focusGroup: TextEditorFocusGroup, environment: Environ
 			documentFilterEnabled = false
 			try {
 				val lastCaretPosition = textArea.caretPosition
-				textArea.setText(text, if (lastCaretPosition < text.length) lastCaretPosition else 0)
+				textArea.setText(text, SyntaxType.NONE, if (lastCaretPosition < text.length) lastCaretPosition else 0)
 			} finally {
 				documentFilterEnabled = true
 			}

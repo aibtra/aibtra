@@ -108,7 +108,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 			schemeComboBox.selectedItem = it
 		}
 
-		rawEditor.initializeText(text)
+		rawEditor.initializeText(text, SyntaxType.NONE)
 	}
 
 	fun initiateClose(runnable: Runnable) {
@@ -170,7 +170,7 @@ internal class RefinerTextTab(private val workingMode: WorkingMode, tabbedPane: 
 
 	private fun updateInitialText() {
 		diffManager.updateInitial()?.let {
-			rawEditor.initializeText(it)
+			rawEditor.initializeText(it, SyntaxType.NONE)
 		}
 	}
 }

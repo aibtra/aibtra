@@ -1,5 +1,9 @@
 package dev.aibtra.main.content
 
+import dev.aibtra.configuration.*
+import dev.aibtra.core.*
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.*
@@ -9,12 +13,18 @@ import javax.swing.event.*
 import javax.swing.text.*
 import kotlin.math.*
 
-class TextArea(private val editable: Boolean) {
+class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean, configurationProvider: ConfigurationProvider) {
 
 	var pasting = false
 		private set
 
-	private val textArea = object : JTextArea() {
+	private val textArea = object : RSyntaxTextArea() {
+		init {
+			highlightCurrentLine = false
+			animateBracketMatching = false
+			isBracketMatchingEnabled = false
+		}
+
 		override fun paste() {
 			pasting = true
 			try {
@@ -34,7 +44,11 @@ class TextArea(private val editable: Boolean) {
 		null
 	}
 
-	private val scrollPane = JScrollPane(textArea)
+	private val scrollPane = object : RTextScrollPane(textArea) {
+		init {
+			Theme.applyRSyntaxTextTheme(this, configurationProvider)
+		}
+	}
 
 	val text: String
 		get() = textArea.text
@@ -75,7 +89,9 @@ class TextArea(private val editable: Boolean) {
 		return scrollPane
 	}
 
-	fun setText(text: String, caretPosition: Int = 0) {
+	fun setText(text: String, syntaxType: SyntaxType, caretPosition: Int = 0) {
+		require(syntaxSupport || syntaxType == SyntaxType.NONE)
+
 		if (editable) {
 			textArea.text = text
 			textArea.caretPosition = caretPosition
@@ -99,6 +115,8 @@ class TextArea(private val editable: Boolean) {
 
 			textArea.setCaretPosition(max(0, min(text.length - 1, caretPosition)))
 		}
+
+		textArea.syntaxEditingStyle = syntaxType.internal
 	}
 
 	fun replaceText(from: Int, to: Int, text: String) {
