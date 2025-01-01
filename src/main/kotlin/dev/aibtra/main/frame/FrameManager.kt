@@ -34,7 +34,7 @@ class FrameManager {
 		return frame
 	}
 
-	fun exit() {
+	fun close(finishRunnable: Runnable? = null) {
 		val runnable = {
 			this.frame?.closed()
 
@@ -42,9 +42,16 @@ class FrameManager {
 				frame.dispose()
 			}
 
-			System.exit(0)
+			finishRunnable?.run()
+			Unit
 		}
 
 		frame?.checkClose(runnable) ?: runnable()
+	}
+
+	fun exit() {
+		close {
+			System.exit(0)
+		}
 	}
 }

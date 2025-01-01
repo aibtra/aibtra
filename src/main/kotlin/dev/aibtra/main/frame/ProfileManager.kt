@@ -4,23 +4,9 @@ import dev.aibtra.configuration.ConfigurationProvider
 import dev.aibtra.core.WorkingMode
 import dev.aibtra.openai.OpenAIConfiguration
 
-class ProfileManager(initialWorkingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
+class ProfileManager(private val workingMode: WorkingMode, val configurationProvider: ConfigurationProvider) {
 
 	private val listeners = ArrayList<(OpenAIConfiguration.Profile.Name, OpenAIConfiguration.Profile.Name) -> Unit>()
-
-	var workingMode: WorkingMode = initialWorkingMode
-		set(workingMode) {
-			// If the frame has workingMode != open set, we won't override this by open
-			if (workingMode != WorkingMode.OPEN && field != workingMode) {
-				val currentProfile = profile()
-				configurationProvider.change(OpenAIConfiguration) {
-					it.copy(workingModeToDefaultProfileId = it.workingModeToDefaultProfileId.plus(field to currentProfile.name.id))
-				}
-
-				field = workingMode
-			}
-		}
-
 	private var name: OpenAIConfiguration.Profile.Name = configurationProvider.get(OpenAIConfiguration).currentProfile(workingMode).name
 
 	fun profile(): OpenAIConfiguration.Profile {

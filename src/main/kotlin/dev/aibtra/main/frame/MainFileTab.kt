@@ -1,0 +1,71 @@
+/*
+ * Copyright 2024 https://github.com/aibtra/aibtra. Use of this source code is governed by the GNU General Public License v3.0.
+ */
+
+package dev.aibtra.main.frame
+
+import dev.aibtra.core.WorkingMode
+import dev.aibtra.diff.DiffManager
+import dev.aibtra.gui.Ui
+import dev.aibtra.gui.dialogs.DialogDisplayer
+import java.nio.file.Path
+import javax.swing.JMenu
+
+internal class MainFileTab(tabbedPane: MainTabbedPane, private val environment: Environment, dialogDisplayer: DialogDisplayer) : MainTab(WorkingMode.FILE, tabbedPane, environment, dialogDisplayer) {
+	private val workFile: WorkFile
+
+	init {
+		workFile = WorkFile(environment.mainScope, dialogDisplayer)
+
+		workFile.addStateListener { state ->
+			if (state != null && state.initial) {
+				val text = state.content
+				rawTextArea.setText(text)
+				diffManager.updateRawText(text, null, profileManager.profile().diffConfig, DiffManager.Normalization.STOP, null)
+
+				state.initialLine?.let {
+					Ui.runInEdt {
+						rawTextArea.scrollToLine(it)
+					}
+				}
+			}
+
+			Ui.runInEdt {
+				updateTitle()
+			}
+		}
+
+		init()
+	}
+
+	override fun getTitle() : String {
+		return workFile.state?.let {
+			val name = it.path.fileName.toString()
+			name + if (it.modified) "*" else ""
+		} ?: "<untitled>"
+	}
+
+	override fun updateContent() {
+		super.updateContent()
+		workFile.setContent(rawTextArea.getText())
+	}
+
+	override fun checkClose(runnable: Runnable) {
+		workFile.checkSave({
+			toFront()
+		}, runnable)
+	}
+
+	override fun addFileActions(menu: JMenu) {
+		addAction(menu, SaveAction(workFile, environment))
+	}
+
+	fun getFile(): Path? {
+		return workFile.state?.path
+	}
+
+	fun setFile(fileToOpen: Path, profileId: String?, line: Int?) {
+		updateProfile(profileId)
+		workFile.load(fileToOpen, line)
+	}
+}
