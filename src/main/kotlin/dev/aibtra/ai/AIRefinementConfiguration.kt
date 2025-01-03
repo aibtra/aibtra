@@ -231,7 +231,10 @@ data class AIRefinementConfiguration(
 					Instruction(AIRole.USER, COMMAND_MACRO),
 					Instruction(AIRole.USER, SELECTION_MACRO)
 				),
-				null,
+				listOf(
+					Instruction(AIRole.USER, COMMAND_MACRO),
+					Instruction(AIRole.USER, SELECTION_MACRO)
+				),
 				ResponseType.CONTENT_AS_IS,
 				RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
 			)
