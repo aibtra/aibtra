@@ -154,18 +154,31 @@ class AIRefinementService(driver: AIDriver, apiToken: String, debugLog: DebugLog
 
 			val parser: Parser = Parser.builder(options).build()
 			val node = parser.parse(raw)
+			var targetFencedCodeBlock: String? = null
 			var lastFencedCodeBlock: String? = null
 			object : NodeVisitor() {
 				override fun processNode(node: Node, withChildren: Boolean, processor: BiConsumer<Node, Visitor<Node>>) {
 					super.processNode(node, withChildren, processor)
 
 					if (node is FencedCodeBlock) {
-						val content = node.contentChars.toString()
+						val rawContent = node.contentChars.toString()
+						val (content, target) = if (rawContent.startsWith(AIRefinementConfiguration.FILENAME_MAIN)) {
+							Pair(rawContent.substring(AIRefinementConfiguration.FILENAME_MAIN.length).trimStart(), true)
+						}
+						else {
+							Pair(rawContent, false)
+						}
+
 						lastFencedCodeBlock = content
+
+						if (node.info.contains(AIRefinementConfiguration.FILENAME_MAIN) || target) {
+							targetFencedCodeBlock = content
+						}
 					}
 				}
 			}.visit(node)
-			return lastFencedCodeBlock ?: throw IOException("Could not detect fenced code block")
+
+			return targetFencedCodeBlock ?: lastFencedCodeBlock ?: throw IOException("Could not detect fenced code block")
 		}
 
 		private fun parseJson(input: String): Any {

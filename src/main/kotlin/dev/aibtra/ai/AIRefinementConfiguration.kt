@@ -93,6 +93,7 @@ data class AIRefinementConfiguration(
 		const val CONTENT_MACRO = "\${CONTENT}"
 		const val SELECTION_MACRO = "\${SELECTION}"
 		const val COMMAND_MACRO = "\${COMMAND}"
+		const val FILENAME_MAIN = "{filename=\"main\"}"
 		private const val MODEL_4O = "gpt-4o"
 		private const val MODEL_O1_MINI = "o1-mini"
 		private const val MODEL_CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
@@ -261,7 +262,7 @@ data class AIRefinementConfiguration(
 						|Your objective is to apply the specified changes to a source code file:
 						|
 						|1. Begin by providing a detailed reasoning process about the planned modifications, explaining why and how each change will be implemented.
-						|2. Conclude your response with the updated file content enclosed in triple backticks (```).
+						|2. Conclude your response with the updated file content enclosed in triple backticks (```) and be sure to include `$FILENAME_MAIN` as code block attribute.
 						|2.1 Be sure to preserve the indentation of every line exactly as is.
 						|
 						|The changes to be applied are described below:
@@ -295,7 +296,7 @@ data class AIRefinementConfiguration(
 					Instruction(
 						AIRole.USER,
 						"""
-						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```). The changes to be applied are described below:
+						|Continue to refine the file by applying more changes. Conclude your response with the updated file content enclosed in triple backticks (```) and be sure to include `$FILENAME_MAIN` as code block attribute. The changes to be applied are described below:
 						|
 						|$COMMAND_MACRO
 					""".trimMargin()
