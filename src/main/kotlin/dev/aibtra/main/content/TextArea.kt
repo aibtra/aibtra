@@ -37,6 +37,10 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 				pasting = false
 			}
 		}
+
+		override fun copyAsStyledText() {
+			copySelectionToClipboard()
+		}
 	}
 
 	private val documentFilter: NonEditableDocumentFilter? = if (!editable) {
