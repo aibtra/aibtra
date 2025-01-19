@@ -261,6 +261,10 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 		return ScrollState.ScrollPos(topModel, bottomModel)
 	}
 
+	fun copySelectionToClipboard() {
+		textArea.copySelectionToClipboard()
+	}
+
 	private class Highlighter(private val textArea: TextArea, private val configurationProvider: ConfigurationProvider) {
 		private val highlightStyleToPainter = mutableMapOf<HighlightStyle, DefaultHighlighter.DefaultHighlightPainter>()
 		private val ourHighlights = mutableSetOf<javax.swing.text.Highlighter.Highlight>()

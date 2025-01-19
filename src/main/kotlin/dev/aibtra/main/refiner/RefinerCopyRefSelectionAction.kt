@@ -5,15 +5,11 @@
 package dev.aibtra.main.refiner
 
 import dev.aibtra.gui.action.*
-import java.awt.*
-import java.awt.datatransfer.*
 
 class RefinerCopyRefSelectionAction(
 	refEditor: RefinerRefEditor
 ) :
 	DefaultAction("Copy", ActionRunnable {
-		val selection = StringSelection(refEditor.getSelectionText())
-		val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-		clipboard.setContents(selection, selection)
+		refEditor.copySelectionToClipboard()
 	})
 

@@ -6,6 +6,7 @@ import dev.aibtra.gui.*
 import org.fife.ui.rsyntaxtextarea.*
 import org.fife.ui.rtextarea.*
 import java.awt.*
+import java.awt.datatransfer.*
 import java.awt.event.*
 import java.awt.geom.*
 import java.beans.*
@@ -224,6 +225,12 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 
 	fun copy() {
 		textArea.copy()
+	}
+
+	fun copySelectionToClipboard() {
+		val selection = StringSelection(textArea.selectedText)
+		val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+		clipboard.setContents(selection, selection)
 	}
 
 	private class NonEditableDocumentFilter : DocumentFilter() {
