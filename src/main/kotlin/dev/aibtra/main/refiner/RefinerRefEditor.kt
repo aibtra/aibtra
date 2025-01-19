@@ -51,7 +51,7 @@ class RefinerRefEditor(environment: Environment) :
 			start++
 		}
 
-		textArea.setText(text, syntaxType, if (preserveCaretPosition) textArea.caretPosition else start)
+		textArea.setText(text, syntaxType, if (preserveCaretPosition) textArea.caretPosition else null)
 
 		state = State(chars)
 

@@ -92,12 +92,12 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 		return scrollPane
 	}
 
-	fun setText(text: String, syntaxType: SyntaxType, caretPosition: Int = 0) {
+	fun setText(text: String, syntaxType: SyntaxType, caretPosition: Int? = null) {
 		require(syntaxSupport || syntaxType == SyntaxType.NONE)
 
 		if (editable) {
 			textArea.text = text
-			textArea.caretPosition = caretPosition
+			textArea.caretPosition = caretPosition ?: 0
 		}
 		else {
 			val doc = textArea.document
@@ -116,7 +116,9 @@ class TextArea(private val editable: Boolean, private val syntaxSupport: Boolean
 				doc.insertString(start, text.substring(start), SimpleAttributeSet.EMPTY)
 			}
 
-			textArea.setCaretPosition(max(0, min(text.length - 1, caretPosition)))
+			caretPosition?.let {
+				textArea.setCaretPosition(max(0, min(text.length - 1, it)))
+			}
 		}
 
 		textArea.syntaxEditingStyle = syntaxType.internal
