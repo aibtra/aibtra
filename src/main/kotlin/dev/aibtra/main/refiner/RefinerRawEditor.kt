@@ -82,12 +82,6 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 				}
 			}
 		})
-
-		textArea.addPropertyChangeListener { evt ->
-			if (evt.propertyName == "UI") {
-				updateCharacterAttributes()
-			}
-		}
 	}
 
 	fun getText(): String {
@@ -130,6 +124,11 @@ class RefinerRawEditor(private val textInitializer: TextInitializer, environment
 
 	fun addActiveRangeListener(listen: (range: IntRange?) -> Unit) {
 		activeRange.addListener(listen)
+	}
+
+	override fun updateUI() {
+		super.updateUI()
+		updateCharacterAttributes()
 	}
 
 	private fun updateCharacterAttributes() {

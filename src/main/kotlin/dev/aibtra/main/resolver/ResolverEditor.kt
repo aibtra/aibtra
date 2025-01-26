@@ -26,13 +26,6 @@ abstract class ResolverEditor(editable: Boolean, private val focusGroup: TextEdi
 		textArea.setLineWrap(false)
 
 		texter = Texter(textArea, environment)
-		textArea.addPropertyChangeListener { evt ->
-			if (evt.propertyName == "UI") {
-				texter.updateHighlights()
-				updateConflictBackgrounds()
-				updateCharacterAttributes()
-			}
-		}
 
 		@Suppress("LeakingThis")
 		focusGroup.register(this)
@@ -49,6 +42,12 @@ abstract class ResolverEditor(editable: Boolean, private val focusGroup: TextEdi
 	protected fun setSummary(summary: ResolveSummary) {
 		this.summary = summary
 
+		updateConflictBackgrounds()
+		updateCharacterAttributes()
+	}
+
+	override fun updateUI() {
+		texter.updateHighlights()
 		updateConflictBackgrounds()
 		updateCharacterAttributes()
 	}

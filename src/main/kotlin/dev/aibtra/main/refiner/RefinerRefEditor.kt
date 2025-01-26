@@ -32,12 +32,6 @@ class RefinerRefEditor(environment: Environment) :
 		styleGapLeft = HighlightStyle({ it.refBackgroundRemovedGap }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.LEFT)
 		styleGapRight = HighlightStyle({ it.refBackgroundRemovedGap }, { it.refBackgroundRemovedShadow }, false, false, GapStyle.RIGHT)
 
-		textArea.addPropertyChangeListener { evt ->
-			if (evt.propertyName == "UI") {
-				updateCharacterAttributes()
-			}
-		}
-
 		configurationProvider = environment.configurationProvider
 	}
 
@@ -57,6 +51,11 @@ class RefinerRefEditor(environment: Environment) :
 
 		require(text == textArea.text)
 
+		updateCharacterAttributes()
+	}
+
+	override fun updateUI() {
+		super.updateUI()
 		updateCharacterAttributes()
 	}
 

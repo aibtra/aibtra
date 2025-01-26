@@ -30,8 +30,8 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 		textArea.setFont(guiConfiguration.fonts.monospacedFont)
 
 		textArea.addPropertyChangeListener { evt ->
-			if (evt.propertyName == "UI") {
-				highlighter.resetPainters()
+			if (evt.propertyName == "RSTA.syntaxScheme") {
+				updateUI()
 			}
 		}
 	}
@@ -42,6 +42,10 @@ open class AbstractTextEditor(editable: Boolean, syntaxSupport: Boolean, environ
 
 	fun requestFocusInWindow() {
 		textArea.requestFocusInWindow()
+	}
+
+	protected open fun updateUI() {
+		highlighter.resetPainters()
 	}
 
 	protected fun updateCharacterAttributes(chars: List<DiffChar>, highlightStyle: (index: Int, char: DiffChar) -> HighlightStyle?) {
