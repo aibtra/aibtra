@@ -27,7 +27,7 @@ data class GuiConfiguration(
 	val setup: Boolean = false
 ) {
 	@Serializable
-	data class Fonts(val monospacedFont: Font = Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE)) {
+	data class Fonts(val monospacedFont: Font = getDefaultMonospacedFont()) {
 		companion object {
 			private val editorFontSize = JTextArea().font.size
 
@@ -36,6 +36,28 @@ data class GuiConfiguration(
 			}
 			else {
 				Math.max(editorFontSize, 13)
+			}
+
+			private fun getDefaultMonospacedFont(): Font {
+				val fontName = when {
+					SystemInfo.isWindows -> {
+						listOf(
+							"Cascadia Code",
+							"JetBrains Mono",
+							Font.MONOSPACED
+						).firstOrNull { isFontAvailable(it) } ?: Font.MONOSPACED
+					}
+
+					else -> Font.MONOSPACED
+				}
+				return Font(fontName, Font.PLAIN, DEFAULT_FONT_SIZE)
+			}
+
+			private fun isFontAvailable(fontName: String): Boolean {
+				return GraphicsEnvironment
+					.getLocalGraphicsEnvironment()
+					.availableFontFamilyNames
+					.any { it.equals(fontName, ignoreCase = true) }
 			}
 		}
 	}
