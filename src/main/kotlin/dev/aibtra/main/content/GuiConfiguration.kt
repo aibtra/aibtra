@@ -75,14 +75,33 @@ data class GuiConfiguration(
 	}
 
 	object MonospacedFontSerializer : KSerializer<Font> {
-		override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Font", PrimitiveKind.STRING)
+		override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Font") {
+			element<String>("name")
+			element<Int>("size")
+		}
 
 		override fun serialize(encoder: Encoder, value: Font) {
-			encoder.encodeInt(value.size)
+			encoder.encodeStructure(descriptor) {
+				encodeStringElement(descriptor, 0, value.name)
+				encodeIntElement(descriptor, 1, value.size)
+			}
 		}
 
 		override fun deserialize(decoder: Decoder): Font {
-			return Font(Font.MONOSPACED, Font.PLAIN, decoder.decodeInt())
+			return decoder.decodeStructure(descriptor) {
+				var name = Font.MONOSPACED
+				var size = 12 // Default size
+
+				while (true) {
+					when (val index = decodeElementIndex(descriptor)) {
+						0 -> name = decodeStringElement(descriptor, index)
+						1 -> size = decodeIntElement(descriptor, index)
+						CompositeDecoder.DECODE_DONE -> break
+						else -> throw SerializationException("Unexpected index: $index")
+					}
+				}
+				Font(name, Font.PLAIN, size)
+			}
 		}
 	}
 }
