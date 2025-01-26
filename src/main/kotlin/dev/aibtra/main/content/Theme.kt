@@ -6,7 +6,7 @@ package dev.aibtra.main.content
 
 import com.formdev.flatlaf.*
 import dev.aibtra.configuration.*
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rsyntaxtextarea.*
 import org.fife.ui.rtextarea.*
 import java.awt.*
 import java.util.*
@@ -43,7 +43,7 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 		val laf = if (dark) DarkLaf(guiColors) else LightLaf(guiColors)
 		FlatLaf.setup(laf)
 
-		val rSyntaxTextTheme = loadRSyntaxTextTheme(dark)
+		val rSyntaxTextTheme = loadRSyntaxTextTheme(dark, colors)
 		fun iterateRSyntaxTextAreas(component: Component, consume: (RTextScrollPane) -> Unit) {
 			if (component is RTextScrollPane) {
 				consume(component)
@@ -72,11 +72,11 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 
 	companion object {
 		fun applyRSyntaxTextTheme(scrollPane: RTextScrollPane, configurationProvider: ConfigurationProvider) {
-			val theme = loadRSyntaxTextTheme(configurationProvider.get(GuiConfiguration).darkTheme)
 			val guiColors = configurationProvider.get(GuiColors)
 			val dark = configurationProvider.get(GuiConfiguration).darkTheme
 			val colors = if (dark) guiColors.dark else guiColors.light
 			val fonts = configurationProvider.get(GuiConfiguration).fonts
+			val theme = loadRSyntaxTextTheme(configurationProvider.get(GuiConfiguration).darkTheme, colors)
 			applyTheme(scrollPane, colors, theme, fonts)
 		}
 
@@ -98,12 +98,23 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 			scrollPane.gutter.currentLineNumberColor = colors.foregroundColor
 		}
 
-		private fun loadRSyntaxTextTheme(dark: Boolean): org.fife.ui.rsyntaxtextarea.Theme {
-			return if (dark) {
+		private fun loadRSyntaxTextTheme(dark: Boolean, colors: GuiColors.Colors): org.fife.ui.rsyntaxtextarea.Theme {
+			return (if (dark) {
 				loadRSyntaxTextTheme("dark.xml")
 			}
 			else {
 				loadRSyntaxTextTheme("default.xml")
+			}).let { textTheme ->
+				val foregroundColor = textTheme.currentLineNumberColor
+				textTheme.scheme.let {
+					for (i in 0 until it.styleCount) {
+						val style = it.getStyle(i)
+						if (style.foreground == foregroundColor) {
+							style.foreground = colors.foregroundColor
+						}
+					}
+				}
+				textTheme
 			}
 		}
 
