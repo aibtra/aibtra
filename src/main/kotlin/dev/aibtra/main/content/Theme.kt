@@ -93,7 +93,6 @@ class Theme(val configurationProvider: ConfigurationProvider) {
 			scrollPane.gutter.background = colors.backgroundColor
 
 			scrollPane.gutter.lineNumberFont = fonts.monospacedFont
-			scrollPane.gutter.lineNumberFont = fonts.monospacedFont
 			scrollPane.gutter.lineNumberColor = colors.foregroundColor
 			scrollPane.gutter.currentLineNumberColor = colors.foregroundColor
 		}
