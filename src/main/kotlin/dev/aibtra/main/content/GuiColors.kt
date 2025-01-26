@@ -47,8 +47,8 @@ data class GuiColors(
 			private val DARK_RED_SHADOW = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
 			private val DARK_ACTIVE_RANGE_SOFT = Color(0x00, 0x4B, 0x4B)
 			private val DARK_ACTIVE_RANGE_INTENSE = Color(0x00, 0x8B, 0x8B)
-			private val DARK_FOREGROUND = Color(0xD0, 0xD0, 0xD0)
-			private val DARK_BACKGROUND = Color(0x10, 0x10, 0x20)
+			private val DARK_FOREGROUND = Color(0xD6, 0xD6, 0xD6)
+			private val DARK_BACKGROUND = Color(0x18, 0x18, 0x18)
 			private val DARK_CONFLICT_UNRESOLVED = Color(0xC6, 0x28, 0x28, SHADOW_ALPHA)
 			private val DARK_RESOLVER_HEADER_WARNING = Color(0xC0, 0x00, 0x00)
 
