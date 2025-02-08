@@ -8,92 +8,6 @@ import java.nio.file.attribute.*
 class ResolverPatcherTest {
 
 	@Test
-	fun testResolutionExact() {
-		val snippet = createSnippet(
-			"a",
-			"x", "y",
-			"b"
-		)
-
-		assertResolution(
-			"a.z.b",
-			"a",
-			"z",
-			"b",
-			snippet
-		)
-	}
-
-	@Test
-	fun testResolutionWithAdditionalLines() {
-		val snippet = createSnippet(
-			"a",
-			"x", "y",
-			"b"
-		)
-
-		assertResolution(
-			"a.z.f.b",
-			"a",
-			"z.f",
-			"b",
-			snippet
-		)
-	}
-
-	@Test
-	fun testResolutionWithAdditionalLinesBeforeAndAfter() {
-		val snippet = createSnippet(
-			"a",
-			"x", "y",
-			"b"
-		)
-
-		assertResolution(
-			"f.a.z.b.f",
-			"a",
-			"z",
-			"b",
-			snippet
-		)
-	}
-
-	@Test
-	fun testResolutionNotFound() {
-		val snippet = createSnippet(
-			"a",
-			"x",
-			"y",
-			"b"
-		)
-
-		assertResolution(
-			"q.xy.r",
-			"",
-			"q.xy.r",
-			"",
-			snippet
-		)
-	}
-
-	@Test
-	fun testResolutionWithBeforeAndAfterWhitespaceChanges() {
-		val snippet = createSnippet(
-			" a",
-			"x", "y",
-			" b "
-		)
-
-		assertResolution(
-			"a .z.b",
-			" a",
-			"z",
-			" b ",
-			snippet
-		)
-	}
-
-	@Test
 	fun testFixIdentation1() {
 		val snippet = createSnippet(
 			"\t{",
@@ -102,7 +16,7 @@ class ResolverPatcherTest {
 		)
 
 		assertResolution(
-			"{.z.}",
+			"z",
 			"\t{",
 			"\t\tz",
 			"\t}",
@@ -119,10 +33,10 @@ class ResolverPatcherTest {
 		)
 
 		assertResolution(
-			"{.z.}.",
+			"z",
 			"\t{",
 			"\t \t  z",
-			"\t}.",
+			"\t}..",
 			snippet
 		)
 	}
@@ -136,7 +50,7 @@ class ResolverPatcherTest {
 		)
 
 		assertResolution(
-			"{.z.z..z.}",
+			"z.z..z.",
 			"{",
 			"\tz.\tz..\tz",
 			"}",
@@ -153,78 +67,10 @@ class ResolverPatcherTest {
 		)
 
 		assertResolution(
-			"\t{.\t\tz.\t}",
+			"\t\tz",
 			"  {",
 			"    z",
 			"  }",
-			snippet
-		)
-	}
-
-	@Test
-	fun testFuzzyStart() {
-		val snippet = createSnippet(
-			"a.b.c.d",
-			"x", "y",
-			"e"
-		)
-
-		assertResolution(
-			"m.b.c.d.xy.e",
-			"a.b.c.d",
-			"xy",
-			"e",
-			snippet
-		)
-	}
-
-	@Test
-	fun testFuzzyEnd() {
-		val snippet = createSnippet(
-			"a",
-			"x", "y",
-			"b.c.d.e"
-		)
-
-		assertResolution(
-			"a.xy.b.c.d.m",
-			"a",
-			"xy",
-			"b.c.d.e",
-			snippet
-		)
-	}
-
-	@Test
-	fun testFuzzyStartTooShort() {
-		val snippet = createSnippet(
-			"a.b",
-			"x", "y",
-			"e"
-		)
-
-		assertResolution(
-			"m.b.xy.e",
-			"",
-			"m.b.xy",
-			"e",
-			snippet
-		)
-	}
-
-	@Test
-	fun testFuzzyEndTooShort() {
-		val snippet = createSnippet(
-			"a",
-			"x", "y",
-			"b.c"
-		)
-
-		assertResolution(
-			"a.xy.b.m",
-			"a",
-			"xy.b.m",
-			"",
 			snippet
 		)
 	}
@@ -259,23 +105,6 @@ class ResolverPatcherTest {
 			"a.b",
 			"x.y",
 			"d.e",
-			snippet
-		)
-	}
-
-	@Test
-	fun testJustConflictButTooLarge() {
-		val snippet = createSnippet(
-			"a",
-			"x", "y",
-			"d"
-		)
-
-		assertResolution(
-			"x.y.z",
-			"",
-			"x.y.z",
-			"",
 			snippet
 		)
 	}
@@ -374,7 +203,7 @@ class ResolverPatcherTest {
 		)
 
 		assertResolution(
-			"a a a.x.y.b b b",
+			"x.y",
 			"\ta  a \t a",
 			"\tx.\ty",
 			"\tb  b \t b",
@@ -383,7 +212,7 @@ class ResolverPatcherTest {
 	}
 
 	private fun assertResolution(res: String, expectedBefore: String, expectedConflict: String, expectedAfter: String, snippet: ResolverSnippet) {
-		val resolution = ResolverPatcher.apply(res.replace(".", "\n"), snippet, ResolverPatcher.FuzzyRange(3, 1))
+		val resolution = ResolverPatcher.apply(res.replace(".", "\n"), snippet)
 		assertEquals(expectedBefore.replace(".", "\n").let { it + if (it.isNotEmpty() && !it.endsWith("\n")) "\n" else "" }, resolution.content.before)
 		assertEquals(expectedConflict.replace(".", "\n") + "\n", resolution.content.text)
 		assertEquals(expectedAfter.replace(".", "\n").let { it + if (it.isNotEmpty() && !it.endsWith("\n")) "\n" else "" }, resolution.content.after)

@@ -45,7 +45,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		val idToResolution = resolutions.associateBy { it.id }
 		for (snippet in snippets) {
 			idToResolution[snippet.id]?.let {
-				resolutionList.add(ResolverPatcher.apply(it.resolution, snippet, ResolverPatcher.FuzzyRange(5, 1)))
+				resolutionList.add(ResolverPatcher.apply(it.resolution, snippet))
 			}
 		}
 
@@ -64,7 +64,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			val fileName = snippet.file.name
 			val debugDetailsBuilder = StringBuilder(debugDetailsBuilderMain).append("\n\n")
 
-			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.text, AIRole.USER, input, debugDetailsBuilder)
 			addMessage("Filename '$fileName', CONFLICT-ID '$id', BASE version:\n\n" + snippet.base.join(false), AIRole.USER, input, debugDetailsBuilder)
 			addMessage("Filename '$fileName', CONFLICT-ID '$id', OURS version:\n\n" + snippet.ours.join(false), AIRole.USER, input, debugDetailsBuilder)
 			addMessage("Filename '$fileName', CONFLICT-ID '$id', THEIRS version:\n\n" + snippet.theirs.join(false), AIRole.USER, input, debugDetailsBuilder)
@@ -132,7 +132,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		val idToResolution = resolutions.associateBy { it.id }
 		for (snippet in snippets) {
 			idToResolution[snippet.id]?.let {
-				resolutionList.add(ResolverPatcher.apply(it.resolution, snippet, ResolverPatcher.FuzzyRange(5, 1)))
+				resolutionList.add(ResolverPatcher.apply(it.resolution, snippet))
 			}
 		}
 
@@ -151,7 +151,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			val fileName = snippet.file.name
 			val debugDetailsBuilder = StringBuilder(debugDetailsBuilderMain).append("\n\n")
 
-			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.join(false), AIRole.USER, input, debugDetailsBuilder)
+			addMessage("Filename '$fileName', CONFLICT-ID '$id', CONFLICT:\n\n" + snippet.draft.text, AIRole.USER, input, debugDetailsBuilder)
 			addMessage("Filename '$fileName', CONFLICT-ID '$id', BASE version:\n\n" + snippet.base.join(false), AIRole.USER, input, debugDetailsBuilder)
 			addMessage("Filename '$fileName', CONFLICT-ID '$id', OURS version:\n\n" + snippet.ours.join(false), AIRole.USER, input, debugDetailsBuilder)
 			addMessage("Filename '$fileName', CONFLICT-ID '$id', THEIRS version:\n\n" + snippet.theirs.join(false), AIRole.USER, input, debugDetailsBuilder)
@@ -189,7 +189,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			idToMerge[id]?.let {
 				builder.append("HINTS:\n${it.instructions}\n")
 			}
-			builder.append("CONFLICT:\n```\n${snippet.draft.join(true)}```\n\n")
+			builder.append("CONFLICT:\n```\n${snippet.draft.text}```\n\n")
 			builder.append("BASE version:\n```\n${snippet.base.join(true)}```\n\n")
 			builder.append("OURS version:\n```\n${snippet.ours.join(true)}```\n\n")
 			builder.append("THEIRS version:\n```\n${snippet.theirs.join(true)}```\n\n")
