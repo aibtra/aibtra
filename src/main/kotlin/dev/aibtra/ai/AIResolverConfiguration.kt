@@ -12,7 +12,7 @@ import kotlinx.serialization.*
 @Serializable
 data class AIResolverConfiguration(
 	val profiles: List<Profile> = DEFAULT_PROFILES,
-	val currentProfileId: String = O1_MINI_SUMMARIZE_MERGE_RESOLVE_ID
+	val currentProfileId: String = O3_MINI_SUMMARIZE_MERGE_RESOLVE_ID
 ) {
 	@Serializable
 	data class Profile(
@@ -61,9 +61,9 @@ data class AIResolverConfiguration(
 	}
 
 	companion object : ConfigurationFactory<AIResolverConfiguration> {
-		private const val MODEL_O1_MINI = "o1-mini"
+		private const val MODEL_O3_MINI = "o3-mini"
 		private const val MODEL_CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
-		private const val O1_MINI_SUMMARIZE_MERGE_RESOLVE_ID = "o1-mini-summarize-merge-resolve"
+		private const val O3_MINI_SUMMARIZE_MERGE_RESOLVE_ID = "o3-mini-summarize-merge-resolve"
 
 		private fun createDefaultSingleStageApproach(model: String): SingleStageApproach {
 			return SingleStageApproach(
@@ -179,8 +179,8 @@ data class AIResolverConfiguration(
 
 		private val O1_MINI_SINGLE_STAGE = Profile(
 			AIProvider.OPENAI,
-			AIProfile.Name("o1-mini-single-stage", "Single Stage (o1-mini)"),
-			listOf(createDefaultSingleStageApproach(MODEL_O1_MINI))
+			AIProfile.Name("o3-mini-single-stage", "Single Stage (o3-mini)"),
+			listOf(createDefaultSingleStageApproach(MODEL_O3_MINI))
 		)
 
 		private val CLAUDE_SONNET_SINGLE_STAGE = Profile(
@@ -191,8 +191,8 @@ data class AIResolverConfiguration(
 
 		private val O1_MINI_SUMMARIZE_MERGE_RESOLVE = Profile(
 			AIProvider.OPENAI,
-			AIProfile.Name(O1_MINI_SUMMARIZE_MERGE_RESOLVE_ID, "Summarize-Merge-Resolve (o1-mini)"),
-			listOf(createDefaultSummarizeMergeResolveApproach(MODEL_O1_MINI))
+			AIProfile.Name(O3_MINI_SUMMARIZE_MERGE_RESOLVE_ID, "Summarize-Merge-Resolve (o3-mini)"),
+			listOf(createDefaultSummarizeMergeResolveApproach(MODEL_O3_MINI))
 		)
 
 		private val CLAUDE_SONNET_SUMMARIZE_MERGE_RESOLVE = Profile(

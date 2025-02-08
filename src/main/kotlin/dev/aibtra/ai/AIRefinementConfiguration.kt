@@ -88,14 +88,14 @@ data class AIRefinementConfiguration(
 		private const val CODING_O1_MINI_ID = "code-refinement"
 		private const val CODING_CLAUDE_SONNET_ID = "code-claude-sonnet"
 		private const val GENERIC_GPT_4O_ID = "generic-gpt-4o"
-		private const val GENERIC_O1_MINI_ID = "generic-o1-mini"
+		private const val GENERIC_O3_MINI_ID = "generic-o3-mini"
 		private const val GENERIC_CLAUDE_SONNET_ID = "generic-claude-sonnet"
 		const val CONTENT_MACRO = "\${CONTENT}"
 		const val SELECTION_MACRO = "\${SELECTION}"
 		const val COMMAND_MACRO = "\${COMMAND}"
 		const val FILENAME_MAIN = "{filename=\"main\"}"
 		private const val MODEL_4O = "gpt-4o"
-		private const val MODEL_O1_MINI = "o1-mini"
+		private const val MODEL_O3_MINI = "o3-mini"
 		private const val MODEL_CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
 		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
 			WorkingMode.CLIPBOARD to PROOFREAD_ID,
@@ -170,13 +170,13 @@ data class AIRefinementConfiguration(
 
 		private val CODING_GPT_4O = createCodeRefinementProfile(AIProvider.OPENAI, CODING_GPT_4O_ID, "Coding GPT-4o", MODEL_4O)
 
-		private val CODING_O1_MINI = createCodeRefinementProfile(AIProvider.OPENAI, CODING_O1_MINI_ID, "Coding o1-mini", MODEL_O1_MINI, "ctrl shift R")
+		private val CODING_O1_MINI = createCodeRefinementProfile(AIProvider.OPENAI, CODING_O1_MINI_ID, "Coding o3-mini", MODEL_O3_MINI, "ctrl shift R")
 
 		private val CODING_CLAUDE_SONNET = createCodeRefinementProfile(AIProvider.ANTHROPIC, CODING_CLAUDE_SONNET_ID, "Coding Claude Sonnet", MODEL_CLAUDE_SONNET)
 
 		private val GENERIC_GPT_4O = createGenericProfile(AIProvider.OPENAI, GENERIC_GPT_4O_ID, "Generic GPT-4o", MODEL_4O)
 
-		private val GENERIC_O1_MINI = createGenericProfile(AIProvider.OPENAI, GENERIC_O1_MINI_ID, "Generic o1-mini", MODEL_O1_MINI)
+		private val GENERIC_O1_MINI = createGenericProfile(AIProvider.OPENAI, GENERIC_O3_MINI_ID, "Generic o3-mini", MODEL_O3_MINI)
 
 		private val GENERIC_CLAUDE_SONNET = createGenericProfile(AIProvider.ANTHROPIC, GENERIC_CLAUDE_SONNET_ID, "Generic Claude Sonnet", MODEL_CLAUDE_SONNET)
 
