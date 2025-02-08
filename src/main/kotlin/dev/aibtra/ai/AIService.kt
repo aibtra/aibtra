@@ -7,7 +7,7 @@ import java.io.*
 import java.net.*
 import java.nio.charset.*
 
-open class AIService(private val driver: AIDriver, private val apiToken: String, private val debugLog: DebugLog) {
+open class AIService(private val driver: AIDriver, private val apiToken: String?, private val debugLog: DebugLog) {
 
 	protected fun request(model: String, params: String?, completionsEndpoint: String?, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
 		val input = JSONObject()
@@ -57,15 +57,12 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 										val line = reader.readLine() ?: break
 										log.println(line)
 
-										if (line.startsWith("data: ")) {
-											val data = line.substring(6)
-											if (data == "[DONE]") {
-												break
-											}
+										if (!driver.processStreamingLine(line, builder)) {
+											break
+										}
 
-											if (!parseDataChunk(data, builder, handler)) {
-												break
-											}
+										if (!handler.process(builder)) {
+											break
 										}
 									}
 
@@ -118,22 +115,6 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 
 	private fun measureRequestTime(startTime: Long, requestId: Int) {
 		LOG.info("Finished request '$requestId' in ${System.currentTimeMillis() - startTime}ms")
-	}
-
-	private fun parseDataChunk(data: String, builder: StringBuilder, handler: StreamingHandler): Boolean {
-		return StringReader(data).use { reader ->
-			val parser = JSONParser()
-			val result = parser.parse(reader) as? JSONObject ?: throw IOException("Invalid response (no JSON)")
-			driver.processStreamingChunk(result)?.let { chunk ->
-				if (chunk.isNotEmpty()) {
-					builder.append(chunk)
-					handler.process(builder)
-				}
-				else {
-					true
-				}
-			} ?: false
-		}
 	}
 
 	sealed interface Handler

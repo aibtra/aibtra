@@ -17,7 +17,7 @@ import java.nio.file.*
 import java.util.function.*
 import kotlin.io.path.*
 
-class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog: DebugLog, val paths: ApplicationPaths) : AIService(driver, apiToken, debugLog) {
+class AIResolverService(driver: AIDriver, apiToken: String?, private val debugLog: DebugLog, val paths: ApplicationPaths) : AIService(driver, apiToken, debugLog) {
 	fun request(profileName: AIProfile.Name, approach: AIResolverConfiguration.Approach, snippets: ResolverSnippets, resolverPacket: ResolverPacket?, failureHandler: FailureHandler, callback: Callback) {
 		when (approach) {
 			is AIResolverConfiguration.SingleStageApproach -> requestSingleStage(profileName, approach, snippets, failureHandler, callback)

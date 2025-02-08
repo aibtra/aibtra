@@ -12,11 +12,11 @@ import java.awt.*
 import javax.swing.*
 import javax.swing.event.*
 
-class Submitter(private val environment: Environment, private val dialogDisplayer: DialogDisplayer, private val submit: (apiToken: String, failureHandler: RequestManagerFailureHandler) -> Unit) {
+class Submitter(private val environment: Environment, private val dialogDisplayer: DialogDisplayer, private val submit: (apiToken: String?, failureHandler: RequestManagerFailureHandler) -> Unit) {
 	fun submit(provider: AIProvider) {
 		val configurationProvider = environment.configurationProvider
 		val credentials = configurationProvider.get(AICredentials)
-		if (credentials.providerToToken[provider] != null) {
+		if (credentials.providerToToken[provider] != null || !provider.driver.requiresToken()) {
 			submit(provider, configurationProvider, dialogDisplayer)
 		}
 		else {
@@ -58,7 +58,7 @@ class Submitter(private val environment: Environment, private val dialogDisplaye
 
 	private fun submit(provider: AIProvider, configurationProvider: ConfigurationProvider, dialogDisplayer: DialogDisplayer) {
 		val apiToken = configurationProvider.get(AICredentials).providerToToken[provider]
-		require(apiToken != null) { "API token must not be null" }
+		require(apiToken != null || !provider.driver.requiresToken()) { "API token must not be null" }
 
 		submit(apiToken) { failure, mightBeAuthentication ->
 			if (mightBeAuthentication) {

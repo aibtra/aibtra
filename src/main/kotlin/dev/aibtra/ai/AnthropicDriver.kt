@@ -5,17 +5,17 @@ import org.json.simple.*
 import java.io.*
 import java.net.*
 
-class AnthropicDriver : AIDriver {
+class AnthropicDriver : OpenAILikeDriver() {
 
 	override fun initializeInput(model: String, input: JSONObject) {
 		input["model"] = model
 		input["max_tokens"] = 8192 // Error message "max_tokens: 2147483647 > 8192, which is the maximum allowed number of output tokens for claude-3-5-sonnet-20241022"
 	}
 
-	override fun openConnection(endpoint: URI?, apiToken: String): HttpURLConnection {
+	override fun openConnection(endpoint: URI?, apiToken: String?): HttpURLConnection {
 		val uri = endpoint ?: URI("https://api.anthropic.com/v1/messages")
 		val connection = uri.toURL().openConnection() as HttpURLConnection
-		connection.addRequestProperty("x-api-key", apiToken)
+		apiToken?.let { connection.addRequestProperty("x-api-key", it) }
 		connection.addRequestProperty("anthropic-version", "2023-06-01")
 		return connection
 	}
@@ -48,5 +48,9 @@ class AnthropicDriver : AIDriver {
 
 		val delta = objNotNull<JSONObject>(result, "delta")
 		return objNotNull<String>(delta, "text")
+	}
+
+	override fun requiresToken(): Boolean {
+		return true
 	}
 }

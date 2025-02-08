@@ -6,14 +6,14 @@ import org.json.simple.*
 import java.io.*
 import java.net.*
 
-class DeepSeekDriver : AIDriver {
+class DeepSeekDriver : OpenAILikeDriver() {
 
 	override fun initializeInput(model: String, input: JSONObject) {
 		input["model"] = model
 		input["n"] = 1
 	}
 
-	override fun openConnection(endpoint: URI?, apiToken: String): HttpURLConnection {
+	override fun openConnection(endpoint: URI?, apiToken: String?): HttpURLConnection {
 		val uri = endpoint ?: URI("https://api.deepseek.com/chat/completions")
 		val connection = uri.toURL().openConnection() as HttpURLConnection
 		apiToken.let { connection.addRequestProperty("Authorization", "Bearer $it") }
@@ -44,5 +44,9 @@ class DeepSeekDriver : AIDriver {
 		else {
 			null
 		}
+	}
+
+	override fun requiresToken(): Boolean {
+		return true
 	}
 }

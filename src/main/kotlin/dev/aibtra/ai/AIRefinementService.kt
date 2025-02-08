@@ -17,7 +17,7 @@ import org.json.simple.parser.*
 import java.io.*
 import java.util.function.*
 
-class AIRefinementService(driver: AIDriver, apiToken: String, debugLog: DebugLog) : AIService(driver, apiToken, debugLog) {
+class AIRefinementService(driver: AIDriver, apiToken: String?, debugLog: DebugLog) : AIService(driver, apiToken, debugLog) {
 	fun request(profile: AIRefinementConfiguration.Profile, part: FilteredText.Part, rawPriorConversation: RefinerConversation?, macroResolver: MacroResolver, callback: (result: Result) -> Boolean) {
 		val streaming = profile.streaming
 		val selectionMode = part.isPart()

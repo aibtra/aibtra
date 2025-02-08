@@ -6,17 +6,17 @@ import org.json.simple.*
 import java.io.*
 import java.net.*
 
-class OpenAIDriver : AIDriver {
+class OpenAIDriver : OpenAILikeDriver() {
 
 	override fun initializeInput(model: String, input: JSONObject) {
 		input["model"] = model
 		input["n"] = 1
 	}
 
-	override fun openConnection(endpoint: URI?, apiToken: String): HttpURLConnection {
+	override fun openConnection(endpoint: URI?, apiToken: String?): HttpURLConnection {
 		val uri = endpoint ?: URI("https://api.openai.com/v1/chat/completions")
 		val connection = uri.toURL().openConnection() as HttpURLConnection
-		connection.addRequestProperty("Authorization", "Bearer $apiToken")
+		apiToken.let { connection.addRequestProperty("Authorization", "Bearer $it") }
 		return connection
 	}
 
@@ -44,5 +44,9 @@ class OpenAIDriver : AIDriver {
 		else {
 			null
 		}
+	}
+
+	override fun requiresToken(): Boolean {
+		return true
 	}
 }
