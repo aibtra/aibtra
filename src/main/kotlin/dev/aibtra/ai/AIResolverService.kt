@@ -33,7 +33,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-input", DebugLog.Level.INFO, JsonUtils.formatJson(resolveInput.toJSONString()), debugLog)
 
 		callback.startResolutions()
-		val resolveOutput = sendRequest(approach.model, approach.modelParams, resolveInput, failureHandler, "request") ?: return
+		val resolveOutput = sendRequest(approach.model, approach.modelParams, approach.completionsEndpoint, resolveInput, failureHandler, "request") ?: return
 		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-output", DebugLog.Level.INFO, resolveOutput, debugLog)
 
 		val resolutions = extractResolutions(resolveOutput, idToStepToDebugDetails, "1-resolve-output")
@@ -85,7 +85,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-summarize-input", DebugLog.Level.INFO, JsonUtils.formatJson(summarizeInput.toJSONString()), debugLog)
 
 			callback.startSummaries()
-			val summarizeOutput = sendRequest(approach.model, approach.modelParams, summarizeInput, failureHandler, "summarize") ?: return
+			val summarizeOutput = sendRequest(approach.model, approach.modelParams, approach.completionsEndpoint, summarizeInput, failureHandler, "summarize") ?: return
 			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-summarize-output", DebugLog.Level.INFO, summarizeOutput, debugLog)
 
 			val summaries = extractSummaries(summarizeOutput, idToStepToDebugDetails)
@@ -101,7 +101,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-merge-input", DebugLog.Level.INFO, JsonUtils.formatJson(mergeInput.toJSONString()), debugLog)
 
 			callback.startMerges()
-			val mergeOutput = sendRequest(approach.model, approach.modelParams, mergeInput, failureHandler, "merge") ?: return
+			val mergeOutput = sendRequest(approach.model, approach.modelParams, approach.completionsEndpoint, mergeInput, failureHandler, "merge") ?: return
 			debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-merge-output", DebugLog.Level.INFO, mergeOutput, debugLog)
 
 			val merges = extractMerges(mergeOutput, idToStepToDebugDetails)
@@ -120,7 +120,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-resolve-input", DebugLog.Level.INFO, JsonUtils.formatJson(resolveInput.toJSONString()), debugLog)
 
 		callback.startResolutions()
-		val resolveOutput = sendRequest(approach.model, approach.modelParams, resolveInput, failureHandler, "resolve") ?: return
+		val resolveOutput = sendRequest(approach.model, approach.modelParams, approach.completionsEndpoint, resolveInput, failureHandler, "resolve") ?: return
 		debugLog(DEBUG_LOG_CATEGORY, "${++debugStep}-resolve-output", DebugLog.Level.INFO, resolveOutput, debugLog)
 
 		val resolutions = extractResolutions(resolveOutput, idToStepToDebugDetails, "3-resolve-output")
@@ -268,7 +268,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 		return missingConflicts.joinToString(separator = "\n\n") { it.toDebugString() }
 	}
 
-	private fun sendRequest(model: String, params: String?, messages: JSONArray, failureHandler: FailureHandler, stepId: String): String? {
+	private fun sendRequest(model: String, params: String?, completionsEndpoint: String?, messages: JSONArray, failureHandler: FailureHandler, stepId: String): String? {
 		paths.getProperty("resolver.simulate.$stepId")?.let {
 			LOG.info("Simulating request for '$stepId'")
 			return Path.of(it).readText()
@@ -278,7 +278,7 @@ class AIResolverService(driver: AIDriver, apiToken: String, private val debugLog
 
 		var text: String? = null
 		var failurePair: Pair<IOException, Boolean>? = null
-		request(model, params, messages, object : ResultHandler {
+		request(model, params, completionsEndpoint, messages, object : ResultHandler {
 			override fun process(message: String) {
 				text = message
 			}

@@ -7,18 +7,17 @@ import java.net.*
 
 class AnthropicDriver : AIDriver {
 
-	override fun getCompletionsURI() : URI {
-		return URI("https://api.anthropic.com/v1/messages")
-	}
-
 	override fun initializeInput(model: String, input: JSONObject) {
 		input["model"] = model
 		input["max_tokens"] = 8192 // Error message "max_tokens: 2147483647 > 8192, which is the maximum allowed number of output tokens for claude-3-5-sonnet-20241022"
 	}
 
-	override fun initializeConnection(connection: HttpURLConnection, apiToken: String) {
+	override fun openConnection(endpoint: URI?, apiToken: String): HttpURLConnection {
+		val uri = endpoint ?: URI("https://api.anthropic.com/v1/messages")
+		val connection = uri.toURL().openConnection() as HttpURLConnection
 		connection.addRequestProperty("x-api-key", apiToken)
 		connection.addRequestProperty("anthropic-version", "2023-06-01")
+		return connection
 	}
 
 	override fun processCompleteResponse(result: JSONObject): String {

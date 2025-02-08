@@ -4,11 +4,9 @@ import org.json.simple.*
 import java.net.*
 
 interface AIDriver {
-	fun getCompletionsURI() : URI
-
 	fun initializeInput(model: String, input: JSONObject)
 
-	fun initializeConnection(connection: HttpURLConnection, apiToken: String)
+	fun openConnection(endpoint: URI?, apiToken: String) : HttpURLConnection
 
 	fun processCompleteResponse(result: JSONObject) : String
 

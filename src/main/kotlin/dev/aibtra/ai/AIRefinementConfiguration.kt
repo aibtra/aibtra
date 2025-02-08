@@ -13,6 +13,7 @@ import dev.aibtra.refiner.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
+import java.net.*
 import java.security.*
 import kotlin.jvm.optionals.*
 
@@ -39,6 +40,7 @@ data class AIRefinementConfiguration(
 		val submitOnProfileChange: Boolean = false,
 		val wordWrap: Boolean = false,
 		val modelParams: String? = null,
+		val completionsEndpoint: String? = null,
 		val accelerator: String? = null
 	) : AIProfile {
 

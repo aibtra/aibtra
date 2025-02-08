@@ -8,17 +8,16 @@ import java.net.*
 
 class OpenAIDriver : AIDriver {
 
-	override fun getCompletionsURI() : URI {
-		return URI("https://api.openai.com/v1/chat/completions")
-	}
-
 	override fun initializeInput(model: String, input: JSONObject) {
 		input["model"] = model
 		input["n"] = 1
 	}
 
-	override fun initializeConnection(connection: HttpURLConnection, apiToken: String) {
+	override fun openConnection(endpoint: URI?, apiToken: String): HttpURLConnection {
+		val uri = endpoint ?: URI("https://api.openai.com/v1/chat/completions")
+		val connection = uri.toURL().openConnection() as HttpURLConnection
 		connection.addRequestProperty("Authorization", "Bearer $apiToken")
+		return connection
 	}
 
 	override fun processCompleteResponse(result: JSONObject): String {

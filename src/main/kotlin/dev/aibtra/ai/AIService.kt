@@ -9,7 +9,7 @@ import java.nio.charset.*
 
 open class AIService(private val driver: AIDriver, private val apiToken: String, private val debugLog: DebugLog) {
 
-	protected fun request(model: String, params: String?, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
+	protected fun request(model: String, params: String?, completionsEndpoint: String?, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
 		val input = JSONObject()
 		driver.initializeInput(model, input)
 		input["messages"] = messages
@@ -27,17 +27,16 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 			input["stream"] = true
 		}
 
-		val url = driver.getCompletionsURI().toURL()
-		val connection = url.openConnection() as HttpURLConnection
 		val startTime = System.currentTimeMillis()
 
 		val requestId = System.identityHashCode(messages)
 		LOG.info("Sending request '$requestId' (model '$model')")
+		val endpoint = completionsEndpoint?.let { URI.create(it) }
+		val connection = driver.openConnection(endpoint, apiToken)
 		try {
 			connection.doOutput = true
 			connection.requestMethod = "POST"
 			connection.addRequestProperty("Content-Type", "application/json")
-			driver.initializeConnection(connection, apiToken)
 
 			debugLog.run("aiService", "network", DebugLog.Level.INFO) { log: DebugLog.Log, _: Boolean ->
 				val jsonInput = input.toJSONString()

@@ -25,6 +25,7 @@ data class AIResolverConfiguration(
 	sealed interface Approach {
 		val model: String
 		val modelParams: String?
+		val completionsEndpoint: String?
 
 		@Suppress("unused")
 		fun toHashString(): String {
@@ -37,7 +38,8 @@ data class AIResolverConfiguration(
 	data class SingleStageApproach(
 		override val model: String,
 		val mainInstruction: Instruction,
-		override val modelParams: String?
+		override val modelParams: String?,
+		override val completionsEndpoint: String?
 	) : Approach
 
 	@Serializable
@@ -46,7 +48,8 @@ data class AIResolverConfiguration(
 		val summarizeMainInstruction: Instruction,
 		val mergeMainInstruction: Instruction,
 		val resolveMainInstruction: Instruction,
-		override val modelParams: String?
+		override val modelParams: String?,
+		override val completionsEndpoint: String?
 	) : Approach
 
 	@Serializable
@@ -98,7 +101,8 @@ data class AIResolverConfiguration(
 							```
 						""".trimIndent()
 				),
-				params
+				params,
+				null
 			)
 		}
 
@@ -177,7 +181,8 @@ data class AIResolverConfiguration(
 							```
 						""".trimIndent()
 				),
-				params
+				params,
+				null
 			)
 		}
 
