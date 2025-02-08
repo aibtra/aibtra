@@ -92,12 +92,16 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 					val parser = JSONParser()
 					val mightBeAuthentication = connection.responseCode in AUTHENTICATION_RELATED_RESPONSE_CODES
 					connection.errorStream?.let { errorStream ->
-						(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
-							(result["error"] as? JSONObject)?.let { error ->
-								(error["message"] as? String)?.let { message ->
-									failureHandler.process(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)
+						try {
+							(parser.parse(InputStreamReader(errorStream, StandardCharsets.UTF_8)) as? JSONObject)?.let { result ->
+								(result["error"] as? JSONObject)?.let { error ->
+									(error["message"] as? String)?.let { message ->
+										failureHandler.process(IOException("${ioe.message}:\n\n$message"), mightBeAuthentication)
+									}
 								}
 							}
+						} catch (ex: ParseException) {
+							failureHandler.process(IOException("Failed to parse response: $ex", ex), mightBeAuthentication)
 						}
 					} ?: run {
 						if (ioe is UnknownHostException) {
