@@ -127,8 +127,7 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 		}
 	}
 
-	sealed interface Handler {
-	}
+	sealed interface Handler
 
 	interface StreamingHandler : Handler {
 		fun process(builder: StringBuilder): Boolean
@@ -147,10 +146,6 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 	companion object {
 		private val LOG = Logger.getLogger(this::class)
 		private val AUTHENTICATION_RELATED_RESPONSE_CODES = setOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN)
-
-		fun addMessage(content: String, role: AIRole, array: JSONArray) {
-			array.add(createMessage(content, role))
-		}
 
 		fun createMessage(content: String, role: AIRole): JSONObject {
 			val message = JSONObject()
