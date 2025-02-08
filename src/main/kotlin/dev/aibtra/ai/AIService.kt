@@ -9,10 +9,18 @@ import java.nio.charset.*
 
 open class AIService(private val driver: AIDriver, private val apiToken: String, private val debugLog: DebugLog) {
 
-	protected fun request(model: String, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
+	protected fun request(model: String, params: String?, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
 		val input = JSONObject()
 		driver.initializeInput(model, input)
 		input["messages"] = messages
+
+		try {
+			params?.let {
+				input.putAll(JSONParser().parse(it) as JSONObject)
+			}
+		} catch (ex: ParseException) {
+			throw IOException("Invalid 'params' configuration", ex)
+		}
 
 		val streaming = handler is StreamingHandler
 		if (streaming) {

@@ -38,6 +38,7 @@ data class AIRefinementConfiguration(
 		val submitOnInvocation: Boolean = false,
 		val submitOnProfileChange: Boolean = false,
 		val wordWrap: Boolean = false,
+		val modelParams: String? = null,
 		val accelerator: String? = null
 	) : AIProfile {
 

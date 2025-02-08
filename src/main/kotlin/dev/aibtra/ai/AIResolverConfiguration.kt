@@ -24,6 +24,7 @@ data class AIResolverConfiguration(
 	@Serializable
 	sealed interface Approach {
 		val model: String
+		val modelParams: String?
 
 		@Suppress("unused")
 		fun toHashString(): String {
@@ -35,7 +36,8 @@ data class AIResolverConfiguration(
 	@Serializable
 	data class SingleStageApproach(
 		override val model: String,
-		val mainInstruction: Instruction
+		val mainInstruction: Instruction,
+		override val modelParams: String?
 	) : Approach
 
 	@Serializable
@@ -43,7 +45,8 @@ data class AIResolverConfiguration(
 		override val model: String,
 		val summarizeMainInstruction: Instruction,
 		val mergeMainInstruction: Instruction,
-		val resolveMainInstruction: Instruction
+		val resolveMainInstruction: Instruction,
+		override val modelParams: String?
 	) : Approach
 
 	@Serializable
@@ -65,7 +68,7 @@ data class AIResolverConfiguration(
 		private const val MODEL_CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
 		private const val O3_MINI_SUMMARIZE_MERGE_RESOLVE_ID = "o3-mini-summarize-merge-resolve"
 
-		private fun createDefaultSingleStageApproach(model: String): SingleStageApproach {
+		private fun createDefaultSingleStageApproach(model: String, params: String? = null): SingleStageApproach {
 			return SingleStageApproach(
 				model,
 				Instruction(
@@ -85,7 +88,6 @@ data class AIResolverConfiguration(
 							3.2. Ensure you preserve the `CONFLICT-ID` and `FILENAME` exactly as provided.
 							3.3. Provide each resolution in a separate code block enclosed by triple backticks (```).
 							3.4. Do not attempt to complete or modify any code beyond the conflict resolution.
-							3.5. Preserve and report the non-conflicting areas exactly as they were.
 									
 							Format for each resolution:
 							```
@@ -95,11 +97,12 @@ data class AIResolverConfiguration(
 							<conflict-resolution>
 							```
 						""".trimIndent()
-				)
+				),
+				params
 			)
 		}
 
-		private fun createDefaultSummarizeMergeResolveApproach(model: String): SummarizeMergeResolveApproach {
+		private fun createDefaultSummarizeMergeResolveApproach(model: String, params: String? = null): SummarizeMergeResolveApproach {
 			return SummarizeMergeResolveApproach(
 				model,
 				Instruction(
@@ -173,7 +176,8 @@ data class AIResolverConfiguration(
 							<conflict-resolution>
 							```
 						""".trimIndent()
-				)
+				),
+				params
 			)
 		}
 
