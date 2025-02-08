@@ -13,7 +13,6 @@ import dev.aibtra.refiner.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
-import java.net.*
 import java.security.*
 import kotlin.jvm.optionals.*
 
@@ -93,6 +92,7 @@ data class AIRefinementConfiguration(
 		private const val GENERIC_GPT_4O_ID = "generic-gpt-4o"
 		private const val GENERIC_O3_MINI_ID = "generic-o3-mini"
 		private const val GENERIC_CLAUDE_SONNET_ID = "generic-claude-sonnet"
+		private const val GENERIC_DEEPSEEK_REASONER_ID = "generic-deepseek-reasoner"
 		const val CONTENT_MACRO = "\${CONTENT}"
 		const val SELECTION_MACRO = "\${SELECTION}"
 		const val COMMAND_MACRO = "\${COMMAND}"
@@ -100,6 +100,7 @@ data class AIRefinementConfiguration(
 		private const val MODEL_4O = "gpt-4o"
 		private const val MODEL_O3_MINI = "o3-mini"
 		private const val MODEL_CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
+		private const val MODEL_DEEPSEEK_REASONER = "deepseek-reasoner"
 		private val WORKING_MODE_TO_DEFAULT_PROFILE_ID = mapOf(
 			WorkingMode.CLIPBOARD to PROOFREAD_ID,
 			WorkingMode.FILE to PROOFREAD_ID,
@@ -183,7 +184,9 @@ data class AIRefinementConfiguration(
 
 		private val GENERIC_CLAUDE_SONNET = createGenericProfile(AIProvider.ANTHROPIC, GENERIC_CLAUDE_SONNET_ID, "Generic Claude Sonnet", MODEL_CLAUDE_SONNET)
 
-		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, null, CODING_GPT_4O, CODING_O1_MINI, CODING_CLAUDE_SONNET, null, GENERIC_GPT_4O, GENERIC_O1_MINI, GENERIC_CLAUDE_SONNET)
+		private val GENERIC_DEEPSEEK_REASONER = createGenericProfile(AIProvider.DEEPSEEK, GENERIC_DEEPSEEK_REASONER_ID, "Generic DeepSeek Reasoner", MODEL_DEEPSEEK_REASONER)
+
+		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, null, CODING_GPT_4O, CODING_O1_MINI, CODING_CLAUDE_SONNET, null, GENERIC_GPT_4O, GENERIC_O1_MINI, GENERIC_CLAUDE_SONNET, GENERIC_DEEPSEEK_REASONER)
 
 		override fun name(): String = "ai-refiner"
 
