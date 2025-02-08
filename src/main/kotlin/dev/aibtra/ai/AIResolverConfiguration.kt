@@ -181,10 +181,16 @@ data class AIResolverConfiguration(
 			)
 		}
 
-		private val O1_MINI_SINGLE_STAGE = Profile(
+		private val O1_MINI_SINGLE_STAGE_LOW = Profile(
 			AIProvider.OPENAI,
-			AIProfile.Name("o3-mini-single-stage", "Single Stage (o3-mini)"),
-			listOf(createDefaultSingleStageApproach(MODEL_O3_MINI))
+			AIProfile.Name("o3-mini-single-stage-low", "Single Stage (o3-mini, low)"),
+			listOf(createDefaultSingleStageApproach(MODEL_O3_MINI, "{\"reasoning_effort\" : \"low\"}"))
+		)
+
+		private val O1_MINI_SINGLE_STAGE_HIGH = Profile(
+			AIProvider.OPENAI,
+			AIProfile.Name("o3-mini-single-stage-high", "Single Stage (o3-mini, high)"),
+			listOf(createDefaultSingleStageApproach(MODEL_O3_MINI, "{\"reasoning_effort\" : \"high\"}"))
 		)
 
 		private val CLAUDE_SONNET_SINGLE_STAGE = Profile(
@@ -205,7 +211,7 @@ data class AIResolverConfiguration(
 			listOf(createDefaultSummarizeMergeResolveApproach(MODEL_CLAUDE_SONNET))
 		)
 
-		private val DEFAULT_PROFILES = listOf(O1_MINI_SINGLE_STAGE, CLAUDE_SONNET_SINGLE_STAGE, O1_MINI_SUMMARIZE_MERGE_RESOLVE, CLAUDE_SONNET_SUMMARIZE_MERGE_RESOLVE)
+		private val DEFAULT_PROFILES = listOf(O1_MINI_SINGLE_STAGE_LOW, O1_MINI_SINGLE_STAGE_HIGH, CLAUDE_SONNET_SINGLE_STAGE, O1_MINI_SUMMARIZE_MERGE_RESOLVE, CLAUDE_SONNET_SUMMARIZE_MERGE_RESOLVE)
 
 		override fun name(): String = "ai-resolver"
 
