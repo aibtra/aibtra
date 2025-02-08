@@ -23,9 +23,7 @@ open class AIService(private val driver: AIDriver, private val apiToken: String,
 		}
 
 		val streaming = handler is StreamingHandler
-		if (streaming) {
-			input["stream"] = true
-		}
+		input["stream"] = streaming
 
 		val startTime = System.currentTimeMillis()
 
