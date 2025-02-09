@@ -9,7 +9,7 @@ import java.nio.charset.*
 
 open class AIService(private val driver: AIDriver, private val apiToken: String?, private val debugLog: DebugLog) {
 
-	protected fun request(model: String, params: String?, completionsEndpoint: String?, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
+	protected fun request(model: String, params: String?, completionsEndpoint: String?, reasoningFilterName: String?, messages: JSONArray, handler: Handler, failureHandler: FailureHandler) {
 		val input = JSONObject()
 		driver.initializeInput(model, input)
 		input["messages"] = messages
@@ -21,6 +21,8 @@ open class AIService(private val driver: AIDriver, private val apiToken: String?
 		} catch (ex: ParseException) {
 			throw IOException("Invalid 'params' configuration", ex)
 		}
+
+		val reasoningFilter = driver.createReasoningFilter(reasoningFilterName)
 
 		val streaming = handler is StreamingHandler
 		input["stream"] = streaming
@@ -52,22 +54,25 @@ open class AIService(private val driver: AIDriver, private val apiToken: String?
 							when (handler) {
 								is StreamingHandler -> {
 									val reader = BufferedReader(InputStreamReader(input, StandardCharsets.UTF_8))
-									val builder = StringBuilder()
+									val rawBuilder = StringBuilder()
+									val filteredBuilder = StringBuilder()
 									while (true) {
 										val line = reader.readLine() ?: break
 										log.println(line)
 
-										if (!driver.processStreamingLine(line, builder)) {
+										val finished = !driver.processStreamingLine(line, rawBuilder)
+										reasoningFilter.process(rawBuilder, filteredBuilder, finished)
+										if (finished) {
 											break
 										}
 
-										if (!handler.process(builder)) {
+										if (!handler.process(filteredBuilder)) {
 											break
 										}
 									}
 
 									measureRequestTime(startTime, requestId)
-									handler.finish(builder)
+									handler.finish(filteredBuilder)
 								}
 								is ResultHandler -> {
 									InputStreamReader(input, StandardCharsets.UTF_8).use {

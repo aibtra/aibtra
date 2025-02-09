@@ -71,7 +71,7 @@ class AIRefinementService(driver: AIDriver, apiToken: String?, debugLog: DebugLo
 			}
 		}
 
-		request(profile.model, profile.modelParams, profile.completionsEndpoint, messageArray, handler, object : FailureHandler {
+		request(profile.model, profile.modelParams, profile.completionsEndpoint, profile.reasoningFilter, messageArray, handler, object : FailureHandler {
 			override fun process(failure: IOException, mightBeAuthentication: Boolean) {
 				callback(Result(null, null, Pair(failure, mightBeAuthentication)))
 			}

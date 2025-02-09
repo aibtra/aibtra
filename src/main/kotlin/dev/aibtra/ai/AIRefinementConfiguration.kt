@@ -40,6 +40,7 @@ data class AIRefinementConfiguration(
 		val wordWrap: Boolean = false,
 		val modelParams: String? = null,
 		val completionsEndpoint: String? = null,
+		val reasoningFilter: String? = null,
 		val accelerator: String? = null
 	) : AIProfile {
 

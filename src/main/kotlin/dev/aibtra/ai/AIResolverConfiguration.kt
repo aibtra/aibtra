@@ -26,6 +26,7 @@ data class AIResolverConfiguration(
 		val model: String
 		val modelParams: String?
 		val completionsEndpoint: String?
+		val reasoningFilter: String?
 
 		@Suppress("unused")
 		fun toHashString(): String {
@@ -39,7 +40,8 @@ data class AIResolverConfiguration(
 		override val model: String,
 		val mainInstruction: Instruction,
 		override val modelParams: String?,
-		override val completionsEndpoint: String?
+		override val completionsEndpoint: String?,
+		override val reasoningFilter: String?
 	) : Approach
 
 	@Serializable
@@ -49,7 +51,8 @@ data class AIResolverConfiguration(
 		val mergeMainInstruction: Instruction,
 		val resolveMainInstruction: Instruction,
 		override val modelParams: String?,
-		override val completionsEndpoint: String?
+		override val completionsEndpoint: String?,
+		override val reasoningFilter: String?
 	) : Approach
 
 	@Serializable
@@ -102,6 +105,7 @@ data class AIResolverConfiguration(
 						""".trimIndent()
 				),
 				params,
+				null,
 				null
 			)
 		}
@@ -182,6 +186,7 @@ data class AIResolverConfiguration(
 						""".trimIndent()
 				),
 				params,
+				null,
 				null
 			)
 		}
