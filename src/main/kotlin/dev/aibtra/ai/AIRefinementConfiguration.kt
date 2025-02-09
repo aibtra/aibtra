@@ -187,9 +187,9 @@ data class AIRefinementConfiguration(
 
 		private val GENERIC_CLAUDE_SONNET = createGenericProfile(AIProvider.ANTHROPIC, GENERIC_CLAUDE_SONNET_ID, "Generic Claude Sonnet", MODEL_CLAUDE_SONNET)
 
-		private val GENERIC_DEEPSEEK_REASONER = createGenericProfile(AIProvider.DEEPSEEK, GENERIC_DEEPSEEK_REASONER_ID, "Generic DeepSeek Reasoner", MODEL_DEEPSEEK_REASONER)
+		private val GENERIC_DEEPSEEK_REASONER = createGenericProfile(AIProvider.DEEPSEEK, GENERIC_DEEPSEEK_REASONER_ID, "Generic DeepSeek Reasoner", MODEL_DEEPSEEK_REASONER, reasoningFilter = "think")
 
-		private val GENERIC_OLLAMA_DEEPSEEK_R1 = createGenericProfile(AIProvider.OLLAMA, GENERIC_OLLAMA_DEEPSEEK_R1_ID, "Generic Ollama DeepSeek R1", MODEL_OLLAMA_DEEPSEEK_R1)
+		private val GENERIC_OLLAMA_DEEPSEEK_R1 = createGenericProfile(AIProvider.OLLAMA, GENERIC_OLLAMA_DEEPSEEK_R1_ID, "Generic Ollama DeepSeek R1", MODEL_OLLAMA_DEEPSEEK_R1, reasoningFilter = "think")
 
 		private val DEFAULT_PROFILES = listOf(PROOFREAD, IMPROVE, TO_STANDARD_ENGLISH, null, CODING_GPT_4O, CODING_O1_MINI, CODING_CLAUDE_SONNET, null, GENERIC_GPT_4O, GENERIC_O1_MINI, GENERIC_CLAUDE_SONNET, GENERIC_DEEPSEEK_REASONER, GENERIC_OLLAMA_DEEPSEEK_R1)
 
@@ -239,7 +239,7 @@ data class AIRefinementConfiguration(
 			return hashBytes.joinToString("") { "%02x".format(it) }
 		}
 
-		private fun createGenericProfile(provider: AIProvider, id: String, title: String, model: String): Profile {
+		private fun createGenericProfile(provider: AIProvider, id: String, title: String, model: String, reasoningFilter: String? = null): Profile {
 			return Profile(
 				provider,
 				AIProfile.Name(id, title),
@@ -255,7 +255,8 @@ data class AIRefinementConfiguration(
 					Instruction(AIRole.USER, SELECTION_MACRO)
 				),
 				ResponseType.CONTENT_AS_IS,
-				RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false)
+				RefinerDiffManager.Config(false, false, DiffTokenizingMode.NONE, false),
+				reasoningFilter = reasoningFilter
 			)
 		}
 

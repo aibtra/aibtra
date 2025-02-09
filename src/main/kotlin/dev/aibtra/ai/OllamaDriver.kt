@@ -12,6 +12,14 @@ class OllamaDriver : AIDriver {
 		input["model"] = model
 	}
 
+	override fun createReasoningFilter(filterName: String?): AIReasoningFilter {
+		DeepSeekDriver.createReasoningFilter(filterName)?.let {
+			return it
+		}
+
+		return super.createReasoningFilter(filterName)
+	}
+
 	override fun openConnection(endpoint: URI?, apiToken: String?): HttpURLConnection {
 		endpoint?.let {
 			return it.toURL().openConnection() as HttpURLConnection
