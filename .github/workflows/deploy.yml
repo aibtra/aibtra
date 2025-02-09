@@ -94,9 +94,9 @@ jobs:
         tar -czf aibtra-${{ env.TAG }}-macos-intel.tar.gz *
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: binaries
+        name: binaries-${{ strategy.job-index }}
         path: build/jpackage/aibtra-${{ env.TAG }}-*
 
   release:
@@ -117,7 +117,7 @@ jobs:
         exit 1
 
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Determine release tag
       id: determine-tag
@@ -132,7 +132,7 @@ jobs:
         prerelease: ${{ github.ref != 'refs/heads/main' }}
         title: "${{ env.RELEASE_TITLE }}"
         files: |
-          binaries/*
+          binaries-*/*
 
     - name: Checkout code
       uses: actions/checkout@v3

@@ -35,7 +35,7 @@ jobs:
         ls -al *.icns
 
     - name: Upload ICNS as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: icns
         path: logo.icns
